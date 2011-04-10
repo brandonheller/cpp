@@ -109,6 +109,7 @@ def compute(g, link_fail_prob, node_fail_prob, max_failures, alg):
         lg.debug("covered %s%% of the uptime distribution" % fraction_covered)
         weighted_conn = 0
         for percentage, conn in uptime_dist:
+            lg.debug("adding %s to weighted_conn" % (percentage * conn))
             weighted_conn += percentage * conn
         # Account for time when nothing's broken:
         weighted_conn += (1.0 - fraction_covered) * 1.0
@@ -117,10 +118,5 @@ def compute(g, link_fail_prob, node_fail_prob, max_failures, alg):
         connectivities.append(weighted_conn)
 
     avg_conn = sum(connectivities) / len(connectivities)
-    print "average connectivity: %f" % avg_conn
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    g = nx.complete_graph(3)
-    print compute(g, 0.1, 0, 1, 'sssp')
-
+    lg.debug("average connectivity: %f" % avg_conn)
+    return avg_conn
