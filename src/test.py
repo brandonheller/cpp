@@ -33,8 +33,8 @@ class test_SSSP(unittest.TestCase):
         return exp_uptime
 
     def run_complete_test(self, n, link_fail, node_fail, max_fail, hard_coded_uptime = None):
-        g = nx.complete_graph(3)
-        exp_uptime = self.calc_complete_uptime(3, link_fail)
+        g = nx.complete_graph(n)
+        exp_uptime = self.calc_complete_uptime(n, link_fail)
         node_fail = 0
         # if hard-coded "test bootstrap uptime" defined, verify w/eqn.
         if hard_coded_uptime:
@@ -63,8 +63,8 @@ class test_SSSP(unittest.TestCase):
         # For l = 0.1, that's 3 instances of 3/4 up and 3 of 1.0 up
         # 0.1 * (3 * 3/4 + 3 * 1.0) + 0.4 * 1.0 = 
         hard_coded_uptimes = {
-            0.1: 0.933333333333,
-            0.2: 0.866666666666
+            0.1: 0.925,
+            0.2: 0.85
         }
         for link_fail in (0.1, 0.2):
             self.run_complete_test(4, link_fail, 0, 1, hard_coded_uptimes[link_fail])
