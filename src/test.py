@@ -133,10 +133,10 @@ class test_SSSP(unittest.TestCase):
         for link_fail, uptime in hard_coded_uptimes.iteritems():
             self.run_star_test(4, link_fail, 0, 1, uptime)
 
-#    def test_link_star_various_onefail(self):
-#        for n in range(3, 8):
-#            for link_fail in (0.01, 0.02):
-#                self.run_star_test(n, link_fail, 0, 1)
+    def test_link_star_various_onefail(self):
+        for n in range(3, 8):
+            for link_fail in (0.01, 0.02):
+                self.run_star_test(n, link_fail, 0, 1)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
