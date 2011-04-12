@@ -13,6 +13,21 @@ import logging
 
 lg = logging.getLogger("cc")
 
+def flatten(paths):
+    '''Compute and return flattened graph, given paths.
+    @param g: input graph as NetworkX graph
+    @param paths: paths to flatten
+
+    @return flattened: flattened NetworkX Graph
+    '''
+    used = nx.Graph()
+    lg.debug("paths: %s" % paths)
+    for path in paths.values():
+        lg.debug("flattening path: %s" % path)
+        used.add_path(path)
+    return used
+
+
 def compute(g, link_fail_prob, node_fail_prob, max_failures, alg):
     '''Compute connectivity assuming independent failures.
 
@@ -68,12 +83,7 @@ def compute(g, link_fail_prob, node_fail_prob, max_failures, alg):
         # Store the flattened set of shortest paths to the controller as a
         # graph.  Useful later to only consider those nodes or edges that might
         # have an effect on reliability.
-        used = nx.Graph()
-        lg.debug("paths: %s" % paths)
-        for path in paths.values():
-            lg.debug("flattening path: %s" % path)
-            used.add_path(path)
-        lg.debug(used.edges())
+        used = flatten(paths)
 
         for failed_edge in g.edges():
             lg.debug("------------------------")
