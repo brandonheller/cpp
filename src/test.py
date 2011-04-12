@@ -73,32 +73,37 @@ class test_SSSP(unittest.TestCase):
                 self.run_complete_test(n, link_fail, 0, 1)
 
     def calc_star_uptime(self, n, link_fail):
-        g = nx.star_graph(n)
+        '''Calc star uptime.
+
+        NOTE: n is the number of nodes.'''
+        # Correct for NetworkX, which adds one to n.
+        g = nx.star_graph(n - 1)
         # Node 0 is the center of the star.
-        edges = n
+        edges = g.number_of_edges()
+        nodes = g.number_of_nodes()
         paths = nx.single_source_shortest_path(g, g.nodes()[1])
         used = flatten(paths)
         sssp_edges = used.number_of_edges()
         if sssp_edges != g.number_of_edges():
             raise Exception("edge not on sssp for star graph")
-        nodes = g.number_of_nodes()
+
         # consider those times when a link failed:
         # first, consider failure on outside of graph
-        exp_uptime_outer = link_fail * n * ((float(n - 1) / n) * float(n) / nodes + \
-                                            (float(1) / n) * float(1) / nodes)
+        exp_uptime_outer = link_fail * edges * ((float(edges - 1) / edges) * float(edges) / nodes + \
+                                                (float(1) / edges) * float(1) / nodes)
         exp_uptime_outer += (1.0 - (link_fail * sssp_edges)) * 1.0
 
         # consider only the hub as a controller:
-        exp_uptime_inner = link_fail * n * ((float(n) / n) * float(n) / nodes)
+        exp_uptime_inner = link_fail * edges * ((float(edges) / edges) * float(edges) / nodes)
         exp_uptime_inner += (1.0 - (link_fail * edges)) * 1.0
 
         # merge:
-        exp_uptime_weighted = float(n * exp_uptime_outer + 1 * exp_uptime_inner) / nodes
+        exp_uptime_weighted = float(edges * exp_uptime_outer + 1 * exp_uptime_inner) / nodes
         return exp_uptime_weighted
 
     def run_star_test(self, n, link_fail, node_fail, max_fail, hard_coded_uptime = None):
-        # Return the Star graph with _n+1_ nodes
-        g = nx.star_graph(n)
+        # Return the Star graph with n nodes
+        g = nx.star_graph(n - 1)
         exp_uptime = self.calc_star_uptime(n, link_fail)
         node_fail = 0
         # if hard-coded "test bootstrap uptime" defined, verify w/eqn.
@@ -106,7 +111,7 @@ class test_SSSP(unittest.TestCase):
             self.assertAlmostEqual(exp_uptime, hard_coded_uptime)
         run_test(self, g, link_fail, node_fail, max_fail, 'sssp', exp_uptime)
 
-    def test_link_star_3_onefail(self):
+    def test_link_star_4_onefail(self):
         # When controller is along edge (3/4 of the time):
         #     3 links can fail.
         #     3/3 of the time it has an effect.
@@ -126,13 +131,12 @@ class test_SSSP(unittest.TestCase):
             0.1: .8875,
         }
         for link_fail, uptime in hard_coded_uptimes.iteritems():
-            self.run_star_test(3, link_fail, 0, 1, uptime)
+            self.run_star_test(4, link_fail, 0, 1, uptime)
 
-    def test_link_star_various_onefail(self):
-        for n in range(3, 8):
-            for link_fail in (0.01, 0.02):
-                self.run_star_test(n, link_fail, 0, 1)
-
+#    def test_link_star_various_onefail(self):
+#        for n in range(3, 8):
+#            for link_fail in (0.01, 0.02):
+#                self.run_star_test(n, link_fail, 0, 1)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
