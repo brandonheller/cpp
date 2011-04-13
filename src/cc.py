@@ -28,6 +28,72 @@ def flatten(paths):
     return used
 
 
+def sssp_conn(g, controller_node, link_fail_prob):
+    # Store pairs of (probability, connectivity)
+    uptime_dist = []
+
+    # Compute SSSP.
+    # Need a list of nodes from each switch to the controller to see how
+    # connectivity changes when links go down.
+    paths = nx.single_source_shortest_path(g, controller_node)
+    # Store the flattened set of shortest paths to the controller as a
+    # graph.  Useful later to only consider those nodes or edges that might
+    # have an effect on reliability.
+    used = flatten(paths)
+
+    for failed_edge in g.edges():
+        lg.debug("------------------------")
+        lg.debug("considering failed edge: %s" % str(failed_edge))
+
+        # If failed edge is not a part of the path set, then no effect on
+        # reliability.
+        if used.has_edge(failed_edge[0], failed_edge[1]):
+            # Failed edge matters for connectivity for some switch.
+
+            # Check switch-to-controller connectivity.
+            connected = 0
+            disconnected = 0
+            for sw in g.nodes():
+                path_graph = nx.Graph()
+                path_graph.add_path(paths[sw])
+                #lg.debug("path graph edges: %s" % path_graph.edges())
+                if path_graph.has_edge(failed_edge[0], failed_edge[1]):
+                    lg.debug("disconnected sw: %s" % sw)
+                    disconnected += 1
+                else:
+                    lg.debug("connected sw: %s" % sw)
+                    connected += 1
+            connectivity = float(connected) / g.number_of_nodes()
+            uptime_dist.append((link_fail_prob, connectivity))
+        else:
+            # No effect on connectivity.
+            lg.debug("edge not in sssp graph; ignoring")
+            uptime_dist.append((link_fail_prob, 1.0))
+
+    return uptime_dist
+
+
+def any_conn(g, controller_node, link_fail_prob):
+    # Store pairs of (probability, connectivity)
+    uptime_dist = []
+
+    for failed_edge in g.edges():
+        lg.debug("------------------------")
+        lg.debug("considering failed edge: %s" % str(failed_edge))
+
+        # Check switch-to-controller connectivity.
+        gcopy = g.copy()
+        gcopy.remove_edge(failed_edge[0], failed_edge[1])
+        reachable = nx.dfs_tree(gcopy, controller_node).nodes()
+        if controller_node not in reachable:
+            reachable += [controller_node]
+        nodes = g.number_of_nodes()
+        connectivity = float(len(reachable)) / nodes
+        uptime_dist.append((link_fail_prob, connectivity))
+
+    return uptime_dist
+
+
 def compute(g, link_fail_prob, node_fail_prob, max_failures, alg):
     '''Compute connectivity assuming independent failures.
 
@@ -76,57 +142,10 @@ def compute(g, link_fail_prob, node_fail_prob, max_failures, alg):
         # Store pairs of (probability, connectivity)
         uptime_dist = []
 
-        # Compute SSSP.
-        # Need a list of nodes from each switch to the controller to see how
-        # connectivity changes when links go down.
-        paths = nx.single_source_shortest_path(g, controller_node)
-        # Store the flattened set of shortest paths to the controller as a
-        # graph.  Useful later to only consider those nodes or edges that might
-        # have an effect on reliability.
-        used = flatten(paths)
-
-        for failed_edge in g.edges():
-            lg.debug("------------------------")
-            lg.debug("considering failed edge: %s" % str(failed_edge))
-
-            if alg == 'sssp':
-
-                # If failed edge is not a part of the path set, then no effect on
-                # reliability.
-                if used.has_edge(failed_edge[0], failed_edge[1]):
-                    # Failed edge matters for connectivity for some switch.
-    
-                    # Check switch-to-controller connectivity.
-                    connected = 0
-                    disconnected = 0
-                    for sw in g.nodes():
-                        path_graph = nx.Graph()
-                        path_graph.add_path(paths[sw])
-                        #lg.debug("path graph edges: %s" % path_graph.edges())
-                        if path_graph.has_edge(failed_edge[0], failed_edge[1]):
-                            lg.debug("disconnected sw: %s" % sw)
-                            disconnected += 1
-                        else:
-                            lg.debug("connected sw: %s" % sw)
-                            connected += 1
-                    connectivity = float(connected) / g.number_of_nodes()
-                    uptime_dist.append((link_fail_prob, connectivity))
-                else:
-                    # No effect on connectivity.
-                    lg.debug("edge not in sssp graph; ignoring")
-                    uptime_dist.append((link_fail_prob, 1.0))
-            elif alg == 'any':
-                # Check switch-to-controller connectivity.
-                connected = 0
-                disconnected = 0
-                gcopy = g.copy()
-                gcopy.remove_edge(failed_edge[0], failed_edge[1])
-                reachable = nx.dfs_tree(gcopy, controller_node).nodes()
-                if controller_node not in reachable:
-                    reachable += [controller_node]
-                nodes = g.number_of_nodes()
-                connectivity = float(len(reachable)) / nodes
-                uptime_dist.append((link_fail_prob, connectivity))
+        if alg == 'sssp':
+            uptime_dist = sssp_conn(g, controller_node, link_fail_prob)
+        elif alg == 'any':
+            uptime_dist = any_conn(g, controller_node, link_fail_prob)
 
         lg.debug("uptime dist: %s" % uptime_dist)
         fraction_covered = sum([x[0] for x in uptime_dist])
