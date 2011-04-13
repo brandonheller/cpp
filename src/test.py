@@ -181,7 +181,6 @@ class test_sssp(unittest.TestCase):
         for link_fail, uptime in hard_coded_uptimes.iteritems():
             self.run_line_test(2, link_fail, 0, 1, uptime)
 
-
     def test_link_line_3_onefail(self):
         # When controller is on left edge (1/3 of the time):
         #    2 links can fail.
@@ -209,6 +208,29 @@ class test_sssp(unittest.TestCase):
         for n in range(2, 10):
             for link_fail in (0.01, 0.02):
                 self.run_line_test(n, link_fail, 0, 1)
+
+    def run_loop_test(self, n, link_fail, node_fail, max_fail, hard_coded_uptime = None):
+        # Return the line graph with n nodes
+        g = nx.path_graph(n)
+        # Add loop edge
+        g.add_edge(g.number_of_nodes() - 1, 0)
+        node_fail = 0
+        # if hard-coded "test bootstrap uptime" defined, verify w/eqn.
+        run_test(self, g, link_fail, node_fail, max_fail, 'sssp', hard_coded_uptime)
+
+    def test_link_loop_3_onefail(self):
+        # All cases are equal.
+        # When controller is on left edge:
+        #    3 links can fail.
+        #    2/3 of the time it has an effect.
+        #    when an effect, 2/3 are conn.
+        # Left:
+        #    (0.1 * 3 * (2.0/3 * 2.0/3 + 1.0/3 * 1.0)) + (1 - 0.1 * 3) * 1.0 = 0.9333333
+        hard_coded_uptimes = {
+            0.1: 0.93333333333333
+        }
+        for link_fail, uptime in hard_coded_uptimes.iteritems():
+            self.run_loop_test(3, link_fail, 0, 1, uptime)
 
 class test_any(unittest.TestCase):
 
