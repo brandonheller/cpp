@@ -42,7 +42,7 @@ class Plot():
         options, arguments = opts.parse_args()
         self.options = options
 
-    def plot(self, ptype, data, color, axes, label, xscale, yscale, write = False):
+    def plot(self, ptype, data, colors, axes, label, write = False):
 
         def gen_dirname():
             return self.options.input.split('.')[0]
@@ -51,22 +51,29 @@ class Plot():
             return name + '_' + insert + '.' + EXT
 
         fig = pylab.figure()
-        if ptype == 'line':
-            x = [d[0] for d in data]
-            y = [d[1] for d in data]        
-        else:
+        if ptype != 'line':
             raise Exception("invalid plot type")
-        l1 = pylab.plot(x, y, color)
-        #l2 = pylab.plot(range(1,BINS), results_one_queue[6], "r--")
-        #l3 = pylab.plot(range(1,BINS), results_two_queue[6], "g-.")
+
+        if len(colors) < len(data.keys()):
+            raise Exception("insufficient color data")
+
+        lines = []
+        for i, gtype in enumerate(['complete', 'star', 'line']):
+            line = data[gtype]
+            x = [d[0] for d in line]
+            y = [d[1] for d in line]
+            lines.append(pylab.plot(x, y, colors[i]))
         pylab.grid(True)
+        xscale = "linear"
+        yscale = "linear"
         pylab.xscale(xscale)
         pylab.yscale(yscale)
         pylab.axis(axes)
-        pylab.xlabel("value")
-        pylab.ylabel(ptype)
+        pylab.xlabel("nodes")
+        pylab.ylabel("uptime")
         pylab.title(label)
-        #pylab.legend((l1,l2,l3), ("no congestion","one congestion point","two congestion points"),"lower right")
+        print data.keys()
+        pylab.legend(lines, data.keys(), loc = "lower right")
         if self.options.write:
             dirname = gen_dirname()
             if dirname not in os.listdir('.'):
@@ -79,8 +86,8 @@ class Plot():
 
     def plot_all(self, data):
         for alg in data.keys():
-            for gtype in data[alg].keys():
-                self.plot('line', data[alg][gtype], "r-", [0, 10, 0, 1.0], "_".join([alg, gtype]), "linear", "linear", self.options.write)
+            colors = ["r-", "r--", "g-.", "b-"]
+            self.plot('line', data[alg], colors, [0, 20, 0.8, 1.0], alg, self.options.write)
         
 if __name__ == "__main__":
     Plot()
