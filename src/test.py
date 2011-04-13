@@ -138,6 +138,79 @@ class test_SSSP(unittest.TestCase):
             for link_fail in (0.01, 0.02):
                 self.run_star_test(n, link_fail, 0, 1)
 
+    def calc_line_uptime(self, n, link_fail):
+        links = n - 1
+        uptime = 0
+        for controller_pos in range(n):
+            uptime_partial = 0
+            for link_pos in range(links):
+                # link_pos is leftmost edge of broken link.
+                if controller_pos <= link_pos:
+                    # left half is connected.  How many are on the left?
+                    # link_pos == 0: 1 conn
+                    # link_pos == 1: 2 conn
+                    # ...
+                    conn = link_pos + 1
+                else:
+                    # right half is connected.  How many are on the right?
+                    # link_pos == 0: n - 1
+                    # link_pos == 1: n - 2
+                    conn = n - link_pos - 1
+                conn_fraction = float(conn) / n
+                uptime_partial += link_fail * conn_fraction
+                pass
+            # Add case where nothing failed
+            uptime_partial += (1.0 - link_fail * links) * 1.0
+            uptime += uptime_partial * (1.0 / n)
+        return uptime
+
+    def run_line_test(self, n, link_fail, node_fail, max_fail, hard_coded_uptime = None):
+        # Return the line graph with n nodes
+        g = nx.path_graph(n)
+        exp_uptime = self.calc_line_uptime(n, link_fail)
+        node_fail = 0
+        # if hard-coded "test bootstrap uptime" defined, verify w/eqn.
+        if hard_coded_uptime:
+            self.assertAlmostEqual(exp_uptime, hard_coded_uptime)
+        run_test(self, g, link_fail, node_fail, max_fail, 'sssp', exp_uptime)
+
+    def test_link_line_2_onefail(self):
+        hard_coded_uptimes = {
+            0.1: 0.95,
+        }
+        for link_fail, uptime in hard_coded_uptimes.iteritems():
+            self.run_line_test(2, link_fail, 0, 1, uptime)
+
+
+    def test_link_line_3_onefail(self):
+        # When controller is on left edge (1/3 of the time):
+        #    2 links can fail.
+        #    2/2 of the time it has an effect.
+        #    1/2 of the time conn is 1/3
+        #    1/2 of the time conn is 2/3
+        # When controller is in the center (1/3 of the time):
+        #    2 links can fail.
+        #    2/2 of the time it has an effect
+        #    conn is 2/3
+        # When controller is on right edge, same as left.
+        # Left:
+        #    (0.1 * 2 * (1.0/2 * 1.0/3 + 1.0/2 * 2.0/3)) + (1 - 0.1 * 2) * 1.0 = 0.9
+        # Mid:
+        #    (0.1 * 2 * (2.0/2 * 2.0/3)) + (1 - 0.1 * 2) * 1.0 = 0.93333333333
+        # Weighted:
+        # (2/3) * left + (1/3) * mid = .91111111111111
+        hard_coded_uptimes = {
+            0.1: 0.911111111111111,
+        }
+        for link_fail, uptime in hard_coded_uptimes.iteritems():
+            self.run_line_test(3, link_fail, 0, 1, uptime)
+
+    def test_link_line_various_onefail(self):
+        for n in range(2, 10):
+            for link_fail in (0.01, 0.02):
+                self.run_line_test(n, link_fail, 0, 1)
+
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     unittest.main()
