@@ -19,18 +19,19 @@ f = open(FILENAME, 'w')
 
 data = {}
 
-alg = 'sssp'
-data[alg] = {}
-for gtype, fcn in graph_types.iteritems():
-    values = []
-    for i in range(3, 21):
-        link_fail = 0.01
-        node_fail = 0.0
-        max_fail = 1
-        g = fcn(i)
-        uptime = compute(g, link_fail, node_fail, max_fail, alg)
-        values.append((i, uptime))
-    data[alg][gtype] = values
+algs = ['sssp', 'any']
+for alg in algs:
+    data[alg] = {}
+    for gtype, fcn in graph_types.iteritems():
+        values = []
+        for i in range(3, 11):
+            link_fail = 0.01
+            node_fail = 0.0
+            max_fail = 1
+            g = fcn(i)
+            uptime = compute(g, link_fail, node_fail, max_fail, alg)
+            values.append((i, uptime))
+        data[alg][gtype] = values
 
 print data
 

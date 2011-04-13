@@ -47,8 +47,11 @@ class Plot():
         def gen_dirname():
             return self.options.input.split('.')[0]
 
-        def gen_fname(name, insert):
-            return name + '_' + insert + '.' + EXT
+        def gen_fname(name, insert = None):
+            if insert:
+                return name + '_' + insert + '.' + EXT
+            else:
+                return name + '.' + EXT
 
         fig = pylab.figure()
         if ptype != 'line':
@@ -58,11 +61,13 @@ class Plot():
             raise Exception("insufficient color data")
 
         lines = []
+        datanames = []
         for i, gtype in enumerate(['complete', 'star', 'line']):
             line = data[gtype]
             x = [d[0] for d in line]
             y = [d[1] for d in line]
             lines.append(pylab.plot(x, y, colors[i]))
+            datanames.append(gtype)
         pylab.grid(True)
         xscale = "linear"
         yscale = "linear"
@@ -73,21 +78,21 @@ class Plot():
         pylab.ylabel("uptime")
         pylab.title(label)
         print data.keys()
-        pylab.legend(lines, data.keys(), loc = "lower right")
+        pylab.legend(lines, datanames, loc = "lower right")
         if self.options.write:
             dirname = gen_dirname()
             if dirname not in os.listdir('.'):
                 os.mkdir(dirname)
                 print "created directory:", dirname
-            filepath = os.path.join(dirname, dirname + '_' + gen_fname(label, xscale + '_' + yscale + '_' + ptype))
+            filepath = os.path.join(dirname, gen_fname(label))
             fig.savefig(filepath)
         else:
             pylab.show()
 
     def plot_all(self, data):
-        for alg in data.keys():
+        for alg in ['any', 'sssp']:#data.keys():
             colors = ["r-", "r--", "g-.", "b-"]
-            self.plot('line', data[alg], colors, [0, 20, 0.8, 1.0], alg, self.options.write)
+            self.plot('line', data[alg], colors, [0, 10, 0.8, 1.001], alg, self.options.write)
         
 if __name__ == "__main__":
     Plot()

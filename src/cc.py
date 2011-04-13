@@ -54,7 +54,7 @@ def compute(g, link_fail_prob, node_fail_prob, max_failures, alg):
     if max_failures != 1:
         raise Exception("only 1 failure supported")
 
-    if alg != 'sssp':
+    if alg != 'sssp' and alg != 'any':
         raise Exception("only sssp (Dijkstra's) supported")
 
     if node_fail_prob != 0:
@@ -89,34 +89,48 @@ def compute(g, link_fail_prob, node_fail_prob, max_failures, alg):
             lg.debug("------------------------")
             lg.debug("considering failed edge: %s" % str(failed_edge))
 
-            # If failed edge is not a part of the path set, then no effect on
-            # reliability.
-            if used.has_edge(failed_edge[0], failed_edge[1]):
-                # Failed edge matters for connectivity for some switch.
+            if alg == 'sssp':
 
+                # If failed edge is not a part of the path set, then no effect on
+                # reliability.
+                if used.has_edge(failed_edge[0], failed_edge[1]):
+                    # Failed edge matters for connectivity for some switch.
+    
+                    # Check switch-to-controller connectivity.
+                    connected = 0
+                    disconnected = 0
+                    for sw in g.nodes():
+                        path_graph = nx.Graph()
+                        path_graph.add_path(paths[sw])
+                        #lg.debug("path graph edges: %s" % path_graph.edges())
+                        if path_graph.has_edge(failed_edge[0], failed_edge[1]):
+                            lg.debug("disconnected sw: %s" % sw)
+                            disconnected += 1
+                        else:
+                            lg.debug("connected sw: %s" % sw)
+                            connected += 1
+                    connectivity = float(connected) / g.number_of_nodes()
+                    uptime_dist.append((link_fail_prob, connectivity))
+                else:
+                    # No effect on connectivity.
+                    lg.debug("edge not in sssp graph; ignoring")
+                    uptime_dist.append((link_fail_prob, 1.0))
+            elif alg == 'any':
                 # Check switch-to-controller connectivity.
                 connected = 0
                 disconnected = 0
-                for sw in g.nodes():
-                    path_graph = nx.Graph()
-                    path_graph.add_path(paths[sw])
-                    #lg.debug("path graph edges: %s" % path_graph.edges())
-                    if path_graph.has_edge(failed_edge[0], failed_edge[1]):
-                        lg.debug("disconnected sw: %s" % sw)
-                        disconnected += 1
-                    else:
-                        lg.debug("connected sw: %s" % sw)
-                        connected += 1
-                connectivity = float(connected) / g.number_of_nodes()
+                gcopy = g.copy()
+                gcopy.remove_edge(failed_edge[0], failed_edge[1])
+                reachable = nx.dfs_tree(gcopy, controller_node).nodes()
+                if controller_node not in reachable:
+                    reachable += [controller_node]
+                nodes = g.number_of_nodes()
+                connectivity = float(len(reachable)) / nodes
                 uptime_dist.append((link_fail_prob, connectivity))
-            else:
-                # No effect on connectivity.
-                lg.debug("edge not in sssp graph; ignoring")
-                uptime_dist.append((link_fail_prob, 1.0))
 
         lg.debug("uptime dist: %s" % uptime_dist)
         fraction_covered = sum([x[0] for x in uptime_dist])
-        lg.debug("covered %s%% of the uptime distribution" % fraction_covered)
+        lg.debug("covered %s (fraction) of the uptime distribution" % fraction_covered)
         weighted_conn = 0
         for percentage, conn in uptime_dist:
             lg.debug("adding %s to weighted_conn" % (percentage * conn))

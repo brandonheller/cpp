@@ -13,8 +13,17 @@ def run_test(test, g, link_fail, node_fail, max_fail, alg, expected):
     output = compute(g, link_fail, node_fail, max_fail, alg)
     test.assertAlmostEqual(output, expected)
 
+def run_complete_test(test, n, link_fail, node_fail, max_fail, alg, hard_coded_uptime = None):
+    g = nx.complete_graph(n)
+    exp_uptime = test.calc_complete_uptime(n, link_fail)
+    node_fail = 0
+    # if hard-coded "test bootstrap uptime" defined, verify w/eqn.
+    if hard_coded_uptime:
+        test.assertAlmostEqual(exp_uptime, hard_coded_uptime)
+    run_test(test, g, link_fail, node_fail, max_fail, alg, exp_uptime)
 
-class test_SSSP(unittest.TestCase):
+
+class test_sssp(unittest.TestCase):
 
     def calc_complete_uptime(self, n, link_fail):
         g = nx.complete_graph(n)
@@ -32,15 +41,6 @@ class test_SSSP(unittest.TestCase):
         exp_uptime += (1.0 - (link_fail * edges)) * 1.0
         return exp_uptime
 
-    def run_complete_test(self, n, link_fail, node_fail, max_fail, hard_coded_uptime = None):
-        g = nx.complete_graph(n)
-        exp_uptime = self.calc_complete_uptime(n, link_fail)
-        node_fail = 0
-        # if hard-coded "test bootstrap uptime" defined, verify w/eqn.
-        if hard_coded_uptime:
-            self.assertAlmostEqual(exp_uptime, hard_coded_uptime)
-        run_test(self, g, link_fail, node_fail, max_fail, 'sssp', exp_uptime)
-
     def test_link_complete_triangle_onefail(self):
         # 3 links can fail.
         # 2/3 of the time it has an effect.
@@ -52,7 +52,7 @@ class test_SSSP(unittest.TestCase):
             0.2: 0.866666666666
         }
         for link_fail, uptime in hard_coded_uptimes.iteritems():
-            self.run_complete_test(3, link_fail, 0, 1, uptime)
+            run_complete_test(self, 3, link_fail, 0, 1, 'sssp', uptime)
 
     def test_link_complete_quad_onefail(self):
         # 6 links can fail.
@@ -65,12 +65,12 @@ class test_SSSP(unittest.TestCase):
             0.2: 0.85
         }
         for link_fail, uptime in hard_coded_uptimes.iteritems():
-            self.run_complete_test(4, link_fail, 0, 1, uptime)
+            run_complete_test(self, 4, link_fail, 0, 1, 'sssp', uptime)
 
     def test_link_complete_various_onefail(self):
         for n in range(3, 10):
             for link_fail in (0.01, 0.02):
-                self.run_complete_test(n, link_fail, 0, 1)
+                run_complete_test(self, n, link_fail, 0, 1, 'sssp')
 
     def calc_star_uptime(self, n, link_fail):
         '''Calc star uptime.
@@ -210,6 +210,26 @@ class test_SSSP(unittest.TestCase):
             for link_fail in (0.01, 0.02):
                 self.run_line_test(n, link_fail, 0, 1)
 
+class test_any(unittest.TestCase):
+
+    def calc_complete_uptime(self, n, link_fail):
+        return 1.0
+
+    def test_any_link_complete_triangle_onefail(self):
+        # 3 links can fail.
+        # Considering only single-link failures, everything should stay up, because
+        # we always have a backup path to the controller.
+        hard_coded_uptimes = {
+            0.1: 1.0,
+            0.2: 1.0
+        }
+        for link_fail, uptime in hard_coded_uptimes.iteritems():
+            run_complete_test(self, 3, link_fail, 0, 1, 'any', uptime)
+
+    def test_any_link_complete_various_onefail(self):
+        for n in range(3, 10):
+            for link_fail in (0.01, 0.02):
+                run_complete_test(self, n, link_fail, 0, 1, 'any')
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
