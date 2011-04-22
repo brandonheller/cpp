@@ -7,7 +7,7 @@ import logging
 import networkx as nx
 import unittest
 
-from cc import flatten, compute
+from cc import flatten, loop_graph, compute
 
 
 class GraphTest(unittest.TestCase):
@@ -220,9 +220,7 @@ class TestSSSP(GraphTest):
 
     def run_loop_test(self, n, link_fail, node_fail, max_fail, hard_coded_uptime = None):
         # Return the line graph with n nodes
-        g = nx.path_graph(n)
-        # Add loop edge
-        g.add_edge(g.number_of_nodes() - 1, 0)
+        g = loop_graph(n)
         node_fail = 0
         # if hard-coded "test bootstrap uptime" defined, verify w/eqn.
         self.run_test(g, link_fail, node_fail, max_fail, 'sssp', hard_coded_uptime)

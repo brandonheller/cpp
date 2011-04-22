@@ -4,7 +4,7 @@ import json
 
 from networkx import complete_graph, star_graph, path_graph
 
-from cc import compute
+from cc import compute, loop_graph
 
 FILENAME = "uptimes_link.json"
 
@@ -12,7 +12,8 @@ FILENAME = "uptimes_link.json"
 graph_types = {
     'complete': (lambda n: complete_graph(n)),
     'star': (lambda n: star_graph(n - 1)),
-    'line': (lambda n: path_graph(n))
+    'line': (lambda n: path_graph(n)),
+    'loop': (lambda n: loop_graph(n))
 }
 
 f = open(FILENAME, 'w')

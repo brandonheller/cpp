@@ -27,6 +27,12 @@ def flatten(paths):
         used.add_path(path)
     return used
 
+def loop_graph(n):
+    '''Return loop graph with n nodes.'''
+    g = nx.path_graph(n)
+    # Add loop edge
+    g.add_edge(g.number_of_nodes() - 1, 0)
+    return g
 
 def sssp_conn(g, controller_node, link_fail_prob):
     # Store pairs of (probability, connectivity)

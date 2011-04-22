@@ -62,7 +62,7 @@ class Plot():
 
         lines = []
         datanames = []
-        for i, gtype in enumerate(['complete', 'star', 'line']):
+        for i, gtype in enumerate(['complete', 'star', 'loop', 'line']):
             line = data[gtype]
             x = [d[0] for d in line]
             y = [d[1] for d in line]
@@ -90,7 +90,7 @@ class Plot():
             pylab.show()
 
     def plot_all(self, data):
-        for alg in ['any', 'sssp']:#data.keys():
+        for alg in data.keys():
             colors = ["r-", "r--", "g-.", "b-"]
             self.plot('line', data[alg], colors, [0, 10, 0.8, 1.001], alg, self.options.write)
         
