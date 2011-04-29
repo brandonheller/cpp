@@ -13,8 +13,8 @@ from cc import flatten, loop_graph, compute, sssp_conn, any_conn
 class GraphTest(unittest.TestCase):
 
     def run_test(self, g, link_fail, node_fail, max_fail, alg, expected):
-        output = compute(g, link_fail, node_fail, max_fail, alg)
-        self.assertAlmostEqual(output, expected)
+        conn, data = compute(g, link_fail, node_fail, max_fail, alg)
+        self.assertAlmostEqual(conn, expected)
 
     def run_complete_test(self, n, link_fail, node_fail, max_fail, alg, hard_coded_uptime = None):
         g = nx.complete_graph(n)

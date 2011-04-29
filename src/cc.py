@@ -130,9 +130,9 @@ def compute(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn):
     if link_fail_prob * g.number_of_nodes() > 1.0:
         raise Exception("unable to handle case where > 1 failure is typical")
 
-    # Store pairs of (probability, uptime) to be used to build an
-    # uptime distribution later
-    connectivities = []
+    # Store data used to build an uptime distribution later
+    # connectivity_data[controller_location] = uptime
+    connectivity_data = {}
 
     # For each controller location (assume directly attached to a switch
     # with a perfectly reliable link), repeat the analysis.
@@ -156,8 +156,8 @@ def compute(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn):
         weighted_conn += (1.0 - fraction_covered) * 1.0
         lg.debug("weighted connectivity: %s" % weighted_conn)
 
-        connectivities.append(weighted_conn)
+        connectivity_data[controller_node] = weighted_conn
 
-    avg_conn = sum(connectivities) / len(connectivities)
+    avg_conn = sum(connectivity_data.values()) / len(connectivity_data.keys())
     lg.debug("average connectivity: %f" % avg_conn)
-    return avg_conn
+    return avg_conn, connectivity_data
