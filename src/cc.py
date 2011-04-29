@@ -102,22 +102,18 @@ def any_conn(g, controller_node, link_fail_prob):
     return uptime_dist
 
 
-def compute(g, link_fail_prob, node_fail_prob, max_failures, alg):
+def compute(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn):
     '''Compute connectivity assuming independent failures.
 
     @param g: input graph as NetworkX Graph
     @param link_fail_prob: link failure probability
     @param node_fail_prob: node failure probability
     @param max_failures: max failures to consider
-    @param alg: static controller connection algorithm, one of:
-        stp: random dumb spanning tree rooting at controller
-        sssp: Dijksta's, produces shortest-path tree to controller
-        edge-2: Edge disjoint shortest pair:
-            http://en.wikipedia.org/wiki/Edge_disjoint_shortest_pair_algorithm
-        edge-disjoint-n
-        node-disjoint-n
-        best-available: use the best
-        any: any connectivity, no matter how bad (ignore latency)
+    @param alg_fcn: fucntion for static controller connection algorithm, with form:
+        @param g: input graph
+        @param controller_node: input controller node
+        @param link_fail_prob: link failure probability
+        @return uptime_dist: list of pairs of form (link_fail_prob, connectivity)
 
     @return conn: distribution of switch-to-controller connectivity
     '''
@@ -127,9 +123,6 @@ def compute(g, link_fail_prob, node_fail_prob, max_failures, alg):
     # and considering the effect of each one.
     if max_failures != 1:
         raise Exception("only 1 failure supported")
-
-    if alg != 'sssp' and alg != 'any':
-        raise Exception("only sssp (Dijkstra's) supported")
 
     if node_fail_prob != 0:
         raise Exception("only link failures supported")
@@ -150,10 +143,7 @@ def compute(g, link_fail_prob, node_fail_prob, max_failures, alg):
         # Store pairs of (probability, connectivity)
         uptime_dist = []
 
-        if alg == 'sssp':
-            uptime_dist = sssp_conn(g, controller_node, link_fail_prob)
-        elif alg == 'any':
-            uptime_dist = any_conn(g, controller_node, link_fail_prob)
+        uptime_dist = alg_fcn(g, controller_node, link_fail_prob)
 
         lg.debug("uptime dist: %s" % uptime_dist)
         fraction_covered = sum([x[0] for x in uptime_dist])
