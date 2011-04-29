@@ -36,22 +36,26 @@ class Plot():
         opts.add_option("-o", "--output", type = 'string',
                         default = DEF_OUTPUT_DIR,
                         help = "name of output file")
+        opts.add_option("--xmin", type = 'int', default = 0)
+        opts.add_option("--xmax", type = 'int', default = 10)
+        opts.add_option("--ymin", type = 'int', default = 0.8)
+        opts.add_option("--ymax", type = 'int', default = 1.001)
         opts.add_option("-w", "--write",  action = "store_true",
                         default = False,
                         help = "write plots, rather than display?")
         options, arguments = opts.parse_args()
         self.options = options
 
+    def gen_dirname(self):
+        return self.options.input.split('.')[0]
+
+    def gen_fname(self, name, insert = None):
+        if insert:
+            return name + '_' + insert + '.' + EXT
+        else:
+            return name + '.' + EXT
+
     def plot(self, ptype, data, colors, axes, label, write = False):
-
-        def gen_dirname():
-            return self.options.input.split('.')[0]
-
-        def gen_fname(name, insert = None):
-            if insert:
-                return name + '_' + insert + '.' + EXT
-            else:
-                return name + '.' + EXT
 
         fig = pylab.figure()
         if ptype != 'line':
@@ -80,11 +84,11 @@ class Plot():
         print data.keys()
         pylab.legend(lines, datanames, loc = "lower right")
         if self.options.write:
-            dirname = gen_dirname()
+            dirname = self.gen_dirname()
             if dirname not in os.listdir('.'):
                 os.mkdir(dirname)
                 print "created directory:", dirname
-            filepath = os.path.join(dirname, gen_fname(label))
+            filepath = os.path.join(dirname, self.gen_fname(label))
             fig.savefig(filepath)
         else:
             pylab.show()
@@ -92,7 +96,8 @@ class Plot():
     def plot_all(self, data):
         for alg in data.keys():
             colors = ["r-", "r--", "g-.", "b-"]
-            self.plot('line', data[alg], colors, [0, 10, 0.8, 1.001], alg, self.options.write)
+            range = [self.options.xmin, self.options.xmax, self.options.ymin, self.options.ymax]
+            self.plot('line', data[alg], colors, range, alg, self.options.write)
         
 if __name__ == "__main__":
     Plot()
