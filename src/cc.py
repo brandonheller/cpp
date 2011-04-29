@@ -15,7 +15,9 @@ lg = logging.getLogger("cc")
 
 def flatten(paths):
     '''Compute and return flattened graph, given paths.
-    @param g: input graph as NetworkX graph
+
+    By flattened graph, we mean one created from the union of a set of paths.
+
     @param paths: paths to flatten
 
     @return flattened: flattened NetworkX Graph
