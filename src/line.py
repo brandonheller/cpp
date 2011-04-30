@@ -30,7 +30,7 @@ for alg in algs:
             node_fail = 0.0
             max_fail = 1
             g = fcn(i)
-            uptime = compute(g, link_fail, node_fail, max_fail, alg)
+            uptime, conn_data = compute(g, link_fail, node_fail, max_fail, alg)
             values.append((i, uptime))
         data[alg][gtype] = values
 

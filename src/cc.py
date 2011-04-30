@@ -130,6 +130,9 @@ def compute(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn):
     if link_fail_prob * g.number_of_nodes() > 1.0:
         raise Exception("unable to handle case where > 1 failure is typical")
 
+    if type(alg_fcn) is str:
+        raise Exception("alg_fcn cannot be a string")
+
     # Store data used to build an uptime distribution later
     # connectivity_data[controller_location] = uptime
     connectivity_data = {}

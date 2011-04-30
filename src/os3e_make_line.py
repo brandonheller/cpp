@@ -22,7 +22,7 @@ for alg in ALGS:
     lines = uptimes[alg]
     for i in range(1, int(MAX_LINK_FAIL_PROB / LINK_FAIL_INCREMENT)):
         link_fail_prob = i * LINK_FAIL_INCREMENT
-        uptime = cc.compute(g, link_fail_prob, 0, 1, alg)
+        uptime, conn_data = cc.compute(g, link_fail_prob, 0, 1, alg)
         lines.append((link_fail_prob, uptime))
         print "%s %03f %03f" % (alg, link_fail_prob, uptime)
 
