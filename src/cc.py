@@ -115,7 +115,8 @@ def compute(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn):
         @param link_fail_prob: link failure probability
         @return uptime_dist: list of pairs of form (link_fail_prob, connectivity)
 
-    @return conn: distribution of switch-to-controller connectivity
+    @return avg_conn: distribution of switch-to-controller connectivity
+    @return connectivity_data: dict of uptimes for each controller location
     '''
 
     # Consider one failure only, for now.  Eventually extend to handle
