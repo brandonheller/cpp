@@ -7,9 +7,10 @@ A simple tool to evaluate the connectivity of a graph, given a failure rate.
 Intended to help answer questions about the fault tolerance aspects of SDN,
 and the algorithms for bootstrapping the switch-controller connection. 
 '''
-import networkx as nx
+import itertools
 import logging
 
+import networkx as nx
 
 lg = logging.getLogger("cc")
 
@@ -165,3 +166,32 @@ def compute(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn):
     avg_conn = sum(connectivity_data.values()) / len(connectivity_data.keys())
     lg.debug("average connectivity: %f" % avg_conn)
     return avg_conn, connectivity_data
+
+def compare_lists(one, two):
+    '''Compare two ordered lists.  One must be a permutation of the other.
+
+    @param one: list
+    @param two: list
+    @return sum: value representing avg absolute distance between pairs
+    '''
+    # two_dict[element] = pos in array two
+    two_dict = {}
+    for i, e in enumerate(two):
+        two_dict[e] = i
+    sum = 0
+    for i, e in enumerate(one):
+        sum += abs(i - two_dict[e])
+    return sum
+
+def permutations_len_total_diff(size):
+    '''Given list length, add up list distances for all permutations.'''
+    return permutations_total_diff([a for a in range(size)])
+
+def permutations_total_diff(a):
+    '''Given a list, add up list distances for all permutations.'''
+    sum = 0
+    for p in itertools.permutations(a):
+        d = compare_lists(a, p)
+        logging.debug("distance between %s and %s is %s" % (a, p, d))
+        sum += d
+    return sum
