@@ -15,8 +15,8 @@ from file_libs import write_csv_file, write_json_file
 COMPUTE_START = True
 COMPUTE_END = True
 
-NUM_FROM_START = 2
-NUM_FROM_END = 1
+NUM_FROM_START = 4
+NUM_FROM_END = 0
 
 FILENAME = ("data_out/os3e_latencies_with_controller_%s_%s" %
            (NUM_FROM_START, NUM_FROM_END))
@@ -62,7 +62,7 @@ def get_total_path_len(g, controllers):
         # to the currently-considered node.
         closest_controller = None
         shortest_path_len = BIG
-        for c in combo:
+        for c in controllers:
             path_len = apsp[n][c]
             if path_len < shortest_path_len:
                 closest_controller = c
@@ -137,6 +137,50 @@ for i in sorted(controllers):
             'latency': median_combo_path_len
         },
     }
+
+# Greedy algorithm for computing node ordering that re-calculates best value
+# at each step, given the previous sol'n of size n-1.
+greedy_informed = []
+
+for i in sorted(controllers):
+
+    print "** combo size: %s" % i
+
+    best_next_choice_path_len_total = BIG
+    best_next_choice = None
+
+    start_time = time.time()
+
+    for n in [n for n in g.nodes() if n not in greedy_informed]:
+
+        path_len_total = get_total_path_len(g, greedy_informed + [n])
+        #print n, path_len_total, greedy_informed + [n]
+
+        if path_len_total < best_next_choice_path_len_total:
+            best_next_choice_path_len_total = path_len_total
+            best_next_choice = n
+
+    duration = time.time() - start_time
+
+    greedy_informed.append(best_next_choice)
+
+    best_next_choice_path_len = best_next_choice_path_len_total / float(g.number_of_nodes())
+
+    print "\tgreedy_informed"
+    print "\t\tlatency: %s %s" % (best_next_choice_path_len, best_next_choice)
+    print "\t\tduration: %s" % duration
+
+    json_to_add = {
+        'greedy-informed': {
+            'latency': best_next_choice_path_len,
+            'combo': greedy_informed,
+            'duration': duration
+        }
+    }
+
+    if i not in data:
+        data[i] = {}
+    data[i].update(json_to_add)
 
 print "*******************************************************************"
 print data
