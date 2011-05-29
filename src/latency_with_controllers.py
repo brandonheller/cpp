@@ -2,8 +2,6 @@
 '''Compute latency for varying number of controllers and different algorithms.'''
 
 from itertools import combinations
-import json
-import string
 import time
 
 import networkx as nx
@@ -11,13 +9,14 @@ import numpy
 
 import cc
 from topo.os3e import OS3EGraph
+from file_libs import write_csv_file, write_json_file
 
 
 COMPUTE_START = True
 COMPUTE_END = True
 
-NUM_FROM_START = 6
-NUM_FROM_END = 5
+NUM_FROM_START = 2
+NUM_FROM_END = 1
 
 FILENAME = ("data_out/os3e_latencies_with_controller_%s_%s" %
            (NUM_FROM_START, NUM_FROM_END))
@@ -30,9 +29,6 @@ BIG = 10000000
 # best-n: compute closeness centrality, then use that pick the best n node locations.
 ALGS = ['all']
 #ALGS = ['all', 'sequential', 'best-n']
-
-json_file = open(FILENAME + ".json", 'w')
-csv_file = open(FILENAME + ".csv", 'w')
 
 g = OS3EGraph()
 
@@ -134,30 +130,5 @@ for i in sorted(controllers):
 print "*******************************************************************"
 print data
 
-json.dump(data, json_file)
-
-def tab_sep(data):
-    return string.join(data, '\t')
-
-def flatten(data, exclude_list = [], connector = '_'):
-    # Given JSON data, flatten field and subfield names with connect, plus
-    # exclude subfields from the exclude list.
-    flattened = {}
-    for field in data.keys():
-        if field not in exclude_list:
-            #print data[field]
-            for subfield in data[field].keys():
-                if subfield not in exclude_list:
-                    #print data, field, subfield
-                    data_val = data[field][subfield]
-                    flattened[field + connector + subfield] = data_val
-    return flattened
-
-exclude = ['combo']
-field_names = flatten(data[controllers[0]], exclude).keys()
-#print field_names
-csv_file.write(tab_sep(["i"] + field_names) + '\n')
-for i in sorted(controllers):
-    flattened_data = flatten(data[i], exclude)
-    row_data = [flattened_data[field] for field in field_names]
-    csv_file.write(tab_sep(["%s" % val for val in ([i] + row_data)]) + '\n')
+write_json_file(FILENAME, data)
+write_csv_file(FILENAME, data, exclude = ['combo'])
