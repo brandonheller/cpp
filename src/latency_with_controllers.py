@@ -48,6 +48,31 @@ data = {}
 
 apsp = nx.all_pairs_shortest_path_length(g)
 
+def get_total_path_len(g, controllers):
+    '''Returns the total of path lengths from nodes to nearest controllers.
+    
+    @param g: NetworkX graph
+    @param controllers: list of controller locations
+    @return path_len_total: total of path lengths
+    '''
+    # path_lengths[node] = path from node to nearest item in combo
+    path_lengths = {}
+    for n in g.nodes():
+        # closest_controller records controller w/shortest distance
+        # to the currently-considered node.
+        closest_controller = None
+        shortest_path_len = BIG
+        for c in combo:
+            path_len = apsp[n][c]
+            if path_len < shortest_path_len:
+                closest_controller = c
+                shortest_path_len = path_len
+        #  pick the best value from that list
+        path_lengths[n] = shortest_path_len
+    path_len_total = sum(path_lengths.values())
+    return path_len_total
+
+
 for i in sorted(controllers):
     # compute best location(s) for i controllers.
 
@@ -67,23 +92,9 @@ for i in sorted(controllers):
 
     # for each combination of i controllers
     for combo in combinations(g.nodes(), i):
-        
-        # path_lengths[node] = path from node to nearest item in combo
         combos += 1
-        path_lengths = {}
-        for n in g.nodes():
-            # closest_controller records controller w/shortest distance
-            # to the currently-considered node.
-            closest_controller = None
-            shortest_path_len = BIG
-            for c in combo:
-                path_len = apsp[n][c]
-                if path_len < shortest_path_len:
-                    closest_controller = c
-                    shortest_path_len = path_len
-            #  pick the best value from that list
-            path_lengths[n] = shortest_path_len
-        path_len_total = sum(path_lengths.values())
+
+        path_len_total = get_total_path_len(g, combo)
 
         if path_len_total < best_combo_path_len_total:
             best_combo_path_len_total = path_len_total
