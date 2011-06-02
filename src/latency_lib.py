@@ -169,6 +169,8 @@ def run_greedy_informed(data, g, apsp):
         data[i].update(json_to_add)
 
 
+
+
 def run_greedy_alg(data, g, alg, param_name, greedy_dict, apsp,
                    max_iters = None, reversed = True):
     '''Run a greedy algorithm for optimizing latency.
@@ -184,17 +186,18 @@ def run_greedy_alg(data, g, alg, param_name, greedy_dict, apsp,
     @param reversed: if True, larger values are picked first
     '''
     soln = []
-    i = 0
-    for n, value in sort_by_val(greedy_dict, reversed):
-        i += 1
+    greedy_dict_sorted = sort_by_val(greedy_dict, reversed)
+    for i in range(g.number_of_nodes()):
         if max_iters and i > max_iters:
             break
+        n, value = greedy_dict_sorted[i]
         soln.append(n)
         path_len_total = get_total_path_len(g, soln, apsp)
         duration = 0
         path_len = path_len_total / float(g.number_of_nodes())
-        if i in data and "opt" in data[i]:
-            ratio = path_len / data[i]["opt"]["latency"] 
+        combo_size = i + 1
+        if i in data and "opt" in data[combo_size]:
+            ratio = path_len / data[combo_size]["opt"]["latency"]
         else:
             ratio = 0    
 
@@ -207,13 +210,13 @@ def run_greedy_alg(data, g, alg, param_name, greedy_dict, apsp,
             }
         }
 
-        print "** combo size: %s" % i
+        print "** combo size: %s" % combo_size
         print "\t" + alg
         print "\t\t%s: %s" % (param_name, path_len)
         print "\t\tduration: %s" % duration
         print "\t\tcombo: %s" % soln
         print "\t\tratio: %s" % ratio
 
-        if i not in data:
-            data[i] = {}
-        data[i].update(json_to_add)
+        if combo_size not in data:
+            data[combo_size] = {}
+        data[combo_size].update(json_to_add)
