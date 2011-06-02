@@ -44,8 +44,8 @@ apsp = nx.all_pairs_shortest_path_length(g)
 
 lat.run_optimal_latencies(g, controllers, data, apsp)
 lat.run_greedy_informed(data, g, apsp)
-lat.run_greedy_alg(data, g, 'greedy-cc', 'latency', nx.closeness_centrality(g), apsp)
-lat.run_greedy_alg(data, g, 'greedy-dc', 'latency', nx.degree_centrality(g), apsp)
+lat.run_greedy_alg_dict(data, g, 'greedy-cc', 'latency', nx.closeness_centrality(g), apsp)
+lat.run_greedy_alg_dict(data, g, 'greedy-dc', 'latency', nx.degree_centrality(g), apsp)
 
 print "*******************************************************************"
 #print data

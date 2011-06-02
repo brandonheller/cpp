@@ -169,10 +169,37 @@ def run_greedy_informed(data, g, apsp):
         data[i].update(json_to_add)
 
 
-
-
-def run_greedy_alg(data, g, alg, param_name, greedy_dict, apsp,
+def run_greedy_alg_dict(data, g, alg, param_name, greedy_dict, apsp,
                    max_iters = None, reversed = True):
+    '''Convenience fcn to run a greedy algorithm w/choices from a list.
+
+    @param data: JSON data to append to, keyed by id (0...n)
+        appended data will include the param_name, combination, and duration
+    @param g: NetworkX graph
+    @param alg: algorithm name
+    @param param_name: semantic meaning of greedy parameter (e.g. latency)
+    @param greedy_dict: dict mapping node names to param values.
+    @param apsp: all-pairs shortest data
+    @param max_iters: maximum iterations; do all if falsy
+    @param reversed: if True, larger values are selected first.
+    '''
+    greedy_dict_sorted = sort_by_val(greedy_dict, reversed)
+    def greedy_choice(i, soln):
+        '''Construct custom greedy choice fcn.
+
+        @param i: iteration (0 is first one)
+        @param soln: partial, greedily-built sol'n.
+        @return choice: node selection.
+        '''
+        n, value = greedy_dict_sorted[i]
+        return n
+
+    run_greedy_alg(data, g, alg, param_name, greedy_choice, apsp,
+                   max_iters = None)
+
+
+def run_greedy_alg(data, g, alg, param_name, greedy_choice, apsp,
+                   max_iters = None):
     '''Run a greedy algorithm for optimizing latency.
 
     @param data: JSON data to append to, keyed by id (0...n)
@@ -180,18 +207,20 @@ def run_greedy_alg(data, g, alg, param_name, greedy_dict, apsp,
     @param g: NetworkX graph
     @param alg: algorithm name
     @param param_name: semantic meaning of greedy parameter (e.g. latency)
-    @param greedy_dict: dict with node keys and values for greedy choices
+    @param greedy_choice: fcn with:
+        @param i: iteration (0 is first one)
+        @param soln: partial, greedily-built sol'n.
+        @return choice: node selection.
     @param apsp: all-pairs shortest data
     @param max_iters: maximum iterations; do all if falsy
-    @param reversed: if True, larger values are picked first
     '''
     soln = []
-    greedy_dict_sorted = sort_by_val(greedy_dict, reversed)
     for i in range(g.number_of_nodes()):
         if max_iters and i > max_iters:
             break
-        n, value = greedy_dict_sorted[i]
-        soln.append(n)
+        choice = greedy_choice(i, soln)
+        soln.append(choice)
+
         path_len_total = get_total_path_len(g, soln, apsp)
         duration = 0
         path_len = path_len_total / float(g.number_of_nodes())
