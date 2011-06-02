@@ -98,13 +98,16 @@ def run_optimal_latencies(g, controllers, data, apsp):
             },
             'worst': {
                 'latency': worst_combo_path_len,
-                'combo': worst_combo
+                'combo': worst_combo,
+                'ratio': worst_combo_path_len / best_combo_path_len
             },
             'random_mean': {
                 'latency': mean_combo_path_len,
+                'ratio': mean_combo_path_len / best_combo_path_len
             },
             'random_median': {
-                'latency': median_combo_path_len
+                'latency': median_combo_path_len,
+                'ratio': median_combo_path_len / best_combo_path_len
             },
         }
 
