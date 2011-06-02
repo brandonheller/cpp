@@ -38,5 +38,5 @@ def write_csv_file(filename, data, exclude):
     csv_file.write(tab_sep(["i"] + field_names) + '\n')
     for i in sorted(data.keys()):
         flattened_data = flatten(data[i], exclude)
-        row_data = [flattened_data[field] for field in field_names]
+        row_data = [flattened_data.get(field, 0) for field in field_names]
         csv_file.write(tab_sep(["%s" % val for val in ([i] + row_data)]) + '\n')
