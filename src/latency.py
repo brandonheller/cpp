@@ -48,7 +48,6 @@ lat.run_greedy_alg_dict(data, g, 'greedy-cc', 'latency', nx.closeness_centrality
 lat.run_greedy_alg_dict(data, g, 'greedy-dc', 'latency', nx.degree_centrality(g), apsp)
 
 print "*******************************************************************"
-#print data
 
 write_json_file(FILENAME, data)
 write_csv_file(FILENAME, data, exclude = ['combo'])

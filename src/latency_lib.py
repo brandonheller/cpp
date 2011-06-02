@@ -43,12 +43,12 @@ def run_optimal_latencies(g, controllers, data, apsp):
     @param apsp: all-pairs shortest paths data
     '''
 
-    for i in sorted(controllers):
+    for combo_size in sorted(controllers):
         # compute best location(s) for i controllers.
     
-        print "** combo size: %s" % i
+        print "** combo size: %s" % combo_size
         
-        data[i] = {}
+        data[combo_size] = {}
     
         best_combo_path_len_total = BIG
         best_combo = None
@@ -58,11 +58,8 @@ def run_optimal_latencies(g, controllers, data, apsp):
     
         path_len_totals = []  # note all path lengths to compute stats later.
     
-        combos = 0
-    
         # for each combination of i controllers
-        for combo in combinations(g.nodes(), i):
-            combos += 1
+        for combo in combinations(g.nodes(), combo_size):
     
             path_len_total = get_total_path_len(g, combo, apsp)
     
@@ -80,7 +77,7 @@ def run_optimal_latencies(g, controllers, data, apsp):
     
         best_combo_path_len = best_combo_path_len_total / float(g.number_of_nodes())
         worst_combo_path_len = worst_combo_path_len_total / float(g.number_of_nodes())
-        mean_combo_path_len = sum(path_len_totals) / float(combos) / float(g.number_of_nodes())
+        mean_combo_path_len = sum(path_len_totals) / float(combo_size) / float(g.number_of_nodes())
         median_combo_path_len = numpy.median(path_len_totals) / float(g.number_of_nodes())
     
         print "\topt"
@@ -90,7 +87,7 @@ def run_optimal_latencies(g, controllers, data, apsp):
         print "\t\tmedian: %s" % (median_combo_path_len)
         print "\t\tduration: %s" % duration
     
-        data[i] = {
+        data[combo_size] = {
             'opt': {
                 'latency': best_combo_path_len,
                 'duration': duration,
@@ -120,53 +117,27 @@ def run_greedy_informed(data, g, apsp):
 
     Re-calculates best value at each step, given the previous sol'n of size n-1.
     '''
-    greedy_informed = []
-    for i in range(1, g.number_of_nodes() + 1):        
+    def greedy_choice(combo_size, soln):
+        '''Construct custom greedy choice fcn.
+
+        @param combo_size
+        @param soln: partial, greedily-built sol'n.
+        @return choice: node selection.
+        '''
         best_next_choice_path_len_total = BIG
         best_next_choice = None
-    
-        start_time = time.time()
-    
-        for n in [n for n in g.nodes() if n not in greedy_informed]:
-    
-            path_len_total = get_total_path_len(g, greedy_informed + [n], apsp)
+        for n in [n for n in g.nodes() if n not in soln]:
+
+            path_len_total = get_total_path_len(g, soln + [n], apsp)
             #print n, path_len_total, greedy_informed + [n]
     
             if path_len_total < best_next_choice_path_len_total:
                 best_next_choice_path_len_total = path_len_total
                 best_next_choice = n
     
-        duration = time.time() - start_time
-    
-        greedy_informed.append(best_next_choice)
-    
-        best_next_choice_path_len = best_next_choice_path_len_total / float(g.number_of_nodes())
-    
-        path_len = best_next_choice_path_len
-        if i in data and "opt" in data[i]:
-            ratio = path_len / data[i]["opt"]["latency"] 
-        else:
-            ratio = 0
-    
-        print "** combo size: %s" % i
-        print "\tgreedy_informed"
-        print "\t\tlatency: %s %s" % (best_next_choice_path_len, best_next_choice)
-        print "\t\tduration: %s" % duration
-        print "\t\tcombo: %s" % greedy_informed
-        print "\t\tratio: %s" % ratio
-    
-        json_to_add = {
-            'greedy-informed': {
-                'latency': best_next_choice_path_len,
-                'combo': greedy_informed,
-                'duration': duration,
-                'ratio': ratio
-            }
-        }
-    
-        if i not in data:
-            data[i] = {}
-        data[i].update(json_to_add)
+        return best_next_choice
+
+    run_greedy_alg(data, g, "greedy-informed", "latency", greedy_choice, apsp)
 
 
 def run_greedy_alg_dict(data, g, alg, param_name, greedy_dict, apsp,
@@ -184,18 +155,18 @@ def run_greedy_alg_dict(data, g, alg, param_name, greedy_dict, apsp,
     @param reversed: if True, larger values are selected first.
     '''
     greedy_dict_sorted = sort_by_val(greedy_dict, reversed)
-    def greedy_choice(i, soln):
+    def greedy_choice(combo_size, soln):
         '''Construct custom greedy choice fcn.
 
         @param i: iteration (0 is first one)
         @param soln: partial, greedily-built sol'n.
         @return choice: node selection.
         '''
+        i = combo_size - 1
         n, value = greedy_dict_sorted[i]
         return n
 
-    run_greedy_alg(data, g, alg, param_name, greedy_choice, apsp,
-                   max_iters = None)
+    run_greedy_alg(data, g, alg, param_name, greedy_choice, apsp)
 
 
 def run_greedy_alg(data, g, alg, param_name, greedy_choice, apsp,
@@ -208,24 +179,26 @@ def run_greedy_alg(data, g, alg, param_name, greedy_choice, apsp,
     @param alg: algorithm name
     @param param_name: semantic meaning of greedy parameter (e.g. latency)
     @param greedy_choice: fcn with:
-        @param i: iteration (0 is first one)
+        @param combo_size
         @param soln: partial, greedily-built sol'n.
         @return choice: node selection.
     @param apsp: all-pairs shortest data
     @param max_iters: maximum iterations; do all if falsy
     '''
     soln = []
-    for i in range(g.number_of_nodes()):
-        if max_iters and i > max_iters:
+    for combo_size in range(1, g.number_of_nodes() + 1):
+        if max_iters and combo_size > max_iters:
             break
-        choice = greedy_choice(i, soln)
-        soln.append(choice)
 
+        start = time.time()
+        choice = greedy_choice(combo_size, soln)
+        duration = time.time() - start
+
+        soln.append(choice)
         path_len_total = get_total_path_len(g, soln, apsp)
-        duration = 0
+
         path_len = path_len_total / float(g.number_of_nodes())
-        combo_size = i + 1
-        if i in data and "opt" in data[combo_size]:
+        if combo_size in data and "opt" in data[combo_size]:
             ratio = path_len / data[combo_size]["opt"]["latency"]
         else:
             ratio = 0    
@@ -235,7 +208,7 @@ def run_greedy_alg(data, g, alg, param_name, greedy_choice, apsp,
                 param_name: path_len,
                 'duration': duration,
                 'combo': soln,
-                'ratio': 0
+                'ratio': ratio
             }
         }
 
