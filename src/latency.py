@@ -46,6 +46,9 @@ lat.run_optimal_latencies(g, controllers, data, apsp)
 lat.run_greedy_informed(data, g, apsp)
 lat.run_greedy_alg_dict(data, g, 'greedy-cc', 'latency', nx.closeness_centrality(g), apsp)
 lat.run_greedy_alg_dict(data, g, 'greedy-dc', 'latency', nx.degree_centrality(g), apsp)
+lat.run_best_n(data, g, apsp, 10)
+lat.run_best_n(data, g, apsp, 100)
+lat.run_best_n(data, g, apsp, 1000)
 
 print "*******************************************************************"
 
