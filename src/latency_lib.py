@@ -185,16 +185,40 @@ def run_greedy_alg(data, g, alg, param_name, greedy_choice, apsp,
     @param apsp: all-pairs shortest data
     @param max_iters: maximum iterations; do all if falsy
     '''
+    def iter_fcn(combo_size, soln):
+        choice = greedy_choice(combo_size, soln)
+        soln.append(choice)
+        return soln
+
+    run_alg(data, g, alg, param_name, iter_fcn, apsp,
+                   max_iters = None)
+
+
+def run_alg(data, g, alg, param_name, iter_fcn, apsp,
+                   max_iters = None):
+    '''Run an iterative algorithm for optimizing latency.
+
+    @param data: JSON data to append to, keyed by id (0...n)
+        appended data will include the param_name, combination, and duration
+    @param g: NetworkX graph
+    @param alg: algorithm name
+    @param param_name: semantic meaning of greedy parameter (e.g. latency)
+    @param iter_fcn: fcn with:
+        @param combo_size: size of current group of controllers
+        @param soln: last solution
+        @return new_soln: best sol'n for this iteration
+    @param apsp: all-pairs shortest data
+    @param max_iters: maximum iterations; do all if falsy
+    '''
     soln = []
     for combo_size in range(1, g.number_of_nodes() + 1):
         if max_iters and combo_size > max_iters:
             break
 
         start = time.time()
-        choice = greedy_choice(combo_size, soln)
+        soln = iter_fcn(combo_size, soln)
         duration = time.time() - start
 
-        soln.append(choice)
         path_len_total = get_total_path_len(g, soln, apsp)
 
         path_len = path_len_total / float(g.number_of_nodes())
