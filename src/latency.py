@@ -56,6 +56,9 @@ lat.run_greedy_alg_dict(data, g, 'greedy-dc', 'latency', nx.degree_centrality(g)
 lat.run_best_n(data, g, apsp, 10)
 lat.run_best_n(data, g, apsp, 100)
 lat.run_best_n(data, g, apsp, 1000)
+lat.run_worst_n(data, g, apsp, 10)
+lat.run_worst_n(data, g, apsp, 100)
+lat.run_worst_n(data, g, apsp, 1000)
 
 print "*******************************************************************"
 

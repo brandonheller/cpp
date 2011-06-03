@@ -109,7 +109,7 @@ def run_optimal_latencies(g, controllers, data, apsp):
 
 
 def run_best_n(data, g, apsp, n):
-    '''Greedy algorithm for computing node ordering
+    '''Use best of n runs
 
     @param data: JSON data on which to append
     @param g: NetworkX graph
@@ -145,6 +145,45 @@ def run_best_n(data, g, apsp, n):
         return best_next_combo
 
     run_alg(data, g, "best-n-" + str(n), "latency", iter_fcn, apsp)
+    
+
+def run_worst_n(data, g, apsp, n):
+    '''Use worst of n runs
+
+    @param data: JSON data on which to append
+    @param g: NetworkX graph
+    @param apsp: all-pairs shortest data
+    @param n: number of combinations to try
+
+    Randomly computes n possibilities and chooses the worst one.
+    '''
+    def iter_fcn(combo_size, soln):
+        '''Construct custom iter fcn.
+
+        @param combo_size
+        @param soln: partial, greedily-built sol'n.
+        @return choice: node selection.
+        '''
+        worst_next_combo_path_len_total = -BIG
+        worst_next_combo = None
+        for i in range(n):
+
+            combo = random_combination(g.nodes(), combo_size)
+            # oddly, tuples don't automatically print.
+            # convert to array to get past this issue.
+            combo = [c for c in combo]
+            if n < 5:
+                print "random combo: %s" % combo
+
+            path_len_total = get_total_path_len(g, combo, apsp)
+
+            if path_len_total > worst_next_combo_path_len_total:
+                worst_next_combo_path_len_total = path_len_total
+                worst_next_combo = combo
+    
+        return worst_next_combo
+
+    run_alg(data, g, "worst-n-" + str(n), "latency", iter_fcn, apsp)
 
 
 def run_greedy_informed(data, g, apsp):
