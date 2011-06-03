@@ -48,5 +48,5 @@ def OS3EWeightedGraph():
         g[src][dst]["weight"] = dist_in_miles(data, src, dst)
         print "%s to %s: %s" % (src, dst, g[src][dst]["weight"])
 
-
-g = OS3EWeightedGraph()
+if __name__ == '__main__':
+    g = OS3EWeightedGraph()
