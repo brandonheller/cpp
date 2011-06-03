@@ -46,7 +46,7 @@ def OS3EWeightedGraph():
     # Append weights
     for src, dst in g.edges():
         g[src][dst]["weight"] = dist_in_miles(data, src, dst)
-        print "%s to %s: %s" % (src, dst, g[src][dst]["weight"])
+        #print "%s to %s: %s" % (src, dst, g[src][dst]["weight"])
 
 if __name__ == '__main__':
     g = OS3EWeightedGraph()

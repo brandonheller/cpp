@@ -6,7 +6,7 @@ import networkx as nx
 import latency_lib as lat
 from topo.os3e import OS3EGraph
 from file_libs import write_csv_file, write_json_file, read_json_file
-
+from os3e_weighted import OS3EWeightedGraph
 
 COMPUTE_START = True
 COMPUTE_END = True
@@ -14,20 +14,22 @@ COMPUTE_END = True
 NUM_FROM_START = 4
 NUM_FROM_END = 0
 
-FILENAME = ("data_out/os3e_latencies_with_controller_%s_%s.json" %
-           (NUM_FROM_START, NUM_FROM_END))
+WEIGHTED = False
 
 USE_PRIOR_OPTS = True
-PRIOR_OPTS_FILENAME = "data_out/os3e_latencies_with_controller_9_9.json"
 
-# Algorithms for computing best-latency controller positions.
-# all: explore all possibilities.  exponential blowup in # controllers.
-# sequential:  pick the best one, then given that choice, pick the next best.
-# best-n: compute closeness centrality, then use that pick the best n node locations.
-ALGS = ['all']
-#ALGS = ['all', 'sequential', 'best-n']
+FILENAME = "data_out/os3e_latencies"
+if WEIGHTED:
+    FILENAME += "_weighted"
+else:
+    FILENAME += "_unweighted"
+    PRIOR_OPTS_FILENAME = "data_out/os3e_latencies_unweighted_9_9.json"
+FILENAME += "_%s_%s.json" % (NUM_FROM_START, NUM_FROM_END)
 
-g = OS3EGraph()
+if WEIGHTED:
+    g = OS3EWeightedGraph()
+else:
+    g = OS3EGraph()
 
 # Controller numbers to compute data for.
 controllers = []
