@@ -48,8 +48,6 @@ def run_optimal_latencies(g, controllers, data, apsp):
         # compute best location(s) for i controllers.
     
         print "** combo size: %s" % combo_size
-        
-        data[combo_size] = {}
     
         best_combo_path_len_total = BIG
         best_combo = None
@@ -88,7 +86,7 @@ def run_optimal_latencies(g, controllers, data, apsp):
         print "\t\tmedian: %s" % (median_combo_path_len)
         print "\t\tduration: %s" % duration
     
-        data[combo_size] = {
+        data[unicode(combo_size)] = {
             'opt': {
                 'latency': best_combo_path_len,
                 'duration': duration,
@@ -288,6 +286,6 @@ def run_alg(data, g, alg, param_name, iter_fcn, apsp,
         print "\t\tratio: %s" % ratio
         print "\t\tpath_len: %s" % path_len
 
-        if combo_size not in data:
-            data[combo_size] = {}
-        data[combo_size].update(json_to_add)
+        if unicode(combo_size) not in data:
+            data[unicode(combo_size)] = {}
+        data[unicode(combo_size)].update(json_to_add)

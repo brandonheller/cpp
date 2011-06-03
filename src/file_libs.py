@@ -37,7 +37,8 @@ def read_json_file(filename):
 def write_csv_file(filename, data, exclude):
     '''Given JSON data, convert to CSV and write to file.'''
     csv_file = open(filename + ".csv", 'w')
-    field_names = flatten(data[data.keys()[0]], exclude).keys()
+    # We assume that the lowest-indexed key has a full set of data.
+    field_names = flatten(data[sorted(data.keys())[0]], exclude).keys()
     #print field_names
     csv_file.write(tab_sep(["i"] + field_names) + '\n')
     for i in sorted(data.keys()):
