@@ -14,7 +14,7 @@ COMPUTE_END = True
 NUM_FROM_START = 4
 NUM_FROM_END = 0
 
-FILENAME = ("data_out/os3e_latencies_with_controller_%s_%s" %
+FILENAME = ("data_out/os3e_latencies_with_controller_%s_%s.json" %
            (NUM_FROM_START, NUM_FROM_END))
 
 USE_PRIOR_OPTS = True

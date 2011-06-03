@@ -27,7 +27,7 @@ def flatten(data, exclude_list = [], connector = '_'):
 
 def write_json_file(filename, data):
     '''Given JSON data, write to file.'''
-    json_file = open(filename + ".json", 'w')
+    json_file = open(filename, 'w')
     json.dump(data, json_file)
 
 def read_json_file(filename):
