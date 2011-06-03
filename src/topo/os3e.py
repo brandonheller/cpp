@@ -11,7 +11,7 @@ May not be 100% accurate:
     Vancouver, Miami are dashed links
     New York is two parallel links between two nodes
     Houston to Baton Rouge has two parallel links
-    Sunnyvale to [Portland, Salt Lake] may share a span
+    Sunnyvale, CA to [Portland, Salt Lake] may share a span
 '''
 import networkx as nx
 
@@ -20,17 +20,17 @@ def OS3EGraph():
     g.add_path(["Vancouver", "Seattle"])
     g.add_path(["Seattle", "Missoula", "Minneapolis", "Chicago"])
     g.add_path(["Seattle", "Salt Lake City"])
-    g.add_path(["Seattle", "Portland", "Sunnyvale"])
-    g.add_path(["Sunnyvale", "Salt Lake City"])
-    g.add_path(["Sunnyvale", "Los Angeles"])
+    g.add_path(["Seattle", "Portland", "Sunnyvale, CA"])
+    g.add_path(["Sunnyvale, CA", "Salt Lake City"])
+    g.add_path(["Sunnyvale, CA", "Los Angeles"])
     g.add_path(["Los Angeles", "Salt Lake City"])
-    g.add_path(["Los Angeles", "Tucson", "El Paso"])
+    g.add_path(["Los Angeles", "Tucson", "El Paso, TX"])
     g.add_path(["Salt Lake City", "Denver"])
-    g.add_path(["Denver", "Albuquerque", "El Paso"])
-    g.add_path(["Denver", "Kansas City"])
-    g.add_path(["Kansas City", "Dallas", "Houston"])
-    g.add_path(["El Paso", "Houston"])
-    g.add_path(["Houston", "Jackson", "Memphis", "Nashville"])
+    g.add_path(["Denver", "Albuquerque", "El Paso, TX"])
+    g.add_path(["Denver", "Kansas City, MO"])
+    g.add_path(["Kansas City, MO", "Dallas", "Houston"])
+    g.add_path(["El Paso, TX", "Houston"])
+    g.add_path(["Houston", "Jackson, MI", "Memphis", "Nashville"])
     g.add_path(["Houston", "Baton Rouge", "Jacksonville"])
     g.add_path(["Chicago", "Indianapolis", "Louisville", "Nashville"])
     g.add_path(["Nashville", "Atlanta"])
@@ -38,6 +38,6 @@ def OS3EGraph():
     g.add_path(["Jacksonville", "Miami"])
     g.add_path(["Chicago", "Cleveland"])
     g.add_path(["Cleveland", "Buffalo", "Boston", "New York", "Philadelphia", "Washington DC"])
-    g.add_path(["Cleveland", "Pittsburgh", "Ashburn", "Washington DC"])
-    g.add_path(["Washington DC", "Raleigh", "Atlanta"])
+    g.add_path(["Cleveland", "Pittsburgh", "Ashburn, VA", "Washington DC"])
+    g.add_path(["Washington DC", "Raleigh, NC", "Atlanta"])
     return g
