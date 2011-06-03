@@ -263,8 +263,11 @@ def run_alg(data, g, alg, param_name, iter_fcn, apsp,
         path_len_total = get_total_path_len(g, soln, apsp)
 
         path_len = path_len_total / float(g.number_of_nodes())
-        if combo_size in data and "opt" in data[combo_size]:
-            ratio = path_len / data[combo_size]["opt"]["latency"]
+        if str(combo_size) in data and "opt" in data[str(combo_size)]:
+            if data[str(combo_size)]["opt"]["latency"] == 0:
+                ratio = 1
+            else:
+                ratio = path_len / data[str(combo_size)]["opt"]["latency"]
         else:
             ratio = 0    
 
@@ -283,6 +286,7 @@ def run_alg(data, g, alg, param_name, iter_fcn, apsp,
         print "\t\tduration: %s" % duration
         print "\t\tcombo: %s" % soln
         print "\t\tratio: %s" % ratio
+        print "\t\tpath_len: %s" % path_len
 
         if combo_size not in data:
             data[combo_size] = {}

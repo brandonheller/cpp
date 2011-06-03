@@ -30,6 +30,10 @@ def write_json_file(filename, data):
     json_file = open(filename + ".json", 'w')
     json.dump(data, json_file)
 
+def read_json_file(filename):
+    input_file = open(filename, 'r')
+    return json.load(input_file)
+
 def write_csv_file(filename, data, exclude):
     '''Given JSON data, convert to CSV and write to file.'''
     csv_file = open(filename + ".csv", 'w')

@@ -5,7 +5,7 @@ import networkx as nx
 
 import latency_lib as lat
 from topo.os3e import OS3EGraph
-from file_libs import write_csv_file, write_json_file
+from file_libs import write_csv_file, write_json_file, read_json_file
 
 
 COMPUTE_START = True
@@ -16,6 +16,9 @@ NUM_FROM_END = 0
 
 FILENAME = ("data_out/os3e_latencies_with_controller_%s_%s" %
            (NUM_FROM_START, NUM_FROM_END))
+
+USE_PRIOR_OPTS = True
+PRIOR_OPTS_FILENAME = "data_out/os3e_latencies_with_controller_9_9.json"
 
 # Algorithms for computing best-latency controller positions.
 # all: explore all possibilities.  exponential blowup in # controllers.
@@ -42,7 +45,11 @@ data = {}
 
 apsp = nx.all_pairs_shortest_path_length(g)
 
-lat.run_optimal_latencies(g, controllers, data, apsp)
+if USE_PRIOR_OPTS:
+    data = read_json_file(PRIOR_OPTS_FILENAME)
+else:
+    lat.run_optimal_latencies(g, controllers, data, apsp)
+
 lat.run_greedy_informed(data, g, apsp)
 lat.run_greedy_alg_dict(data, g, 'greedy-cc', 'latency', nx.closeness_centrality(g), apsp)
 lat.run_greedy_alg_dict(data, g, 'greedy-dc', 'latency', nx.degree_centrality(g), apsp)
