@@ -11,12 +11,12 @@ from os3e_weighted import OS3EWeightedGraph
 COMPUTE_START = True
 COMPUTE_END = True
 
-NUM_FROM_START = 4
+NUM_FROM_START = 6
 NUM_FROM_END = 0
 
-WEIGHTED = False
+WEIGHTED = True
 
-USE_PRIOR_OPTS = True
+USE_PRIOR_OPTS = False
 
 FILENAME = "data_out/os3e_latencies"
 if WEIGHTED:
@@ -24,7 +24,7 @@ if WEIGHTED:
 else:
     FILENAME += "_unweighted"
     PRIOR_OPTS_FILENAME = "data_out/os3e_latencies_unweighted_9_9.json"
-FILENAME += "_%s_%s.json" % (NUM_FROM_START, NUM_FROM_END)
+FILENAME += "_%s_%s" % (NUM_FROM_START, NUM_FROM_END)
 
 if WEIGHTED:
     g = OS3EWeightedGraph()
@@ -45,24 +45,24 @@ if COMPUTE_END:
 # latency is also equal to 1/closeness centrality.
 data = {}
 
-apsp = nx.all_pairs_shortest_path_length(g)
+if WEIGHTED:
+    apsp = nx.all_pairs_dijkstra_path_length(g)
+else:
+    apsp = nx.all_pairs_shortest_path_length(g)
 
 if USE_PRIOR_OPTS:
     data = read_json_file(PRIOR_OPTS_FILENAME)
 else:
-    lat.run_optimal_latencies(g, controllers, data, apsp)
+    lat.run_optimal_latencies(g, controllers, data, apsp, WEIGHTED)
 
-lat.run_greedy_informed(data, g, apsp)
-lat.run_greedy_alg_dict(data, g, 'greedy-cc', 'latency', nx.closeness_centrality(g), apsp)
-lat.run_greedy_alg_dict(data, g, 'greedy-dc', 'latency', nx.degree_centrality(g), apsp)
-lat.run_best_n(data, g, apsp, 10)
-lat.run_best_n(data, g, apsp, 100)
-lat.run_best_n(data, g, apsp, 1000)
-lat.run_worst_n(data, g, apsp, 10)
-lat.run_worst_n(data, g, apsp, 100)
-lat.run_worst_n(data, g, apsp, 1000)
+lat.run_greedy_informed(data, g, apsp, WEIGHTED)
+lat.run_greedy_alg_dict(data, g, 'greedy-cc', 'latency', nx.closeness_centrality(g, weighted_edges = WEIGHTED), apsp, WEIGHTED)
+lat.run_greedy_alg_dict(data, g, 'greedy-dc', 'latency', nx.degree_centrality(g), apsp, WEIGHTED)
+for i in [10, 100, 1000]:
+    lat.run_best_n(data, g, apsp, i, WEIGHTED)
+    lat.run_worst_n(data, g, apsp, i, WEIGHTED)
 
 print "*******************************************************************"
 
-write_json_file(FILENAME, data)
+write_json_file(FILENAME + '.json', data)
 write_csv_file(FILENAME, data, exclude = ['combo'])

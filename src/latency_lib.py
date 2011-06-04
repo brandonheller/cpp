@@ -11,11 +11,13 @@ from util import sort_by_val
 
 BIG = 10000000
 
-def get_total_path_len(g, controllers, apsp):
+def get_total_path_len(g, controllers, apsp, weighted = False):
     '''Returns the total of path lengths from nodes to nearest controllers.
     
     @param g: NetworkX graph
     @param controllers: list of controller locations
+    @param apsp: all-pairs shortest paths data
+    @param weighted: is graph weighted?
     @return path_len_total: total of path lengths
     '''
     # path_lengths[node] = path from node to nearest item in combo
@@ -36,12 +38,14 @@ def get_total_path_len(g, controllers, apsp):
     return path_len_total
 
 
-def run_optimal_latencies(g, controllers, data, apsp):
+def run_optimal_latencies(g, controllers, data, apsp, weighted = False):
     '''Compute best, worst, and mean/median latencies.
 
+    @param g: NetworkX graph
     @param controllers: list of numbers of controllers to analyze.
     @param data: JSON data to be augmented.
     @param apsp: all-pairs shortest paths data
+    @param weighted: is graph weighted?
     '''
 
     for combo_size in sorted(controllers):
@@ -60,7 +64,7 @@ def run_optimal_latencies(g, controllers, data, apsp):
         # for each combination of i controllers
         for combo in combinations(g.nodes(), combo_size):
     
-            path_len_total = get_total_path_len(g, combo, apsp)
+            path_len_total = get_total_path_len(g, combo, apsp, weighted)
     
             if path_len_total < best_combo_path_len_total:
                 best_combo_path_len_total = path_len_total
@@ -108,13 +112,14 @@ def run_optimal_latencies(g, controllers, data, apsp):
         }
 
 
-def run_best_n(data, g, apsp, n):
+def run_best_n(data, g, apsp, n, weighted):
     '''Use best of n runs
 
     @param data: JSON data on which to append
     @param g: NetworkX graph
     @param apsp: all-pairs shortest data
     @param n: number of combinations to try
+    @param weighted: is graph weighted?
 
     Randomly computes n possibilities and chooses the best one.
     '''
@@ -136,7 +141,7 @@ def run_best_n(data, g, apsp, n):
             if n < 5:
                 print "random combo: %s" % combo
 
-            path_len_total = get_total_path_len(g, combo, apsp)
+            path_len_total = get_total_path_len(g, combo, apsp, weighted)
 
             if path_len_total < best_next_combo_path_len_total:
                 best_next_combo_path_len_total = path_len_total
@@ -144,10 +149,10 @@ def run_best_n(data, g, apsp, n):
     
         return best_next_combo
 
-    run_alg(data, g, "best-n-" + str(n), "latency", iter_fcn, apsp)
+    run_alg(data, g, "best-n-" + str(n), "latency", iter_fcn, apsp, weighted)
     
 
-def run_worst_n(data, g, apsp, n):
+def run_worst_n(data, g, apsp, n, weighted):
     '''Use worst of n runs
 
     @param data: JSON data on which to append
@@ -175,7 +180,7 @@ def run_worst_n(data, g, apsp, n):
             if n < 5:
                 print "random combo: %s" % combo
 
-            path_len_total = get_total_path_len(g, combo, apsp)
+            path_len_total = get_total_path_len(g, combo, apsp, weighted)
 
             if path_len_total > worst_next_combo_path_len_total:
                 worst_next_combo_path_len_total = path_len_total
@@ -183,15 +188,16 @@ def run_worst_n(data, g, apsp, n):
     
         return worst_next_combo
 
-    run_alg(data, g, "worst-n-" + str(n), "latency", iter_fcn, apsp)
+    run_alg(data, g, "worst-n-" + str(n), "latency", iter_fcn, apsp, weighted)
 
 
-def run_greedy_informed(data, g, apsp):
+def run_greedy_informed(data, g, apsp, weighted):
     '''Greedy algorithm for computing node ordering
 
     @param data: JSON data on which to append
     @param g: NetworkX graph
     @param apsp: all-pairs shortest data
+    @param weighted: is graph weighted?
 
     Re-calculates best value at each step, given the previous sol'n of size n-1.
     '''
@@ -206,7 +212,7 @@ def run_greedy_informed(data, g, apsp):
         best_next_choice = None
         for n in [n for n in g.nodes() if n not in soln]:
 
-            path_len_total = get_total_path_len(g, soln + [n], apsp)
+            path_len_total = get_total_path_len(g, soln + [n], apsp, weighted)
             #print n, path_len_total, greedy_informed + [n]
     
             if path_len_total < best_next_choice_path_len_total:
@@ -215,10 +221,10 @@ def run_greedy_informed(data, g, apsp):
     
         return best_next_choice
 
-    run_greedy_alg(data, g, "greedy-informed", "latency", greedy_choice, apsp)
+    run_greedy_alg(data, g, "greedy-informed", "latency", greedy_choice, apsp, weighted)
 
 
-def run_greedy_alg_dict(data, g, alg, param_name, greedy_dict, apsp,
+def run_greedy_alg_dict(data, g, alg, param_name, greedy_dict, apsp, weighted,
                    max_iters = None, reversed = True):
     '''Convenience fcn to run a greedy algorithm w/choices from a list.
 
@@ -229,6 +235,7 @@ def run_greedy_alg_dict(data, g, alg, param_name, greedy_dict, apsp,
     @param param_name: semantic meaning of greedy parameter (e.g. latency)
     @param greedy_dict: dict mapping node names to param values.
     @param apsp: all-pairs shortest data
+    @param weighted: is graph weighted?
     @param max_iters: maximum iterations; do all if falsy
     @param reversed: if True, larger values are selected first.
     '''
@@ -244,10 +251,10 @@ def run_greedy_alg_dict(data, g, alg, param_name, greedy_dict, apsp,
         n, value = greedy_dict_sorted[i]
         return n
 
-    run_greedy_alg(data, g, alg, param_name, greedy_choice, apsp)
+    run_greedy_alg(data, g, alg, param_name, greedy_choice, apsp, weighted)
 
 
-def run_greedy_alg(data, g, alg, param_name, greedy_choice, apsp,
+def run_greedy_alg(data, g, alg, param_name, greedy_choice, apsp, weighted,
                    max_iters = None):
     '''Run a greedy algorithm for optimizing latency.
 
@@ -261,6 +268,7 @@ def run_greedy_alg(data, g, alg, param_name, greedy_choice, apsp,
         @param soln: partial, greedily-built sol'n.
         @return choice: node selection.
     @param apsp: all-pairs shortest data
+    @param weighted: is graph weighted?
     @param max_iters: maximum iterations; do all if falsy
     '''
     def iter_fcn(combo_size, soln):
@@ -268,11 +276,11 @@ def run_greedy_alg(data, g, alg, param_name, greedy_choice, apsp,
         soln.append(choice)
         return soln
 
-    run_alg(data, g, alg, param_name, iter_fcn, apsp,
+    run_alg(data, g, alg, param_name, iter_fcn, apsp, weighted,
                    max_iters = None)
 
 
-def run_alg(data, g, alg, param_name, iter_fcn, apsp,
+def run_alg(data, g, alg, param_name, iter_fcn, apsp, weighted,
                    max_iters = None):
     '''Run an iterative algorithm for optimizing latency.
 
@@ -286,6 +294,7 @@ def run_alg(data, g, alg, param_name, iter_fcn, apsp,
         @param soln: last solution
         @return new_soln: best sol'n for this iteration
     @param apsp: all-pairs shortest data
+    @param weighted: is graph weighted?
     @param max_iters: maximum iterations; do all if falsy
     '''
     soln = []
@@ -297,7 +306,7 @@ def run_alg(data, g, alg, param_name, iter_fcn, apsp,
         soln = iter_fcn(combo_size, soln)
         duration = time.time() - start
 
-        path_len_total = get_total_path_len(g, soln, apsp)
+        path_len_total = get_total_path_len(g, soln, apsp, weighted)
 
         path_len = path_len_total / float(g.number_of_nodes())
         if str(combo_size) in data and "opt" in data[str(combo_size)]:
