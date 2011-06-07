@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-# Plot graphs from pre-computed stats files
-import json
-from optparse import OptionParser
+'''Generic cdf/pdf/ccdf plotting functions.'''
 import os
 
 import matplotlib.pyplot as plt
@@ -9,95 +7,66 @@ import networkx as nx
 import pylab
 
 
-# Input filename of metrics
-DEF_INPUT = 'uptimes_link'
+def plot(ptype, data, colors, axes, label, xscale, yscale,
+         write_filepath = None, write = False, num_bins = None, ext = 'pdf'):
 
-# Name of output file
-DEF_OUTPUT_DIR = './'
-
-EXT = 'png'
-
-
-class Plot():
-    
-    def __init__(self):
-        self.parse_args()
-        options = self.options
-        input_path = options.input + '.json'
-        input_file = open(input_path, 'r')
-        data = json.load(input_file)
-        self.plot_all(data)
-
-    def parse_args(self):
-        opts = OptionParser()
-        opts.add_option("-i", "--input", type = 'string', 
-                        default = DEF_INPUT,
-                        help = "name of input file")
-        opts.add_option("-o", "--output", type = 'string',
-                        default = DEF_OUTPUT_DIR,
-                        help = "name of output file")
-        opts.add_option("--xmin", type = 'int', default = 0)
-        opts.add_option("--xmax", type = 'int', default = 10)
-        opts.add_option("--ymin", type = 'int', default = 0.8)
-        opts.add_option("--ymax", type = 'int', default = 1.001)
-        opts.add_option("-w", "--write",  action = "store_true",
-                        default = False,
-                        help = "write plots, rather than display?")
-        options, arguments = opts.parse_args()
-        self.options = options
-
-    def gen_dirname(self):
-        return self.options.input.split('.')[0]
-
-    def gen_fname(self, name, insert = None):
-        if insert:
-            return name + '_' + insert + '.' + EXT
-        else:
-            return name + '.' + EXT
-
-    def plot(self, ptype, data, colors, axes, label, write = False):
-
-        fig = pylab.figure()
-        if ptype != 'line':
-            raise Exception("invalid plot type")
-
-        if len(colors) < len(data.keys()):
-            raise Exception("insufficient color data")
-
-        lines = []
-        datanames = []
-        for i, gtype in enumerate(['complete', 'star', 'loop', 'line']):
-            line = data[gtype]
-            x = [d[0] for d in line]
-            y = [d[1] for d in line]
-            lines.append(pylab.plot(x, y, colors[i]))
-            datanames.append(gtype)
-        pylab.grid(True)
-        xscale = "linear"
-        yscale = "linear"
-        pylab.xscale(xscale)
-        pylab.yscale(yscale)
-        pylab.axis(axes)
-        pylab.xlabel("nodes")
-        pylab.ylabel("uptime")
-        pylab.title(label)
-        print data.keys()
-        pylab.legend(lines, datanames, loc = "lower right")
-        if self.options.write:
-            dirname = self.gen_dirname()
-            if dirname not in os.listdir('.'):
-                os.mkdir(dirname)
-                print "created directory:", dirname
-            filepath = os.path.join(dirname, self.gen_fname(label))
-            fig.savefig(filepath)
-        else:
-            pylab.show()
-
-    def plot_all(self, data):
-        for alg in data.keys():
-            colors = ["r-", "r--", "g-.", "b-"]
-            range = [self.options.xmin, self.options.xmax, self.options.ymin, self.options.ymax]
-            self.plot('line', data[alg], colors, range, alg, self.options.write)
+    fig = pylab.figure()
+    lines = []
+    datanames = []
         
-if __name__ == "__main__":
-    Plot()
+    if ptype == 'cdf':
+        index = 0
+        for key, val in data.iteritems():
+            x = sorted(val)
+            y = [(float(i + 1) / len(x)) for i in range(len(x))]
+            lines.append(pylab.plot(x, y, colors[index]))
+            datanames.append(key)
+            index += 1
+#    elif ptype == 'ccdf':
+#        x = sorted(data)
+#        y = [1.0 - (float(i + 1) / len(x)) for i in range(len(x))]
+#    elif ptype == 'pdf':
+#        # bin data by value
+#        hist = {}
+#        data_max = max(data)
+#        # use all bins if our data is integers
+#        if data_max == int(data_max):
+#            num_bins = data_max
+#        else:
+#            num_bins = 1000
+#        for d in data:
+#            bin = int((float(d) * num_bins) / float(data_max))
+#            if bin not in hist:
+#                hist[bin] = 1
+#            else:
+#                hist[bin] += 1
+#
+#        x = []
+#        y = []
+#        for i in range(num_bins + 1):
+#            range_lo = float(i) / float(num_bins) * data_max
+#            range_hi = float(i + 1) / float(num_bins) * data_max
+#            y_val = (float(hist[i]) / len(data)) if i in hist else 0
+#            x.append(range_lo)
+#            y.append(y_val)
+#
+#            x.append(range_hi)
+#            y.append(y_val)
+#
+#        # scale max Y
+#        axes[3] = float(max(hist.values())) / len(data)
+    else:
+        raise Exception("invalid plot type")
+
+    pylab.grid(True)
+    pylab.xscale(xscale)
+    pylab.yscale(yscale)
+    pylab.axis(axes)
+    pylab.xlabel("value")
+    pylab.ylabel(ptype)
+    pylab.title(label)
+    pylab.legend(lines, datanames, loc = "lower right")
+    if write:
+        fig.savefig(write_filepath + '.' + ext)
+    else:
+        pylab.show()

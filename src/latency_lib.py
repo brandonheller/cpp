@@ -38,7 +38,8 @@ def get_total_path_len(g, controllers, apsp, weighted = False):
     return path_len_total
 
 
-def run_optimal_latencies(g, controllers, data, apsp, weighted = False):
+def run_optimal_latencies(g, controllers, data, apsp, weighted = False,
+                          write_dist = False, write_combos = False):
     '''Compute best, worst, and mean/median latencies.
 
     @param g: NetworkX graph
@@ -46,6 +47,7 @@ def run_optimal_latencies(g, controllers, data, apsp, weighted = False):
     @param data: JSON data to be augmented.
     @param apsp: all-pairs shortest paths data
     @param weighted: is graph weighted?
+    @param write_dist: write all values to the distribution.
     '''
 
     for combo_size in sorted(controllers):
@@ -61,6 +63,7 @@ def run_optimal_latencies(g, controllers, data, apsp, weighted = False):
     
         path_len_totals = []  # note all path lengths to compute stats later.
     
+        distribution = [] # list of {combo, key:value}'s in JSON, per combo
         # for each combination of i controllers
         for combo in combinations(g.nodes(), combo_size):
     
@@ -75,7 +78,18 @@ def run_optimal_latencies(g, controllers, data, apsp, weighted = False):
                 worst_combo = combo
     
             path_len_totals.append(path_len_total)
-    
+
+            if write_dist:
+                if write_combos:
+                    distribution.append({
+                        'combo': combo,
+                        'latency': path_len_total / float(g.number_of_nodes())
+                    })
+                else:
+                    distribution.append({
+                        'latency': path_len_total / float(g.number_of_nodes())
+                    })
+
         duration = time.time() - start_time
     
         best_combo_path_len = best_combo_path_len_total / float(g.number_of_nodes())
@@ -109,6 +123,7 @@ def run_optimal_latencies(g, controllers, data, apsp, weighted = False):
                 'latency': median_combo_path_len,
                 'ratio': median_combo_path_len / best_combo_path_len
             },
+            'distribution': distribution
         }
 
 
