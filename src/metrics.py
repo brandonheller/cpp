@@ -50,7 +50,8 @@ if COMPUTE_START:
 if COMPUTE_END:
     controllers += (range(g.number_of_nodes() - NUM_FROM_END + 1, g.number_of_nodes() + 1))
 
-# data[num controllers] = [latency:latency, nodes:[best-pos node(s)]]
+# data['data'][num controllers] = [latency:latency, nodes:[best-pos node(s)]]
+# data['metrics'] = [list of metrics included]
 # latency is also equal to 1/closeness centrality.
 data = {}
 
@@ -75,7 +76,7 @@ if not DIST_ONLY:
 print "*******************************************************************"
 
 # Ignore the actual combinations in CSV outputs as well as single points.
-exclude = ["combo", "distribution"]
+exclude = ["combo", "distribution", "metrics"]
 
 write_json_file(FILENAME + '.json', data)
-write_csv_file(FILENAME, data, exclude = exclude)
+write_csv_file(FILENAME, data["data"], exclude = exclude)

@@ -159,7 +159,8 @@ def run_all_combos(metrics, g, controllers, data, apsp, weighted = False,
         print "\t\tmedian: %s" % (median_combo_path_len)
         print "\t\tduration: %s" % duration
     
-        data[unicode(combo_size)] = {
+        data['data'] = {}
+        data['data'][unicode(combo_size)] = {
             'opt': {
                 'latency': best_combo_path_len,
                 'duration': duration,
@@ -178,8 +179,9 @@ def run_all_combos(metrics, g, controllers, data, apsp, weighted = False,
                 'latency': median_combo_path_len,
                 'ratio': median_combo_path_len / best_combo_path_len
             },
-            'distribution': distribution
+            'distribution': distribution,
         }
+    data['metrics'] = metrics
 
 
 def run_best_n(data, g, apsp, n, weighted):
