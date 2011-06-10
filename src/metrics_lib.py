@@ -79,7 +79,12 @@ def controller_split_fairness(g, combo, apsp, weighted):
             allocations[c] += 1 / float(len(closest_controllers))
 
     #print allocations.values()
-    assert sum(allocations.values()) == g.number_of_nodes()
+    try:
+        assert abs(sum(allocations.values()) - g.number_of_nodes()) < 0.0001
+    except AssertionError:
+        import code
+        code.interact(local=locals())
+
     return fairness(allocations.values())
 
 
