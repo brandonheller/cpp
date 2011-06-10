@@ -88,6 +88,18 @@ def controller_split_fairness(g, combo, apsp, weighted):
     return fairness(allocations.values())
 
 
+
+def get_latency(g, combo, apsp, weighted):
+    return get_total_path_len(g, combo, apsp, weighted) / float(g.number_of_nodes())
+
+# Map of metric names to functions to execute them.
+# Functions must have these parameters:
+# (g, combo, apsp, weighted)
+metric_fcns = {
+    'latency': get_latency,
+    'fairness': controller_split_fairness
+}
+
 def run_all_combos(metrics, g, controllers, data, apsp, weighted = False,
                    write_dist = False, write_combos = False):
     '''Compute best, worst, and mean/median latencies, plus fairness.
@@ -104,85 +116,75 @@ def run_all_combos(metrics, g, controllers, data, apsp, weighted = False,
     data['data'] = {}  # Where all data point & aggregates are stored.
     for combo_size in sorted(controllers):
         # compute best location(s) for i controllers.
-    
+
         print "** combo size: %s" % combo_size
 
-        best_combo_path_len_total = BIG
-        best_combo = None
-        worst_combo_path_len_total = -BIG
-        worst_combo = None
-        start_time = time.time()
-    
-        path_len_totals = []  # note all path lengths to compute stats later.
+        # Initialize metric tracking data
+        metric_data = {}
+        for metric in metrics:
+            metric_data[metric] = {}
+            this_metric = metric_data[metric]
+            this_metric['highest'] = -BIG
+            this_metric['highest_combo'] = None
+            this_metric['lowest'] = BIG
+            this_metric['lowest_combo'] = None
+            this_metric['values'] = []
+            this_metric['duration'] = 0.0
 
         distribution = [] # list of {combo, key:value}'s in JSON, per combo
-        # for each combination of i controllers
+
         for combo in combinations(g.nodes(), combo_size):
-    
-            # Latency computation
-            path_len_total = get_total_path_len(g, combo, apsp, weighted)
-    
-            if path_len_total < best_combo_path_len_total:
-                best_combo_path_len_total = path_len_total
-                best_combo = combo
-    
-            if path_len_total > worst_combo_path_len_total:
-                worst_combo_path_len_total = path_len_total
-                worst_combo = combo
 
-            path_len_totals.append(path_len_total)
+            json_entry = {}  # For writing to distribution
+            json_entry['id'] = id
+            id += 1
+            for metric in metrics:
+                this_metric = metric_data[metric]
+                start_time = time.time()    
+                metric_value = metric_fcns[metric](g, combo, apsp, weighted)
+                duration = time.time() - start_time
+                
+                this_metric['duration'] += duration
+                if metric_value < this_metric['lowest']:
+                    this_metric['lowest'] = metric_value
+                    this_metric['lowest_combo'] = combo
+                if metric_value > this_metric['highest']:
+                    this_metric['highest'] = metric_value
+                    this_metric['highest_combo'] = combo
+                this_metric['values'].append(metric_value)
 
-            # Fairness computation
-            fairness_metric = controller_split_fairness(g, combo, apsp, weighted)
+                json_entry[metric] = metric_value
 
-            if write_dist:
-                json_entry = {}
-                json_entry['id'] = id
-                id += 1
-                if 'latency' in metrics:
-                    json_entry['latency'] = path_len_total / float(g.number_of_nodes())
-                if 'fairness' in metrics:
-                    json_entry['fairness'] = fairness_metric
                 if write_combos:
                     json_entry['combo'] = combo
 
-                distribution.append(json_entry)
+                if write_dist:
+                    distribution.append(json_entry)
 
-        duration = time.time() - start_time
-    
-        best_combo_path_len = best_combo_path_len_total / float(g.number_of_nodes())
-        worst_combo_path_len = worst_combo_path_len_total / float(g.number_of_nodes())
-        mean_combo_path_len = sum(path_len_totals) / float(combo_size) / float(g.number_of_nodes())
-        median_combo_path_len = numpy.median(path_len_totals) / float(g.number_of_nodes())
-    
-        print "\topt"
-        print "\t\tbest: %s %s" % (best_combo_path_len, best_combo)
-        print "\t\tworst: %s %s" % (worst_combo_path_len, worst_combo)
-        print "\t\tmean: %s" % (mean_combo_path_len)
-        print "\t\tmedian: %s" % (median_combo_path_len)
-        print "\t\tduration: %s" % duration
+        # Compute summary stats
+        for metric in metrics:                    
+            this_metric = metric_data[metric]
+            metric_data['mean'] = sum(this_metric['values']) / len(this_metric['values'])
+            metric_data['median'] = numpy.median(this_metric['values'])
+            del this_metric['values']
+            # Work around Python annoyance where str(set) doesn't work
+            this_metric['lowest_combo'] = list(this_metric['lowest_combo'])
+            this_metric['highest_combo'] = list(this_metric['highest_combo'])
+            
 
-        data['data'][unicode(combo_size)] = {
-            'opt': {
-                'latency': best_combo_path_len,
-                'duration': duration,
-                'combo': best_combo
-            },
-            'worst': {
-                'latency': worst_combo_path_len,
-                'combo': worst_combo,
-                'ratio': worst_combo_path_len / best_combo_path_len
-            },
-            'random_mean': {
-                'latency': mean_combo_path_len,
-                'ratio': mean_combo_path_len / best_combo_path_len
-            },
-            'random_median': {
-                'latency': median_combo_path_len,
-                'ratio': median_combo_path_len / best_combo_path_len
-            },
-            'distribution': distribution,
-        }
+            PRINT_VALUES = True
+            if PRINT_VALUES:
+                print "\t" + "%s" % metric
+                for key in sorted(this_metric.keys()):
+                    if key != 'values':
+                        print "\t\t%s: %s" % (key, this_metric[key])
+
+        data['data'][unicode(combo_size)] = {}
+        group_data = data['data'][unicode(combo_size)]
+        for metric in metrics:
+            group_data[metric] = metric_data[metric]
+        group_data['distribution'] = distribution
+
     data['metric'] = metrics
     data['group'] = controllers
 
