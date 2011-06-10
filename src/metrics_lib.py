@@ -88,20 +88,24 @@ def controller_split_fairness(g, combo, apsp, weighted):
     return fairness(allocations.values())
 
 
-
-def get_latency(g, combo, apsp, weighted):
+def get_latency(g, combo, apsp, apsp_paths, weighted):
     return get_total_path_len(g, combo, apsp, weighted) / float(g.number_of_nodes())
+
+def get_fairness(g, combo, apsp, apsp_paths, weighted):
+    return controller_split_fairness(g, combo, apsp, weighted)
 
 # Map of metric names to functions to execute them.
 # Functions must have these parameters:
-# (g, combo, apsp, weighted)
-metric_fcns = {
+# (g, combo, apsp, apsp_paths, weighted)
+METRIC_FCNS = {
     'latency': get_latency,
-    'fairness': controller_split_fairness
+    'fairness': get_fairness
 }
 
-def run_all_combos(metrics, g, controllers, data, apsp, weighted = False,
-                   write_dist = False, write_combos = False):
+METRICS = METRIC_FCNS.keys()
+
+def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
+                   weighted = False, write_dist = False, write_combos = False):
     '''Compute best, worst, and mean/median latencies, plus fairness.
 
     @param metrics: metrics to compute: in ['latency', 'fairness']
@@ -109,6 +113,7 @@ def run_all_combos(metrics, g, controllers, data, apsp, weighted = False,
     @param controllers: list of numbers of controllers to analyze.
     @param data: JSON data to be augmented.
     @param apsp: all-pairs shortest paths data
+    @param apsp_paths: all-pairs shortest paths path data
     @param weighted: is graph weighted?
     @param write_dist: write all values to the distribution.
     '''
@@ -141,7 +146,8 @@ def run_all_combos(metrics, g, controllers, data, apsp, weighted = False,
             for metric in metrics:
                 this_metric = metric_data[metric]
                 start_time = time.time()    
-                metric_value = metric_fcns[metric](g, combo, apsp, weighted)
+                metric_value = METRIC_FCNS[metric](g, combo, apsp, apsp_paths,
+                                                   weighted)
                 duration = time.time() - start_time
                 
                 this_metric['duration'] += duration

@@ -14,9 +14,8 @@ COMPUTE_END = True
 NUM_FROM_START = 3
 NUM_FROM_END = 0
 
-WEIGHTED = False
 
-METRICS = ['latency', 'fairness']
+WEIGHTED = False
 
 # Write all combinations to the output, to be used for distribution for
 #  creating CDFs or other vis's later.
@@ -57,13 +56,15 @@ data = {}
 
 if WEIGHTED:
     apsp = nx.all_pairs_dijkstra_path_length(g)
+    apsp_paths = nx.all_pairs_dijkstra_path(g)
 else:
     apsp = nx.all_pairs_shortest_path_length(g)
+    apsp_paths = nx.all_pairs_shortest_path(g)
 
 if USE_PRIOR_OPTS:
     data = read_json_file(PRIOR_OPTS_FILENAME)
 else:
-    metrics.run_all_combos(METRICS, g, controllers, data, apsp, WEIGHTED, WRITE_DIST)
+    metrics.run_all_combos(metrics.METRICS, g, controllers, data, apsp, apsp_paths, WEIGHTED, WRITE_DIST)
 
 if not DIST_ONLY:
     metrics.run_greedy_informed(data, g, apsp, WEIGHTED)
