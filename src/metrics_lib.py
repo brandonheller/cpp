@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-'''Library of algorithms and helpers for computing latencies.'''
+'''Library of algorithms and helpers for computing metrics.'''
 
 from itertools import combinations
 import time
@@ -38,10 +38,56 @@ def get_total_path_len(g, controllers, apsp, weighted = False):
     return path_len_total
 
 
-def run_optimal_latencies(g, controllers, data, apsp, weighted = False,
-                          write_dist = False, write_combos = False):
-    '''Compute best, worst, and mean/median latencies.
+def fairness(values):
+    '''Compute Jain's fairness index for a list of values.
 
+    See http://en.wikipedia.org/wiki/Fairness_measure for fairness equations.
+
+    @param values: list of values
+    @return fairness: JFI
+    '''
+    num = sum(values) ** 2
+    denom = len(values) * sum([i ** 2 for i in values])
+    return num / float(denom)
+
+
+def controller_split_fairness(g, combo, apsp, weighted):
+    '''Compute Jain's fairness index for switch/controller allocation.
+
+    @param g: NetworkX graph
+    @param controllers: list of controller locations
+    @param apsp: all-pairs shortest paths data
+    @param weighted: is graph weighted?
+    @return fairness: JFI measure for the input
+    '''
+    # allocations[i] is total switches connected to controller i.  
+    # For switches equally distance from n controllers, split share equally.
+    allocations = {}
+    for n in g.nodes():
+        closest_controllers = set([])
+        closest_controller_dist = BIG
+        for c in combo:
+            dist = apsp[n][c]
+            if dist < closest_controller_dist:
+                closest_controller_dist = dist
+                closest_controllers = set([c])
+            elif dist == closest_controller_dist:
+                closest_controllers.add(c)
+        for c in closest_controllers:
+            if c not in allocations:
+                allocations[c] = 0
+            allocations[c] += 1 / float(len(closest_controllers))
+
+    #print allocations.values()
+    assert sum(allocations.values()) == g.number_of_nodes()
+    return fairness(allocations.values())
+
+
+def run_all_combos(metrics, g, controllers, data, apsp, weighted = False,
+                   write_dist = False, write_combos = False):
+    '''Compute best, worst, and mean/median latencies, plus fairness.
+
+    @param metrics: metrics to compute: in ['latency', 'fairness']
     @param g: NetworkX graph
     @param controllers: list of numbers of controllers to analyze.
     @param data: JSON data to be augmented.
@@ -54,7 +100,7 @@ def run_optimal_latencies(g, controllers, data, apsp, weighted = False,
         # compute best location(s) for i controllers.
     
         print "** combo size: %s" % combo_size
-    
+
         best_combo_path_len_total = BIG
         best_combo = None
         worst_combo_path_len_total = -BIG
@@ -62,11 +108,12 @@ def run_optimal_latencies(g, controllers, data, apsp, weighted = False,
         start_time = time.time()
     
         path_len_totals = []  # note all path lengths to compute stats later.
-    
+
         distribution = [] # list of {combo, key:value}'s in JSON, per combo
         # for each combination of i controllers
         for combo in combinations(g.nodes(), combo_size):
     
+            # Latency computation
             path_len_total = get_total_path_len(g, combo, apsp, weighted)
     
             if path_len_total < best_combo_path_len_total:
@@ -76,19 +123,22 @@ def run_optimal_latencies(g, controllers, data, apsp, weighted = False,
             if path_len_total > worst_combo_path_len_total:
                 worst_combo_path_len_total = path_len_total
                 worst_combo = combo
-    
+
             path_len_totals.append(path_len_total)
 
+            # Fairness computation
+            fairness_metric = controller_split_fairness(g, combo, apsp, weighted)
+
             if write_dist:
+                json_entry = {}
+                if 'latency' in metrics:
+                    json_entry['latency'] = path_len_total / float(g.number_of_nodes())
+                if 'fairness' in metrics:
+                    json_entry['fairness'] = fairness_metric
                 if write_combos:
-                    distribution.append({
-                        'combo': combo,
-                        'latency': path_len_total / float(g.number_of_nodes())
-                    })
-                else:
-                    distribution.append({
-                        'latency': path_len_total / float(g.number_of_nodes())
-                    })
+                    json_entry['combo'] = combo
+
+                distribution.append(json_entry)
 
         duration = time.time() - start_time
     
