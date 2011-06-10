@@ -100,7 +100,8 @@ def run_all_combos(metrics, g, controllers, data, apsp, weighted = False,
     @param weighted: is graph weighted?
     @param write_dist: write all values to the distribution.
     '''
-    data['data'] = {}
+    id = 0  # Unique index for every distribution point written out.
+    data['data'] = {}  # Where all data point & aggregates are stored.
     for combo_size in sorted(controllers):
         # compute best location(s) for i controllers.
     
@@ -136,6 +137,8 @@ def run_all_combos(metrics, g, controllers, data, apsp, weighted = False,
 
             if write_dist:
                 json_entry = {}
+                json_entry['id'] = id
+                id += 1
                 if 'latency' in metrics:
                     json_entry['latency'] = path_len_total / float(g.number_of_nodes())
                 if 'fairness' in metrics:
@@ -180,7 +183,8 @@ def run_all_combos(metrics, g, controllers, data, apsp, weighted = False,
             },
             'distribution': distribution,
         }
-    data['metrics'] = metrics
+    data['metric'] = metrics
+    data['group'] = controllers
 
 
 def run_best_n(data, g, apsp, n, weighted):

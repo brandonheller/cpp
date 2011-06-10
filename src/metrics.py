@@ -11,7 +11,7 @@ from os3e_weighted import OS3EWeightedGraph
 COMPUTE_START = True
 COMPUTE_END = True
 
-NUM_FROM_START = 2
+NUM_FROM_START = 3
 NUM_FROM_END = 0
 
 WEIGHTED = False
@@ -76,7 +76,7 @@ if not DIST_ONLY:
 print "*******************************************************************"
 
 # Ignore the actual combinations in CSV outputs as well as single points.
-exclude = ["combo", "distribution", "metrics"]
+exclude = ["combo", "distribution", "metric", "group"]
 
 write_json_file(FILENAME + '.json', data)
 write_csv_file(FILENAME, data["data"], exclude = exclude)
