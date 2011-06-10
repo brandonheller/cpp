@@ -73,7 +73,7 @@ def do_plot():
     stats = load_stats(options)
     data = {}
     for i in range(1, options.max + 1):
-        data[str(i)] = [d[options.metric] for d in stats[str(i)]["distribution"]]
+        data[str(i)] = [d[options.metric] for d in stats['data'][str(i)]["distribution"]]
     colors = ["r-", "r--", "g-.", "b-", "g--"]
     write_filepath = os.path.join(options.output_dir, options.input)
     plot.plot('cdf', data, colors, [0, round(math.ceil(max(data["1"]))), 0, 1],

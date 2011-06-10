@@ -100,7 +100,7 @@ def run_all_combos(metrics, g, controllers, data, apsp, weighted = False,
     @param weighted: is graph weighted?
     @param write_dist: write all values to the distribution.
     '''
-
+    data['data'] = {}
     for combo_size in sorted(controllers):
         # compute best location(s) for i controllers.
     
@@ -158,8 +158,7 @@ def run_all_combos(metrics, g, controllers, data, apsp, weighted = False,
         print "\t\tmean: %s" % (mean_combo_path_len)
         print "\t\tmedian: %s" % (median_combo_path_len)
         print "\t\tduration: %s" % duration
-    
-        data['data'] = {}
+
         data['data'][unicode(combo_size)] = {
             'opt': {
                 'latency': best_combo_path_len,
