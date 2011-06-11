@@ -61,7 +61,7 @@ def controller_split_fairness(g, combo, apsp, weighted):
     @return fairness: JFI measure for the input
     '''
     # allocations[i] is total switches connected to controller i.  
-    # For switches equally distance from n controllers, split share equally.
+    # For switches equally distant from n controllers, split share equally.
     allocations = {}
     for n in g.nodes():
         closest_controllers = set([])
@@ -78,12 +78,7 @@ def controller_split_fairness(g, combo, apsp, weighted):
                 allocations[c] = 0
             allocations[c] += 1 / float(len(closest_controllers))
 
-    #print allocations.values()
-    try:
-        assert abs(sum(allocations.values()) - g.number_of_nodes()) < 0.0001
-    except AssertionError:
-        import code
-        code.interact(local=locals())
+    assert abs(sum(allocations.values()) - g.number_of_nodes()) < 0.0001
 
     return fairness(allocations.values())
 
