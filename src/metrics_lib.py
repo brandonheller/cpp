@@ -5,6 +5,7 @@ from itertools import combinations
 import time
 
 import numpy
+import networkx as nx
 
 from itertools_recipes import random_combination
 from util import sort_by_val
@@ -83,6 +84,61 @@ def controller_split_fairness(g, combo, apsp, weighted):
     return fairness(allocations.values())
 
 
+def control_traffic_congestion(g, combo, apsp, apsp_paths, weighted):
+    '''Find the worst-case control traffic overlap.
+
+    That is, the single link for which the most control traffic is assigned
+    along a shortest path.
+
+    @param g: NetworkX graph
+    @param controllers: list of controller locations
+    @param apsp: all-pairs shortest paths data
+    @param apsp_paths: all-pairs shortest paths path data
+    @param weighted: is graph weighted?
+    @return congestion: fraction of switches' traffic along worst-case link.
+    '''
+    # Counters for each used edge
+    traffic = nx.Graph()
+    for src, dst in g.edges():
+        traffic.add_edge(src, dst)
+        traffic[src][dst]["weight"] = 0.0
+
+    # allocations[i] is total switches connected to controller i.
+    # For switches equally distant from n controllers, split share equally.
+    allocations = {}
+    for n in g.nodes():
+        closest_controllers = set([])
+        closest_controller_dist = BIG
+        for c in combo:
+            dist = apsp[n][c]
+            if dist < closest_controller_dist:
+                closest_controller_dist = dist
+                closest_controllers = set([c])
+            elif dist == closest_controller_dist:
+                closest_controllers.add(c)
+
+        # Assign an equal fraction on each edge to each closest path.
+        for c in closest_controllers:
+            path = apsp_paths[n][c]
+            for i, path_node in enumerate(path):
+                if i != len(path) - 1:
+                    traffic[path_node][path[i + 1]]["weight"] += 1.0 / float(len(closest_controllers))
+
+    most_congested_total = -BIG
+    most_congested_edge = None
+    for src, dst in g.edges():
+        w = traffic[src][dst]["weight"]
+        if w > most_congested_total:
+            most_congested_total = w
+            most_congested_edge = [src, dst]
+
+    #print "most congested edge: %s" % most_congested_edge
+    #print "most congested total: %s" % most_congested_total
+    
+    # Return the largest such edge as a fraction of the number of switches.
+    return most_congested_total / float(g.number_of_nodes())
+
+
 def get_latency(g, combo, apsp, apsp_paths, weighted):
     return get_total_path_len(g, combo, apsp, weighted) / float(g.number_of_nodes())
 
@@ -94,7 +150,8 @@ def get_fairness(g, combo, apsp, apsp_paths, weighted):
 # (g, combo, apsp, apsp_paths, weighted)
 METRIC_FCNS = {
     'latency': get_latency,
-    'fairness': get_fairness
+    'fairness': get_fairness,
+    'congestion': control_traffic_congestion
 }
 
 METRICS = METRIC_FCNS.keys()
