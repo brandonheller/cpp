@@ -6,7 +6,7 @@ import json
 import math
 
 import plot
-
+import metrics_lib as metrics
 
 # Highest number of controllers to plot.
 DEF_MAX = 2
@@ -15,8 +15,8 @@ DEF_MAX = 2
 DEF_WEIGHTED = True
 
 # Metric to plot
-METRICS = ['latency', 'fairness']
-DEF_METRIC = 'latency'
+METRICS = metrics.METRICS
+DEF_METRIC = metrics.METRICS[0]
 
 DEF_INPUT_DIR = 'data_out'
 DEF_OUTPUT_DIR = DEF_INPUT_DIR
