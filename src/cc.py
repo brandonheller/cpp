@@ -17,6 +17,10 @@ import networkx as nx
 
 lg = logging.getLogger("cc")
 
+# Validate that single & multiple-availability functions both return the same
+# value for single-failure cases.
+VALIDATE_SINGLE = True
+
 
 def sssp_conn(g, controller_node, link_fail_prob):
     # Store pairs of (probability, connectivity)
@@ -84,13 +88,12 @@ def any_conn(g, controller_node, link_fail_prob):
     return uptime_dist
 
 
-def availability(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn):
-    '''Compute connectivity assuming independent failures.
+def availability_single(g, link_fail_prob, node_fail_prob, alg_fcn):
+    '''Compute connectivity assuming independent failures for ONE max failure.
 
     @param g: input graph as NetworkX Graph
     @param link_fail_prob: link failure probability
     @param node_fail_prob: node failure probability
-    @param max_failures: max failures to consider
     @param alg_fcn: fucntion for static controller connection algorithm, with form:
         @param g: input graph
         @param controller_node: input controller node
@@ -100,22 +103,6 @@ def availability(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn):
     @return avg_conn: distribution of switch-to-controller connectivity
     @return connectivity_data: dict of uptimes for each controller location
     '''
-
-    # Consider one failure only, for now.  Eventually extend to handle
-    # multiple failures by pushing all combinations as lists onto a stack
-    # and considering the effect of each one.
-    if max_failures != 1:
-        raise Exception("only 1 failure supported")
-
-    if node_fail_prob != 0:
-        raise Exception("only link failures supported")
-
-    if link_fail_prob * g.number_of_nodes() > 1.0:
-        raise Exception("unable to handle case where > 1 failure is typical")
-
-    if type(alg_fcn) is str:
-        raise Exception("alg_fcn cannot be a string")
-
     # Store data used to build an uptime distribution later
     # connectivity_data[controller_location] = uptime
     connectivity_data = {}
@@ -148,3 +135,58 @@ def availability(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn):
     lg.debug("average connectivity: %f" % avg_conn)
     return avg_conn, connectivity_data
 
+
+def availability_multiple(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn):
+    '''Compute connectivity assuming independent failures for multiple failures.
+
+    @param g: input graph as NetworkX Graph
+    @param link_fail_prob: link failure probability
+    @param node_fail_prob: node failure probability
+    @param alg_fcn: fucntion for static controller connection algorithm, with form:
+        @param g: input graph
+        @param controller_node: input controller node
+        @param link_fail_prob: link failure probability
+        @return uptime_dist: list of pairs of form (link_fail_prob, connectivity)
+
+    @return avg_conn: distribution of switch-to-controller connectivity
+    @return connectivity_data: dict of uptimes for each controller location
+    '''
+    return availability_single(g, link_fail_prob, node_fail_prob, alg_fcn)
+
+
+def availability(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn):
+    '''Compute connectivity assuming independent failures.
+
+    @param g: input graph as NetworkX Graph
+    @param link_fail_prob: link failure probability
+    @param node_fail_prob: node failure probability
+    @param max_failures: max failures to consider
+    @param alg_fcn: fucntion for static controller connection algorithm, with form:
+        @param g: input graph
+        @param controller_node: input controller node
+        @param link_fail_prob: link failure probability
+        @return uptime_dist: list of pairs of form (link_fail_prob, connectivity)
+
+    @return avg_conn: distribution of switch-to-controller connectivity
+    @return connectivity_data: dict of uptimes for each controller location
+    '''
+    if node_fail_prob != 0:
+        raise Exception("only link failures supported")
+
+    if link_fail_prob * g.number_of_nodes() > 1.0:
+        raise Exception("unable to handle case where > 1 failure is typical")
+
+    if type(alg_fcn) is str:
+        raise Exception("alg_fcn cannot be a string")
+
+    # Consider one failure only, for now.  Eventually extend to handle
+    # multiple failures by pushing all combinations as lists onto a stack
+    # and considering the effect of each one.
+    if max_failures == 1:
+        if VALIDATE_SINGLE:
+            single_results = availability_single(g, link_fail_prob, node_fail_prob, alg_fcn)
+            multiple_results = availability_multiple(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn)
+            assert abs(single_results[0] - multiple_results[0]) < 0.0000001
+        return single_results
+    else:
+        return availability_multiple(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn)
