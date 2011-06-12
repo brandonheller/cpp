@@ -8,13 +8,13 @@ import networkx as nx
 import unittest
 
 from lib.graph import flatten, loop_graph
-from cc import compute, sssp_conn, any_conn
+from cc import availability, sssp_conn, any_conn
 
 
 class GraphTest(unittest.TestCase):
 
     def run_test(self, g, link_fail, node_fail, max_fail, alg, expected):
-        conn, data = compute(g, link_fail, node_fail, max_fail, alg)
+        conn, data = availability(g, link_fail, node_fail, max_fail, alg)
         self.assertAlmostEqual(conn, expected)
 
     def run_complete_test(self, n, link_fail, node_fail, max_fail, alg, hard_coded_uptime = None):
@@ -54,7 +54,7 @@ class TestSSSP(GraphTest):
     def test_link_complete_triangle_onefail(self):
         # 3 links can fail.
         # 2/3 of the time it has an effect.
-        # when it has an effect, connectivity is 2/3
+        # when it has an effect, availability is 2/3
         # For l = 0.1, that's 2 instances of 2/3 up and 1 of 1.0 up
         # 0.1 * (2 * 2/3 + 1 * 1.0) + 0.7 * 1.0 = 0.9333
         hard_coded_uptimes = {
@@ -67,7 +67,7 @@ class TestSSSP(GraphTest):
     def test_link_complete_quad_onefail(self):
         # 6 links can fail.
         # 3/6 of the time it has an effect.
-        # when it has an effect, connectivity is 3/4
+        # when it has an effect, availability is 3/4
         # For l = 0.1, that's 3 instances of 3/4 up and 3 of 1.0 up
         # 0.1 * (3 * 3/4 + 3 * 1.0) + 0.4 * 1.0 = 
         hard_coded_uptimes = {

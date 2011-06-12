@@ -84,7 +84,7 @@ def any_conn(g, controller_node, link_fail_prob):
     return uptime_dist
 
 
-def compute(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn):
+def availability(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn):
     '''Compute connectivity assuming independent failures.
 
     @param g: input graph as NetworkX Graph
