@@ -7,7 +7,8 @@ import logging
 import networkx as nx
 import unittest
 
-from cc import flatten, loop_graph, compute, sssp_conn, any_conn
+from lib.graph import flatten, loop_graph
+from cc import compute, sssp_conn, any_conn
 
 
 class GraphTest(unittest.TestCase):
