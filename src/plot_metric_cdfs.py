@@ -32,6 +32,10 @@ def parse_args():
                     help = "name of input dir")
     opts.add_option("--max", type = 'int', default = DEF_MAX,
                     help = "highest number of controllers to plot %s" % METRICS)
+    opts.add_option("--minx", type = 'float', default = None,
+                    help = "min X axis value")
+    opts.add_option("--maxx", type = 'float', default = None,
+                    help = "min X axis value")
     opts.add_option("--metric",
                     default = DEF_METRIC,
                     choices = METRICS,
@@ -76,7 +80,12 @@ def do_plot():
         data[str(i)] = [d[options.metric] for d in stats['data'][str(i)]["distribution"]]
     colors = ["r-", "r--", "g-.", "b-", "g--"]
     write_filepath = os.path.join(options.output_dir, options.input)
-    plot.plot('cdf', data, colors, [0, round(math.ceil(max(data["1"]))), 0, 1],
+    axis_limits = [0, round(math.ceil(max(data["1"]))), 0, 1]
+    if options.minx:
+        axis_limits[0] = options.minx
+    if options.maxx:
+        axis_limits[1] = options.maxx
+    plot.plot('cdf', data, colors, axis_limits,
               options.metric, "linear", "linear", write_filepath, options.write)
 
 if __name__ == "__main__":
