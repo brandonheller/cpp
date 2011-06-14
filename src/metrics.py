@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 '''Compute metrics for varying number of controllers w/ different algorithms.'''
+import logging
 
 import networkx as nx
 
@@ -7,6 +8,8 @@ import metrics_lib as metrics
 from topo.os3e import OS3EGraph
 from file_libs import write_csv_file, write_json_file, read_json_file
 from os3e_weighted import OS3EWeightedGraph
+
+logging.basicConfig(level=logging.DEBUG)
 
 COMPUTE_START = True
 COMPUTE_END = True
@@ -24,6 +27,21 @@ WRITE_DIST = True
 # Write out only the full distribution?
 DIST_ONLY = True
 
+# Additional args to pass to metrics functions.
+EXTRA_PARAMS = {
+    'link_fail_prob': 0.01,
+    'max_failures': 2
+}
+
+# Write out combinations?
+WRITE_COMBOS = False
+
+
+# Metrics to compute
+#METRICS = metrics.METRICS
+METRICS = ['availability', 'latency']
+
+# Pull in previously computed data, rather than recompute?
 USE_PRIOR_OPTS = False
 
 FILENAME = "data_out/os3e_"
@@ -64,7 +82,8 @@ else:
 if USE_PRIOR_OPTS:
     data = read_json_file(PRIOR_OPTS_FILENAME)
 else:
-    metrics.run_all_combos(metrics.METRICS, g, controllers, data, apsp, apsp_paths, WEIGHTED, WRITE_DIST)
+    metrics.run_all_combos(METRICS, g, controllers, data, apsp,
+                           apsp_paths, WEIGHTED, WRITE_DIST, WRITE_COMBOS, EXTRA_PARAMS)
 
 if not DIST_ONLY:
     metrics.run_greedy_informed(data, g, apsp, WEIGHTED)

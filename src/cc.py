@@ -22,7 +22,7 @@ lg = logging.getLogger("cc")
 VALIDATE_SINGLE = True
 
 
-def sssp_conn(g, controller_node, link_fail_prob):
+def sssp_conn_single(g, controller_node, link_fail_prob):
     # Store pairs of (probability, connectivity)
     uptime_dist = []
 
@@ -137,12 +137,12 @@ def availability_single(g, link_fail_prob, node_fail_prob, alg_fcn):
 
 
 def availability_multiple(g, link_fail_prob, node_fail_prob, max_failures, alg_fcn):
-    '''Compute connectivity assuming independent failures for multiple failures.
+    '''Compute connectivity assuming independent failures for _multiple_ failures.
 
     @param g: input graph as NetworkX Graph
     @param link_fail_prob: link failure probability
     @param node_fail_prob: node failure probability
-    @param alg_fcn: fucntion for static controller connection algorithm, with form:
+    @param alg_fcn: function for static controller connection algorithm, with form:
         @param g: input graph
         @param controller_node: input controller node
         @param link_fail_prob: link failure probability

@@ -2,15 +2,19 @@
 '''Library of algorithms and helpers for computing metrics.'''
 
 from itertools import combinations
+import logging
 import time
 
 import numpy
 import networkx as nx
 
-from itertools_recipes import random_combination
+from itertools_recipes import random_combination, choose
 from util import sort_by_val
 
 BIG = 10000000
+
+lg = logging.getLogger("metrics_lib")
+
 
 def get_total_path_len(g, controllers, apsp, weighted = False):
     '''Returns the total of path lengths from nodes to nearest controllers.
@@ -84,7 +88,7 @@ def controller_split_fairness(g, combo, apsp, weighted):
     return fairness(allocations.values())
 
 
-def control_traffic_congestion(g, combo, apsp, apsp_paths, weighted):
+def control_traffic_congestion(g, combo, apsp, apsp_paths, weighted, extra_params = None):
     '''Find the worst-case control traffic overlap.
 
     That is, the single link for which the most control traffic is assigned
@@ -139,11 +143,125 @@ def control_traffic_congestion(g, combo, apsp, apsp_paths, weighted):
     return most_congested_total / float(g.number_of_nodes())
 
 
-def get_latency(g, combo, apsp, apsp_paths, weighted):
+def path_is_clear(path, failed_links):
+    '''Return true if path and failed_links are disjoint.
+    
+    @param path: list of nodes
+    @param failed_links: list of (src, dst) node pairs
+    '''
+    failed_links_set = set(failed_links)
+    path_links_set = set([])
+    for i, path_node in enumerate(path):
+        if i != len(path) - 1:
+            path_links_set.add((path_node, path[i + 1]))
+            path_links_set.add((path[i + 1], path_node))
+
+    # Path is clear if no intersection.
+    return len(path_links_set.intersection(failed_links_set)) == 0
+
+
+def connectivity_sssp(g, combo, apsp, apsp_paths, weighted, failed_links):
+    '''Find the connectivity considering only SSSP-computed paths.
+
+    That is, the fraction of switches happily connecting to their primary
+    controller.
+
+    What about switches that are equidistant?  Average results.
+
+    @param g: NetworkX graph
+    @param controllers: list of controller locations
+    @param apsp: all-pairs shortest paths data
+    @param apsp_paths: all-pairs shortest paths path data
+    @param weighted: is graph weighted?
+    @param failed_edges: list of edge failures
+    @return connectivity: fraction of connected switches, on average
+    '''
+    connected = 0  # Number of connected switches
+    for n in g.nodes():
+        # Find best controller set
+        closest_controllers = set([])
+        closest_controller_dist = BIG
+        for c in combo:
+            dist = apsp[n][c]
+            if dist < closest_controller_dist:
+                closest_controller_dist = dist
+                closest_controllers = set([c])
+            elif dist == closest_controller_dist:
+                closest_controllers.add(c)
+
+        # Assign an equal fraction on each edge to each closest path.
+        for c in closest_controllers:
+            path = apsp_paths[n][c]
+            if path_is_clear(path, failed_links):
+                connected += 1.0 / float(len(closest_controllers))
+
+    connectivity = connected / float(g.number_of_nodes())
+    return connectivity
+
+
+def link_failure_combinations(g, failures):
+    '''Returns combinations with the specified number of link failures.
+    
+    @param g: NetworkX graph
+    @param failures: exact number of failures
+    @return combos: combinations of links (src/dst pairs)
+    '''
+    if failures == 0:
+        return [()]
+    combos = []
+    for c in combinations(g.edges(), failures):
+        combos.append(c)
+    return combos
+
+def availability_one_combo(g, combo, apsp, apsp_paths, weighted,
+                           link_fail_prob, max_failures):
+    '''Compute connectivity for a single combination of controllers.
+
+    @param g: NetworkX graph
+    @param controllers: list of controller locations
+    @param apsp: all-pairs shortest paths data
+    @param apsp_paths: all-pairs shortest paths path data
+    @param weighted: is graph weighted?
+    @param node_fail_prob: node failure probability
+    @param max_failures: max # simultaneous failures to simulate
+    @return availability: average availability fraction
+    @return coverage: fraction of cases considered.
+    '''
+    link_success_prob = (1.0 - link_fail_prob)
+    availabilities = {}  # Probabilities * connectivity per # failures
+    coverages = {}  # Coverage per # failures
+
+    for failures in range(max_failures + 1):
+        availabilities[failures] = 0.0
+        coverages[failures] = 0.0
+
+        for failed_links in link_failure_combinations(g, failures):
+            links = g.number_of_edges()
+            bad_links = len(failed_links)
+            good_links = links - bad_links
+            state_prob = ((link_success_prob ** good_links) *
+                          (link_fail_prob ** bad_links))
+            coverages[failures] += state_prob
+            conn = connectivity_sssp(g, combo, apsp, apsp_paths, weighted, failed_links)
+            availabilities[failures] += state_prob * conn
+
+    availability = sum(availabilities.values())
+    coverage = sum(coverages.values())
+    return availability, coverage
+
+
+def get_latency(g, combo, apsp, apsp_paths, weighted, extra_params):
     return get_total_path_len(g, combo, apsp, weighted) / float(g.number_of_nodes())
 
-def get_fairness(g, combo, apsp, apsp_paths, weighted):
+def get_fairness(g, combo, apsp, apsp_paths, weighted, extra_params):
     return controller_split_fairness(g, combo, apsp, weighted)
+
+def get_availability(g, combo, apsp, apsp_paths, weighted, extra_params):
+    assert 'link_fail_prob' in extra_params
+    assert 'max_failures' in extra_params
+    availability, coverage = availability_one_combo(g, combo, apsp, apsp_paths,
+        weighted, extra_params['link_fail_prob'], extra_params['max_failures'])
+    return availability
 
 # Map of metric names to functions to execute them.
 # Functions must have these parameters:
@@ -151,13 +269,15 @@ def get_fairness(g, combo, apsp, apsp_paths, weighted):
 METRIC_FCNS = {
     'latency': get_latency,
     'fairness': get_fairness,
-    'congestion': control_traffic_congestion
+    'congestion': control_traffic_congestion,
+    'availability': get_availability
 }
 
 METRICS = METRIC_FCNS.keys()
 
 def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
-                   weighted = False, write_dist = False, write_combos = False):
+                   weighted = False, write_dist = False, write_combos = False,
+                   extra_params = None):
     '''Compute best, worst, and mean/median latencies, plus fairness.
 
     @param metrics: metrics to compute: in ['latency', 'fairness']
@@ -168,6 +288,9 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
     @param apsp_paths: all-pairs shortest paths path data
     @param weighted: is graph weighted?
     @param write_dist: write all values to the distribution.
+    @param write_combos: write combinations to JSON?
+    @param extra_params: extra params to pass in; hook for custom params, e.g
+        availability is parameterized by failure probabilities.
     '''
     id = 0  # Unique index for every distribution point written out.
     data['data'] = {}  # Where all data point & aggregates are stored.
@@ -199,7 +322,7 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
                 this_metric = metric_data[metric]
                 start_time = time.time()    
                 metric_value = METRIC_FCNS[metric](g, combo, apsp, apsp_paths,
-                                                   weighted)
+                                                   weighted, extra_params)
                 duration = time.time() - start_time
                 
                 this_metric['duration'] += duration
@@ -228,7 +351,6 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
             # Work around Python annoyance where str(set) doesn't work
             this_metric['lowest_combo'] = list(this_metric['lowest_combo'])
             this_metric['highest_combo'] = list(this_metric['highest_combo'])
-            
 
             PRINT_VALUES = True
             if PRINT_VALUES:
