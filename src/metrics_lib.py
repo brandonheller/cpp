@@ -222,7 +222,7 @@ def availability_one_combo(g, combo, apsp, apsp_paths, weighted,
     @param apsp: all-pairs shortest paths data
     @param apsp_paths: all-pairs shortest paths path data
     @param weighted: is graph weighted?
-    @param node_fail_prob: node failure probability
+    @param link_fail_prob: link failure probability
     @param max_failures: max # simultaneous failures to simulate
     @return availability: average availability fraction
     @return coverage: fraction of cases considered.
