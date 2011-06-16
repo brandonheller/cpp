@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 '''Compute metrics for varying number of controllers w/ different algorithms.'''
 import logging
+import time
 
 import networkx as nx
 
@@ -23,6 +24,9 @@ WEIGHTED = False
 # Write all combinations to the output, to be used for distribution for
 #  creating CDFs or other vis's later.
 WRITE_DIST = True
+
+# Write stuff at all?
+WRITE = False
 
 # Write out only the full distribution?
 DIST_ONLY = True
@@ -82,8 +86,11 @@ else:
 if USE_PRIOR_OPTS:
     data = read_json_file(PRIOR_OPTS_FILENAME)
 else:
+    start = time.time()
     metrics.run_all_combos(METRICS, g, controllers, data, apsp,
                            apsp_paths, WEIGHTED, WRITE_DIST, WRITE_COMBOS, EXTRA_PARAMS)
+    total_duration = time.time() - start
+    print "%0.6f" % total_duration
 
 if not DIST_ONLY:
     metrics.run_greedy_informed(data, g, apsp, WEIGHTED)
@@ -98,5 +105,6 @@ print "*******************************************************************"
 # Ignore the actual combinations in CSV outputs as well as single points.
 exclude = ["combo", "distribution", "metric", "group"]
 
-write_json_file(FILENAME + '.json', data)
-write_csv_file(FILENAME, data["data"], exclude = exclude)
+if WRITE:
+    write_json_file(FILENAME + '.json', data)
+    write_csv_file(FILENAME, data["data"], exclude = exclude)
