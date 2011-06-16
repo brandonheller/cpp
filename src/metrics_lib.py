@@ -222,25 +222,40 @@ def availability_one_combo(g, combo, apsp, apsp_paths, weighted,
     @param apsp: all-pairs shortest paths data
     @param apsp_paths: all-pairs shortest paths path data
     @param weighted: is graph weighted?
-    @param link_fail_prob: link failure probability
+    @param link_fail_prob: meaning depends on weighted.
+        if weighted == True:
+            probability per unit weight that a given link will fail
+        if weighted == False:
+            probability that a given link will fail
     @param max_failures: max # simultaneous failures to simulate
     @return availability: average availability fraction
     @return coverage: fraction of cases considered.
     '''
-    link_success_prob = (1.0 - link_fail_prob)
     availabilities = {}  # Probabilities * connectivity per # failures
     coverages = {}  # Coverage per # failures
+    assert g
 
     for failures in range(max_failures + 1):
         availabilities[failures] = 0.0
         coverages[failures] = 0.0
-
         for failed_links in link_failure_combinations(g, failures):
             links = g.number_of_edges()
-            bad_links = len(failed_links)
-            good_links = links - bad_links
-            state_prob = ((link_success_prob ** good_links) *
-                          (link_fail_prob ** bad_links))
+            if weighted:
+                state_prob = 1.0
+                for e in g.edges():
+                    src, dst = e
+                    weight = g[src][dst]['weight']
+                    this_link_fail_prob = link_fail_prob * weight
+                    if e in failed_links:
+                        state_prob *= this_link_fail_prob
+                    else:
+                        state_prob *= (1.0 - this_link_fail_prob)
+            else:
+                bad_links = len(failed_links)
+                good_links = links - bad_links
+                link_success_prob = (1.0 - link_fail_prob)
+                state_prob = ((link_success_prob ** good_links) *
+                              (link_fail_prob ** bad_links))
             coverages[failures] += state_prob
             conn = connectivity_sssp(g, combo, apsp, apsp_paths, weighted, failed_links)
             availabilities[failures] += state_prob * conn
