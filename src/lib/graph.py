@@ -33,3 +33,10 @@ def loop_graph(n):
     # Add loop edge
     g.add_edge(g.number_of_nodes() - 1, 0)
     return g
+
+
+def set_unit_weights(g):
+    '''Set edge weights for NetworkX graph to 1 & return.'''
+    for src, dst in g.edges():
+        g[src][dst]['weight'] = 1
+    return g
