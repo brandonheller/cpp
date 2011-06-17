@@ -19,14 +19,14 @@ NUM_FROM_START = 3
 NUM_FROM_END = 0
 
 
-WEIGHTED = False
+WEIGHTED = True
 
 # Write all combinations to the output, to be used for distribution for
 #  creating CDFs or other vis's later.
 WRITE_DIST = True
 
 # Write stuff at all?
-WRITE = False
+WRITE = True
 
 # Write out only the full distribution?
 DIST_ONLY = True
@@ -46,13 +46,13 @@ PROCESSES = 4  # None
 # Use multiple processes?
 MULTIPROCESS = True
 
-CONTROLLERS_OVERRIDE = [5]
+CONTROLLERS_OVERRIDE = False #[5]
 
 CHUNKSIZE = 50
 
 # Metrics to compute
 #METRICS = metrics.METRICS
-METRICS = ['latency']
+METRICS = ['availability']
 
 # Pull in previously computed data, rather than recompute?
 USE_PRIOR_OPTS = False
@@ -94,6 +94,11 @@ class Metrics:
         if WEIGHTED:
             apsp = nx.all_pairs_dijkstra_path_length(g)
             apsp_paths = nx.all_pairs_dijkstra_path(g)
+            # Try to roughly match the failure probability of links.
+            link_fail_prob = EXTRA_PARAMS['link_fail_prob']
+            distances = [g[src][dst]['weight'] for src, dst in g.edges()]
+            weighted_link_fail_prob = g.number_of_edges() / float(sum(distances)) * link_fail_prob
+            EXTRA_PARAMS['link_fail_prob'] = weighted_link_fail_prob
         else:
             apsp = nx.all_pairs_shortest_path_length(g)
             apsp_paths = nx.all_pairs_shortest_path(g)
