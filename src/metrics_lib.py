@@ -3,6 +3,7 @@
 
 from itertools import combinations
 import logging
+import multiprocessing
 import time
 
 import numpy
@@ -290,9 +291,27 @@ METRIC_FCNS = {
 
 METRICS = METRIC_FCNS.keys()
 
+def handle_combo(combo):
+    '''Handle processing for a combination.
+    
+    Returns list with two elements:
+        combo: list
+        values: dict of metric, (value, duration) tuples.
+    '''
+    values = {}
+    for metric in g_metrics:
+        start_time = time.time()
+        metric_value = METRIC_FCNS[metric](g_g, combo, g_apsp, g_apsp_paths,
+                                           g_weighted, g_extra_params)
+        duration = time.time() - start_time
+        values[metric] = (metric_value, duration)
+    return [combo, values]
+
+
 def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
                    weighted = False, write_dist = False, write_combos = False,
-                   extra_params = None):
+                   extra_params = None, processes = None, multiprocess = False,
+                   chunksize = 1):
     '''Compute best, worst, and mean/median latencies, plus fairness.
 
     @param metrics: metrics to compute: in ['latency', 'fairness']
@@ -306,7 +325,29 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
     @param write_combos: write combinations to JSON?
     @param extra_params: extra params to pass in; hook for custom params, e.g
         availability is parameterized by failure probabilities.
+    @param processes: number of workers in pool
+    @param multiprocess: use multiple processes?
+    @param chunksize: chunksize for multiprocess map
     '''
+    
+    # Ugly hack to effectively write our reused objects to shared memory
+    global g_metrics
+    global g_g
+    global g_apsp
+    global g_apsp_paths
+    global g_weighted
+    global g_extra_params
+    
+    g_metrics = metrics
+    g_g = g
+    g_apsp = apsp
+    g_apsp_paths = apsp_paths
+    g_weighted = weighted
+    g_extra_params = extra_params
+
+    if multiprocess:
+        pool = multiprocessing.Pool(processes)
+
     id = 0  # Unique index for every distribution point written out.
     data['data'] = {}  # Where all data point & aggregates are stored.
     for combo_size in sorted(controllers):
@@ -328,18 +369,19 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
 
         distribution = [] # list of {combo, key:value}'s in JSON, per combo
 
-        for combo in combinations(g.nodes(), combo_size):
+        if multiprocess:
+            results = pool.map(handle_combo, combinations(g.nodes(), combo_size),
+                               chunksize)
+        else:
+            results = map(handle_combo, combinations(g.nodes(), combo_size))
 
+        for combo, values in results:
             json_entry = {}  # For writing to distribution
             json_entry['id'] = id
             id += 1
             for metric in metrics:
                 this_metric = metric_data[metric]
-                start_time = time.time()    
-                metric_value = METRIC_FCNS[metric](g, combo, apsp, apsp_paths,
-                                                   weighted, extra_params)
-                duration = time.time() - start_time
-                
+                metric_value, duration = values[metric]
                 this_metric['duration'] += duration
                 if metric_value < this_metric['lowest']:
                     this_metric['lowest'] = metric_value

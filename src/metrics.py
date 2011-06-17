@@ -40,10 +40,19 @@ EXTRA_PARAMS = {
 # Write out combinations?
 WRITE_COMBOS = False
 
+# Number of processes to spawn in worker pool
+PROCESSES = 4  # None
+
+# Use multiple processes?
+MULTIPROCESS = True
+
+CONTROLLERS_OVERRIDE = [5]
+
+CHUNKSIZE = 50
 
 # Metrics to compute
 #METRICS = metrics.METRICS
-METRICS = ['availability', 'latency']
+METRICS = ['latency']
 
 # Pull in previously computed data, rather than recompute?
 USE_PRIOR_OPTS = False
@@ -71,40 +80,55 @@ if COMPUTE_START:
 if COMPUTE_END:
     controllers += (range(g.number_of_nodes() - NUM_FROM_END + 1, g.number_of_nodes() + 1))
 
-# data['data'][num controllers] = [latency:latency, nodes:[best-pos node(s)]]
-# data['metrics'] = [list of metrics included]
-# latency is also equal to 1/closeness centrality.
-data = {}
+if CONTROLLERS_OVERRIDE:
+    controllers = CONTROLLERS_OVERRIDE
 
-if WEIGHTED:
-    apsp = nx.all_pairs_dijkstra_path_length(g)
-    apsp_paths = nx.all_pairs_dijkstra_path(g)
-else:
-    apsp = nx.all_pairs_shortest_path_length(g)
-    apsp_paths = nx.all_pairs_shortest_path(g)
+class Metrics:
+    
+    def __init__(self):
+        # data['data'][num controllers] = [latency:latency, nodes:[best-pos node(s)]]
+        # data['metrics'] = [list of metrics included]
+        # latency is also equal to 1/closeness centrality.
+        data = {}
+        
+        if WEIGHTED:
+            apsp = nx.all_pairs_dijkstra_path_length(g)
+            apsp_paths = nx.all_pairs_dijkstra_path(g)
+        else:
+            apsp = nx.all_pairs_shortest_path_length(g)
+            apsp_paths = nx.all_pairs_shortest_path(g)
+        
+        if USE_PRIOR_OPTS:
+            data = read_json_file(PRIOR_OPTS_FILENAME)
+        else:
+            start = time.time()
+            metrics.run_all_combos(METRICS, g, controllers, data, apsp,
+                                   apsp_paths, WEIGHTED, WRITE_DIST,
+                                   WRITE_COMBOS, EXTRA_PARAMS, PROCESSES,
+                                   MULTIPROCESS, CHUNKSIZE)
+            total_duration = time.time() - start
+            print "%0.6f" % total_duration
+        
+        if not DIST_ONLY:
+            metrics.run_greedy_informed(data, g, apsp, WEIGHTED)
+            metrics.run_greedy_alg_dict(data, g, 'greedy-cc', 'latency', nx.closeness_centrality(g, weighted_edges = WEIGHTED), apsp, WEIGHTED)
+            metrics.run_greedy_alg_dict(data, g, 'greedy-dc', 'latency', nx.degree_centrality(g), apsp, WEIGHTED)
+            for i in [10, 100, 1000]:
+                metrics.run_best_n(data, g, apsp, i, WEIGHTED)
+                metrics.run_worst_n(data, g, apsp, i, WEIGHTED)
+        
+        print "*******************************************************************"
+        
+        # Ignore the actual combinations in CSV outputs as well as single points.
+        exclude = ["combo", "distribution", "metric", "group"]
+        
+#        for d in data['data']['1']['distribution']:
+#            print " id: %s latency: %s" % (d['id'], d['latency'])
+#        
+        if WRITE:
+            write_json_file(FILENAME + '.json', data)
+            write_csv_file(FILENAME, data["data"], exclude = exclude)
 
-if USE_PRIOR_OPTS:
-    data = read_json_file(PRIOR_OPTS_FILENAME)
-else:
-    start = time.time()
-    metrics.run_all_combos(METRICS, g, controllers, data, apsp,
-                           apsp_paths, WEIGHTED, WRITE_DIST, WRITE_COMBOS, EXTRA_PARAMS)
-    total_duration = time.time() - start
-    print "%0.6f" % total_duration
 
-if not DIST_ONLY:
-    metrics.run_greedy_informed(data, g, apsp, WEIGHTED)
-    metrics.run_greedy_alg_dict(data, g, 'greedy-cc', 'latency', nx.closeness_centrality(g, weighted_edges = WEIGHTED), apsp, WEIGHTED)
-    metrics.run_greedy_alg_dict(data, g, 'greedy-dc', 'latency', nx.degree_centrality(g), apsp, WEIGHTED)
-    for i in [10, 100, 1000]:
-        metrics.run_best_n(data, g, apsp, i, WEIGHTED)
-        metrics.run_worst_n(data, g, apsp, i, WEIGHTED)
-
-print "*******************************************************************"
-
-# Ignore the actual combinations in CSV outputs as well as single points.
-exclude = ["combo", "distribution", "metric", "group"]
-
-if WRITE:
-    write_json_file(FILENAME + '.json', data)
-    write_csv_file(FILENAME, data["data"], exclude = exclude)
+if __name__ == '__main__':
+    Metrics()
