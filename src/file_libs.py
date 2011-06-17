@@ -29,6 +29,7 @@ def write_json_file(filename, data):
     '''Given JSON data, write to file.'''
     json_file = open(filename, 'w')
     json.dump(data, json_file, indent = 4)
+    print "wrote %s" % filename
 
 def read_json_file(filename):
     input_file = open(filename, 'r')
@@ -46,3 +47,4 @@ def write_csv_file(filename, data, exclude):
         row_data = [flattened_data.get(field, 0) for field in field_names]
         csv_file.write(tab_sep(["%s" % val for val in ([i] + row_data)]) + '\n')
 
+    print "wrote %s" % filename + '.csv'
