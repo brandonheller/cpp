@@ -79,7 +79,7 @@ def do_plot():
     for i in range(1, options.max + 1):
         data[str(i)] = [d[options.metric] for d in stats['data'][str(i)]["distribution"]]
     colors = ["r-", "r--", "g-.", "b-", "g--"]
-    write_filepath = os.path.join(options.output_dir, options.input)
+    write_filepath = os.path.join(options.output_dir, options.input + '_' + options.metric)
     axis_limits = [0, round(math.ceil(max(data["1"]))), 0, 1]
     if options.minx:
         axis_limits[0] = options.minx

@@ -67,6 +67,8 @@ def plot(ptype, data, colors, axes, label, xscale, yscale,
     pylab.title(label)
     pylab.legend(lines, datanames, loc = "lower right")
     if write:
-        fig.savefig(write_filepath + '.' + ext)
+        filepath = write_filepath + '.' + ext
+        fig.savefig(filepath)
+        print "wrote file to %s" % filepath
     else:
         pylab.show()
