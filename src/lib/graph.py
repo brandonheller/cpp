@@ -40,3 +40,14 @@ def set_unit_weights(g):
     for src, dst in g.edges():
         g[src][dst]['weight'] = 1
     return g
+
+
+def nx_graph_from_tuples(undir_tuples, dir_tuples = None):
+    g = nx.Graph()
+    for a, b, w in undir_tuples:
+        g.add_edge(a, b, weight = w)
+    if dir_tuples:
+        g = nx.DiGraph(g)
+        for a, b, w in dir_tuples:
+            g.add_edge(a, b, weight = w)
+    return g
