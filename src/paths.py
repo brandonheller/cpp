@@ -100,9 +100,9 @@ def BFS(g, src, dst):
 
 
 def two_step_edge_disjoint_pair(g, src, dst):
-    '''Return shortest path and second-shortest path from src to dst.
+    '''Return shortest path and edge-disjoint second path from src to dst.
 
-    NOTE: not guaranteed to return the second shortest pair!  See pg. 40.
+    NOTE: not guaranteed to return the combined shortest pair!  See pg. 40.
 
     @param g: NetworkX Graph object
     @param src: src node label
@@ -114,4 +114,20 @@ def two_step_edge_disjoint_pair(g, src, dst):
     for i, n in enumerate(shortest_path):
         if i != len(shortest_path) - 1:
             g2.remove_edge(n, shortest_path[i + 1])
+    return [shortest_path, BFS(g2, src, dst)]
+
+
+def two_step_vertex_disjoint_pair(g, src, dst):
+    '''Return shortest path and vertexx-disjoint second path from src to dst.
+
+    NOTE: not guaranteed to return the combined shortest pair!  See pg. 40.
+
+    @param g: NetworkX Graph object
+    @param src: src node label
+    @param dst: dst node label
+    @param paths: two-element list of path lists
+    '''
+    g2 = g.copy()
+    shortest_path = BFS(g2, src, dst)
+    g2.remove_nodes_from(shortest_path[1:-1])
     return [shortest_path, BFS(g2, src, dst)]
