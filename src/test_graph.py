@@ -19,7 +19,7 @@ class DisjointnessTest(unittest.TestCase):
         self.assertFalse(vertex_disjoint([a, a]))
         self.assertFalse(vertex_disjoint([a, b]))
         # Chop shared ends off.
-        self.assertTrue(vertex_disjoint([a[1:-2], b2[1:-2]]))
+        self.assertTrue(vertex_disjoint([a[1:-1], b2[1:-1]]))
 
     def test_edge_disjoint(self):
         '''Test edge disjointness function for correctness.'''
