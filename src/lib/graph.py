@@ -99,3 +99,21 @@ def pathlen(g, path):
         if i != len(path) - 1:
             pathlen += g[n][path[i+1]]['weight']
     return pathlen
+
+def edges_on_path(l):
+    '''Return list of edges on a path list.'''
+    return [(l[i], l[i + 1]) for i in range(len(l) - 1)]
+
+def interlacing_edges(list1, list2):
+    '''Return edges in common between two paths.
+
+    Input paths are considered interlacing, even if they go in the opposite
+    direction across the same link.  In that case, a single edge will be
+    return in whatever order NetworkX prefers for an undirected edge.
+    '''
+    l1 = edges_on_path(list1)
+    l1.extend(edges_on_path([i for i in reversed(list1)]))
+    l2 = edges_on_path(list2)
+    l2.extend(edges_on_path([i for i in reversed(list2)]))
+    combined = [e for e in l1 if e in l2]
+    return nx.Graph(combined).edges()
