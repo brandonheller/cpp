@@ -6,7 +6,7 @@ import unittest
 
 import networkx as nx
 
-from lib.graph import set_unit_weights, nx_graph_from_tuples
+from lib.graph import set_unit_weights, nx_graph_from_tuples, pathlen
 from topo.os3e import OS3EGraph
 from os3e_weighted import OS3EWeightedGraph
 from paths import BFS
@@ -45,6 +45,23 @@ graph_fig_2_3 = nx_graph_from_tuples([
     ('Z', 'E', -2)
 ])
 
+# Figure 3.1a, pg 41
+graph_fig_3_1_a = nx_graph_from_tuples([
+    ('A', 'B', 1),
+    ('A', 'E', 1),
+    ('A', 'G', 8),
+    ('B', 'C', 1),
+    ('B', 'E', 1),
+    ('B', 'F', 2),
+    ('C', 'D', 1),
+    ('C', 'G', 1),
+    ('D', 'F', 1),
+    ('D', 'Z', 1),
+    ('E', 'F', 4),
+    ('F', 'Z', 4),
+    ('G', 'Z', 2)
+])
+
 
 class TestBFS(unittest.TestCase):
 
@@ -66,17 +83,17 @@ class TestBFS(unittest.TestCase):
 
     def test_example_2_6(self):
         '''Example 2.6 on pg. 35.'''
-        def pathlen(g, path):
-            pathlen = 0
-            for i, n in enumerate(path):
-                if i != len(path) - 1:
-                    pathlen += g[n][path[i+1]]['weight']
-            return pathlen
-
         g = graph_fig_2_3
         path = BFS(g, 'A', 'Z')
         self.assertEqual(path, [i for i in 'ADECBZ'])
         self.assertEqual(pathlen(g, path), 12)
+
+    def test_example_3_1_a(self):
+        '''Example 3.1a on pg. 41.'''
+        g = graph_fig_3_1_a
+        path = BFS(g, 'A', 'Z')
+        self.assertEqual(path, [i for i in 'ABCDZ'])
+        self.assertEqual(pathlen(g, path), 4)
 
 
 if __name__ == '__main__':

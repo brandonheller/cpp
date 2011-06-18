@@ -86,3 +86,16 @@ def edge_disjoint(paths):
                     return False
                 edges.add(e_rev)
     return True
+
+def pathlen(g, path):
+    '''Return sum of path weights.
+
+    @param g: NetworkX Graph
+    @param path: list of nodes
+    @return length: sum of path weights
+    '''
+    pathlen = 0
+    for i, n in enumerate(path):
+        if i != len(path) - 1:
+            pathlen += g[n][path[i+1]]['weight']
+    return pathlen
