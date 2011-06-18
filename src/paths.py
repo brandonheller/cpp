@@ -21,7 +21,8 @@ def BFS(g, src, dst):
     @param g: NetworkX Graph
     @param src: source node
     @param dst: destination node
-    @return path: list of nodes in shortest path from src to dst
+    @return path: list of nodes in shortest path from src to dst, or None if
+        no path exists.
     '''
     d = {}  # d[i] is distance of vertex i (in V) from source vertex A.  It
             # is the sum of arcs in a possible path from vertex A to vertex i.
@@ -87,7 +88,11 @@ def BFS(g, src, dst):
 
     # Recover & return path
     if P[Z] == A:
-        return [A, Z]
+        if g.has_edge(A, Z):
+            return [A, Z]
+        else:
+            # Didn't find a path :-(
+            return None
     else:
         pred = P[Z]
         path = [Z]

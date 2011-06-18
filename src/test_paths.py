@@ -77,6 +77,14 @@ class TestBFS(unittest.TestCase):
             self.assertEqual(path[0], 0)
             self.assertEqual(path[-1], i - 1)
 
+    def test_disconnected(self):
+        '''If no path exists, do we return None?'''
+        g = nx.Graph()
+        g.add_node('A')
+        g.add_node('Z')
+        path = BFS(g, 'A', 'Z')
+        self.assertEquals(path, None)
+
     def test_example_2_5(self):
         '''Example 2.5 on pg. 34.'''
         path = BFS(graph_fig_2_1, 'A', 'Z')
