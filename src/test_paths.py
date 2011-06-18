@@ -9,7 +9,7 @@ import networkx as nx
 from lib.graph import set_unit_weights, nx_graph_from_tuples, pathlen
 from topo.os3e import OS3EGraph
 from os3e_weighted import OS3EWeightedGraph
-from paths import BFS
+from paths import BFS, two_step_edge_disjoint_pair
 
 
 lg = logging.getLogger("test_paths")
@@ -94,6 +94,16 @@ class TestBFS(unittest.TestCase):
         path = BFS(g, 'A', 'Z')
         self.assertEqual(path, [i for i in 'ABCDZ'])
         self.assertEqual(pathlen(g, path), 4)
+
+
+class TestTwoStepEdgeDisjointPair(unittest.TestCase):
+
+    def test_example_3_1_b(self):
+        '''Example 3.1b on pg 41.'''
+        g = graph_fig_3_1_a
+        paths = two_step_edge_disjoint_pair(g, 'A', 'Z')
+        self.assertEqual(paths[0], [i for i in 'ABCDZ'])
+        self.assertEqual(paths[1], [i for i in 'AEBFZ'])
 
 
 if __name__ == '__main__':
