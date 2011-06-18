@@ -87,6 +87,7 @@ def edge_disjoint(paths):
                 edges.add(e_rev)
     return True
 
+
 def pathlen(g, path):
     '''Return sum of path weights.
 

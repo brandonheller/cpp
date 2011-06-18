@@ -63,6 +63,28 @@ graph_fig_3_1_a = nx_graph_from_tuples([
     ('G', 'Z', 2)
 ])
 
+# Figure 3.13a, pg 65
+graph_fig_3_13_a = nx_graph_from_tuples([
+    ('A', 'B', 1),
+    ('A', 'G', 1),
+    ('A', 'I', 7),
+    ('B', 'C', 1),
+    ('B', 'I', 2),
+    ('C', 'D', 1),
+    ('C', 'G', 2),
+    ('D', 'E', 1),
+    ('D', 'G', 5),
+    ('D', 'H', 2),
+    ('E', 'F', 1),
+    ('E', 'H', 2),
+    ('E', 'I', 3),
+    ('F', 'Z', 1),
+    ('F', 'I', 3),
+    ('G', 'H', 8),
+    ('H', 'Z', 4),
+    ('I', 'Z', 5)
+])
+
 
 class TestBFS(unittest.TestCase):
 
@@ -103,6 +125,13 @@ class TestBFS(unittest.TestCase):
         path = BFS(g, 'A', 'Z')
         self.assertEqual(path, [i for i in 'ABCDZ'])
         self.assertEqual(pathlen(g, path), 4)
+
+    def test_example_3_13_a(self):
+        '''Example 3.13a on pg 65.'''
+        g = graph_fig_3_13_a
+        path = BFS(g, 'A', 'Z')
+        self.assertEqual(path, [i for i in 'ABCDEFZ'])
+        self.assertEqual(pathlen(g, path), 6)
 
 
 class TestTwoStepEdgeDisjointPair(unittest.TestCase):
