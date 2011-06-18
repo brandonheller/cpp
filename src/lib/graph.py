@@ -51,3 +51,38 @@ def nx_graph_from_tuples(undir_tuples, dir_tuples = None):
         for a, b, w in dir_tuples:
             g.add_edge(a, b, weight = w)
     return g
+
+
+def vertex_disjoint(paths):
+    '''Check if provided paths are vertex-disjoint.
+
+    @param paths: list of path lists
+    '''
+    vertices = set([])
+    for path in paths:
+        for n in path:
+            if n in vertices:
+                return False
+            vertices.add(n)
+    return True
+
+
+def edge_disjoint(paths):
+    '''Check if provided paths are edge-disjoint.
+
+    @param paths: list of path lists
+    '''
+    edges = set([])
+    # Ensure edge disjointness
+    for path in paths:
+        for i, n in enumerate(path):
+            if i != len(path) - 1:
+                e = (n, path[i + 1])
+                if e in edges:
+                    return False
+                edges.add(e)
+                e_rev = (path[i + 1], n)
+                if e_rev in edges:
+                    return False
+                edges.add(e_rev)
+    return True
