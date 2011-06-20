@@ -143,6 +143,47 @@ def two_step_vertex_disjoint_pair(g, src, dst):
     return [shortest_path, BFS(g2, src, dst)]
 
 
+def grouped_shortest_pair(g, shortest_path, shortest_path_2):
+    '''Find shortest pair of paths of two interlacing original paths.
+
+    Last step of the optimal edge-disjoint and vertex-disjoint shortest-pair
+    algorithms.
+
+    @param g: original NetworkX Graph or DiGraph
+    @param shortest_path: list of path nodes
+    @param shortest_path_2: list of path nodes
+    @return path1: first non-interlacing shortest path
+    @return path2: second non-interlacing shortest path
+    '''
+    src = shortest_path[0]
+    dst = shortest_path[-1]
+    assert src == shortest_path_2[0]
+    assert dst == shortest_path_2[-1]
+
+    g3 = nx.Graph()
+    g3.add_path(shortest_path)
+    g3.add_path(shortest_path_2)
+    # copy edges on path:
+    for a, b in edges_on_path(shortest_path):
+        g3[a][b]['weight'] = g[a][b]['weight']
+    g3.add_path(shortest_path_2)
+    for a, b in edges_on_path(shortest_path_2):
+        g3[a][b]['weight'] = g[a][b]['weight']
+    for a, b in interlacing_edges(shortest_path, shortest_path_2):
+        g3.remove_edge(a, b)
+
+    # Find a path through graph and remove edges used.
+    path1 = BFS(g3, src, dst)
+    for a, b in edges_on_path(path1):
+        g3.remove_edge(a, b)
+    path2 = BFS(g3, src, dst)
+    for a, b in edges_on_path(path2):
+        g3.remove_edge(a, b)
+    assert g3.number_of_edges() == 0
+
+    return path1, path2
+
+
 def edge_disjoint_shortest_pair(g, src, dst):
     '''Return list of two edge-disjoint paths w/shortest total cost.
 
@@ -167,28 +208,10 @@ def edge_disjoint_shortest_pair(g, src, dst):
     # 5. Transform to the original graph, and erase any interlacing edges of
     # the two paths found.  Group the remaining edges to obtain the shortest
     # pair of edge-disjoint paths.
-    g3 = nx.Graph()
-    g3.add_path(shortest_path)
-    # copy edges on path:
-    for a, b in edges_on_path(shortest_path):
-        g3[a][b]['weight'] = g[a][b]['weight']
-    g3.add_path(shortest_path_2)
-    for a, b in edges_on_path(shortest_path_2):
-        g3[a][b]['weight'] = g[a][b]['weight']
-    for a, b in interlacing_edges(shortest_path, shortest_path_2):
-        g3.remove_edge(a, b)
+    path1, path2 = grouped_shortest_pair(g, shortest_path, shortest_path_2)
 
-    # Find a path through graph and remove edges used.
-    path1 = BFS(g3, src, dst)
-    path1len = pathlen(g3, path1)
-    for a, b in edges_on_path(path1):
-        g3.remove_edge(a, b)
-    path2 = BFS(g3, src, dst)
-    path2len = pathlen(g3, path2)
-    for a, b in edges_on_path(path2):
-        g3.remove_edge(a, b)
-    assert g3.number_of_edges() == 0
-
+    path1len = pathlen(g, path1)
+    path2len = pathlen(g, path2)
     second_pathtotal = path1len + path2len
     assert(first_pathtotal == second_pathtotal)
 
