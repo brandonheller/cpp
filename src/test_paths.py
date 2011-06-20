@@ -115,6 +115,15 @@ set_weights(graph_fig_3_16_a, 5.0)
 for src, dst in edges_on_path([i for i in 'ABCDEFZ']):
     graph_fig_3_16_a[src][dst]['weight'] = 1.0
 
+# Figure 3.13a mod 1, pg 78
+graph_fig_3_13_a_mod_1 = graph_fig_3_13_a.copy()
+graph_fig_3_13_a_mod_1['G']['H']['weight'] = 3.0
+
+# Figure 3.13a mod 2, pg 78
+graph_fig_3_13_a_mod_2 = graph_fig_3_13_a.copy()
+graph_fig_3_13_a_mod_2['G']['C']['weight'] = 3.0
+graph_fig_3_13_a_mod_2['G']['D']['weight'] = 3.0
+graph_fig_3_13_a_mod_2['H']['Z']['weight'] = 1.0
 
 
 def compare_path_lists(test, one, two, g = None, total = None):
@@ -235,6 +244,19 @@ class TestEdgeDisjointShortestPair(unittest.TestCase):
         exp_paths = [[i for i in 'ABCDZ'], [i for i in 'AEDFZ']]
         compare_path_lists(self, ed_paths, exp_paths, g, 12)
 
+    def test_example_3_13_a_mod_2(self):
+        '''Example 3.13a on pg 65, mod on pg 78.
+
+        This example has two equally good path choices, so only check sum of
+        paths.
+        '''
+        g = graph_fig_3_13_a_mod_2
+        ed_paths = edge_disjoint_shortest_pair(g, 'A', 'Z')
+        ed_paths_len = sum([pathlen(g, ed_paths[i]) for i in [0, 1]])
+        exp_paths = [[i for i in 'ABCDEFZ'], [i for i in 'AGDHZ']]
+        exp_paths_len = sum([pathlen(g, exp_paths[i]) for i in [0, 1]])
+        self.assertEqual(ed_paths_len, exp_paths_len)
+
 
 class TestVertexDisjointShortestPair(unittest.TestCase):
 
@@ -253,6 +275,34 @@ class TestVertexDisjointShortestPair(unittest.TestCase):
         vd_paths = vertex_disjoint_shortest_pair(g, 'A', 'Z')
         exp_paths = [[i for i in 'ABCFZ'], [i for i in 'AEDZ']]
         compare_path_lists(self, vd_paths, exp_paths, g, 14)
+
+    def test_example_3_13_a(self):
+        '''Example 3.13a on pg 65.'''
+        g = graph_fig_3_13_a
+        vd_paths = vertex_disjoint_shortest_pair(g, 'A', 'Z')
+        exp_paths = [[i for i in 'AGCDEFZ'], [i for i in 'ABIZ']]
+        compare_path_lists(self, vd_paths, exp_paths)
+
+    def test_example_3_13_a_mod_1(self):
+        '''Example 3.13a on pg 65, mod 1 on pg 78.'''
+        g = graph_fig_3_13_a_mod_1
+        vd_paths = vertex_disjoint_shortest_pair(g, 'A', 'Z')
+        exp_paths = [[i for i in 'ABCDEFZ'], [i for i in 'AGHZ']]
+        compare_path_lists(self, vd_paths, exp_paths, g, 14)
+
+    def test_example_3_13_a_mod_2(self):
+        '''Example 3.13a on pg 65, mod 2 on pg 78.
+
+        This example has two equally good path choices (ABIFZ / AGDHZ and
+        ABCDEFZ / AGDHZ), so only check sum of paths.
+        '''
+        g = graph_fig_3_13_a_mod_2
+        vd_paths = vertex_disjoint_shortest_pair(g, 'A', 'Z')
+        vd_paths_len = sum([pathlen(g, vd_paths[i]) for i in [0, 1]])
+        exp_paths = [[i for i in 'ABIFZ'], [i for i in 'AGDHZ']]
+        exp_paths_len = sum([pathlen(g, exp_paths[i]) for i in [0, 1]])
+        compare_path_lists(self, vd_paths, exp_paths, g, 14)
+        self.assertEqual(vd_paths_len, exp_paths_len)
 
 
 if __name__ == '__main__':
