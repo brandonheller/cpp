@@ -64,6 +64,21 @@ graph_fig_3_1_a = nx_graph_from_tuples([
     ('G', 'Z', 2)
 ])
 
+# Figure 3.14, pg 69
+graph_fig_3_14 = nx_graph_from_tuples([
+    ('A', 'E', 3),
+    ('A', 'B', 1),
+    ('B', 'C', 1),
+    ('C', 'D', 1),
+    ('C', 'E', 1),
+    ('C', 'F', 4),
+    ('D', 'E', 3),
+    ('D', 'F', 1),
+    ('D', 'Z', 1),
+    ('E', 'Z', 11),
+    ('F', 'Z', 1)
+])
+
 # Figure 3.13a, pg 65
 graph_fig_3_13_a = nx_graph_from_tuples([
     ('A', 'B', 1),
@@ -101,15 +116,22 @@ for src, dst in edges_on_path([i for i in 'ABCDEFZ']):
 
 
 
-def compare_path_lists(test, one, two):
+def compare_path_lists(test, one, two, g = None, total = None):
     '''Compare two path lists.
 
     Useful because shortest path algorithms yield paths in arbitrary orders.
+    @param test: instance of unittest.TestCase
+    @param one: list of path nodes
+    @param two: list of path nodes
+    @param g: optional NetworkX graph for path length verification
+    @param total: optional total length of both paths
     '''
     def make_tuple_set(path_list):
         return set([tuple(path) for path in path_list])
 
     test.assertEqual(make_tuple_set(one), make_tuple_set(two))
+    if g:
+        test.assertEqual(total, pathlen(g, one[0]) + pathlen(g, one[1]))
 
 
 class TestBFS(unittest.TestCase):
@@ -204,6 +226,13 @@ class TestEdgeDisjointShortestPair(unittest.TestCase):
         paths = edge_disjoint_shortest_pair(g, 'A', 'Z')
         exp_paths = [[i for i in 'AGCDEFZ'], [i for i in 'ABIZ']]
         compare_path_lists(self, paths, exp_paths)
+
+    def test_example_3_14(self):
+        '''Example 3.14 on pg 76.'''
+        g = graph_fig_3_14
+        ed_paths = edge_disjoint_shortest_pair(g, 'A', 'Z')
+        exp_paths = [[i for i in 'ABCDZ'], [i for i in 'AEDFZ']]
+        compare_path_lists(self, ed_paths, exp_paths, g, 12)
 
 
 if __name__ == '__main__':
