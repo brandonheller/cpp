@@ -12,6 +12,7 @@ from topo.os3e import OS3EGraph
 from os3e_weighted import OS3EWeightedGraph
 from paths import BFS, two_step_edge_disjoint_pair
 from paths import two_step_vertex_disjoint_pair, edge_disjoint_shortest_pair
+from paths import vertex_disjoint_shortest_pair
 
 
 lg = logging.getLogger("test_paths")
@@ -233,6 +234,25 @@ class TestEdgeDisjointShortestPair(unittest.TestCase):
         ed_paths = edge_disjoint_shortest_pair(g, 'A', 'Z')
         exp_paths = [[i for i in 'ABCDZ'], [i for i in 'AEDFZ']]
         compare_path_lists(self, ed_paths, exp_paths, g, 12)
+
+
+class TestVertexDisjointShortestPair(unittest.TestCase):
+
+    def test_diamond(self):
+        '''Simple diamond graph w/two equal paths.'''
+        g = nx.Graph()
+        g.add_path(['A', 'B', 'Z', 'C', 'A'])
+        set_unit_weights(g)
+        paths = vertex_disjoint_shortest_pair(g, 'A', 'Z')
+        exp_paths = [['A', 'B', 'Z'], ['A', 'C', 'Z']]
+        compare_path_lists(self, paths, exp_paths)
+
+    def test_example_3_14(self):
+        '''Example 3.14 on pg 76.'''
+        g = graph_fig_3_14
+        vd_paths = vertex_disjoint_shortest_pair(g, 'A', 'Z')
+        exp_paths = [[i for i in 'ABCFZ'], [i for i in 'AEDZ']]
+        compare_path_lists(self, vd_paths, exp_paths, g, 14)
 
 
 if __name__ == '__main__':

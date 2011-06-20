@@ -11,7 +11,7 @@ import sys
 import networkx as nx
 
 from lib.graph import interlacing_edges, pathlen, edges_on_path
-from lib.graph import flip_and_negate_path
+from lib.graph import flip_and_negate_path, remove_edge_bidir, add_edge_bidir
 
 # From http://docs.python.org/library/sys.html:
 # max    DBL_MAX    maximum representable finite float
@@ -215,4 +215,133 @@ def edge_disjoint_shortest_pair(g, src, dst):
     second_pathtotal = path1len + path2len
     assert(first_pathtotal == second_pathtotal)
 
+    return [path1, path2]
+
+
+def vertex_disjoint_shortest_pair(g, src, dst):
+    '''Return list of two vertex-disjoint paths w/shortest total cost.
+
+    @param g: NetworkX Graph object
+    @param src: src node label
+    @param dst: dst node label
+    @param paths: two-element list of path lists, arbitrary ordering
+    '''
+    # 1. Use BFS to get shortest path.
+    shortest_path = BFS(g, src, dst)
+
+    # 2. Replace each edge of the shortest path (equivalent to two oppositely
+    # directed arcs) by a single arc directed toward the source vertex.
+    # Also make the arc lengths negative.
+    g2 = flip_and_negate_path(g, shortest_path)
+
+    # 3. Find the first intermediate vertex from the destination vertex whose
+    # degree is greater than 3 (vertex F in Figure 3.16b).  Replace the
+    # external edges by arcs incident on this vertex.
+
+    # Use list comprehension to get an indexable reversed array.
+    sp_rev = [n for n in reversed(shortest_path)]
+    special_v_index = len(shortest_path) - 1  # Large to skip if not found.
+    for i in range(1, len(shortest_path) - 1):
+        v = sp_rev[i]
+        if g.degree(v) > 3:
+            next_v = sp_rev[i + 1]
+            prev_v = sp_rev[i - 1]
+            # We don't need to delete prev_v's edge because it was already
+            # made uni-direction in flip_and_negate_path.
+            ext_vs = [n for n in g.neighbors(v) if n != next_v and n != prev_v]
+            for ext_v in ext_vs:
+                # Since g2 is directed, remove outgoing edge only, leaving
+                # the internally-directed edge.
+                g2.remove_edge(v, ext_v)
+            special_v_index = i
+            break
+
+    # 4. Split each intermediate vertex on the shortest path (except the vertex
+    # found in Step 3) into as many subvertices as there are external edges
+    # connected to it; connect the external edges to these subvertices, one
+    # edge to one subvertex (see Figure 3.16c).  Note splitting is absent for
+    # a vertex with degree 2 or 3.
+
+    subvertices = {}  # subvertices[v] = list of created subvertices
+    special_v = sp_rev[special_v_index]
+    subvertices[special_v] = [special_v]
+    for i in range(special_v_index + 1, len(shortest_path)):
+        v = sp_rev[i]
+        subvertices[v] = []
+        if g.degree(v) > 3:
+            prev_v = sp_rev[i - 1]
+            next_v = sp_rev[i + 1]
+            ext_vs = [n for n in g.neighbors(v) if n != next_v and n != prev_v]
+
+            primes = ""
+            for ext_v in ext_vs:
+                # Create subvertex: vertex-prime
+                primes += "'"
+                subvertex = v + primes
+                subvertices[v].append(subvertex)
+
+                # Step 4: split and connect external edge
+                add_edge_bidir(g2, subvertex, ext_v, g[v][ext_v]['weight'])
+
+            # Remove original vertex v, which will delete all edges to v.
+            # Edges connecting to v on the reversed shortest path will be
+            # added in the next step.
+            g2.remove_node(v)
+
+        else:
+            subvertices[v].append(v)
+
+    # 5. Add arcs in parallel on the shortest path such that each subvertex
+    # belonging to a vertex is connected to subvertices of a neighboring
+    # vertex.   All the added arcs must be directed toward the source vertex.
+    # If m and n denote the number of subvertices of a pair of neighboring
+    # vertices, there will be a total of m x n arcs in parallel between them
+    # (see Figure 3.16d), each with a length equal to the negative of the
+    # length of the corresponding edge in the original graph.
+    for i in range(special_v_index, len(shortest_path) - 1):
+        v = sp_rev[i]
+        next_v = sp_rev[i + 1]
+        for v_src in subvertices[v]:
+            for next_v_dst in subvertices[next_v]:
+                g2.add_edge(v_src, next_v_dst)
+                g2[v_src][next_v_dst]['weight'] = -g[v][next_v]['weight']
+
+    # 6. Run the modified Dijkstra or the BFS algorithm again from the source
+    # vertex to the destination vertex in the above modified graph.
+    shortest_path_2 = BFS(g2, src, dst)
+
+    # 7. (A) Coalesce the subvertices back into their parent vertices, and the
+    # parallel arcs into single arcs.  (B) Replace single arcs on the shortest
+    # path by edges of positive length.  (C) Remove interlacing edges of the
+    # two paths found above to obtain the shortest pair of vertex-disjoint
+    # paths.
+    for i, v in enumerate(sp_rev):
+        # Ignore destination
+        if i == 0 or i == len(sp_rev) - 1:
+            continue
+        prev_v = sp_rev[i - 1]
+        next_v = sp_rev[i + 1]
+        # Is this a split vertex?
+        if v in subvertices and len(subvertices[v]) > 1:
+            g2.add_node(v)
+            # (A) Coalesce subvertices back into parent vertices
+            for subvertex in subvertices[v]:
+                # Restore external edges of subvertics
+                neighbors = g2.neighbors(subvertex)
+                ext_vs = [n for n in neighbors if n != prev_v and n != next_v]
+                for ext_v in ext_vs:
+                    add_edge_bidir(g2, v, ext_v, g[v][ext_v]['weight'])
+                # Clear subvertex and all its edges
+                g2.remove_node(subvertex)
+        # (B) Replace single arcs on the shortest path by edges of
+        # positive length.
+        add_edge_bidir(g2, prev_v, v, g[prev_v][v]['weight'])
+        add_edge_bidir(g2, v, next_v, g[v][next_v]['weight'])
+
+    # Second part of (A) - coalesce nodes names in the second path.
+    # Strip away any "prime" characters.
+    shortest_path_2 = [n.rstrip("'") for n in shortest_path_2]
+
+    # (C) Remove interlacing edges and return shortest pair
+    path1, path2 = grouped_shortest_pair(g, shortest_path, shortest_path_2)
     return [path1, path2]

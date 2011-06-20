@@ -145,3 +145,29 @@ def flip_and_negate_path(g, path):
             g2[n_next][n]['weight'] *= -1
 
     return g2
+
+
+def remove_edge_bidir(g, src, dst):
+    '''Remove edge plus one in opposite direction.
+
+    @param g: NetworkX DiGraph
+    @param src: source node
+    @param dst: destination node
+    '''
+    g.remove_edge(src, dst)
+    g.remove_edge(dst, src)
+
+
+def add_edge_bidir(g, src, dst, weight = None):
+    '''Add edge plus one in opposite direction.
+
+    @param g: NetworkX DiGraph
+    @param src: source node
+    @param dst: destination node
+    @param weight: optional weight to set for both
+    '''
+    g.add_edge(src, dst)
+    g.add_edge(dst, src)
+    if weight:
+        g[src][dst]['weight'] = weight
+        g[dst][src]['weight'] = weight
