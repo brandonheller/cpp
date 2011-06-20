@@ -7,6 +7,7 @@ import unittest
 import networkx as nx
 
 from lib.graph import set_unit_weights, nx_graph_from_tuples, pathlen
+from lib.graph import edges_on_path, set_weights
 from topo.os3e import OS3EGraph
 from os3e_weighted import OS3EWeightedGraph
 from paths import BFS, two_step_edge_disjoint_pair
@@ -85,6 +86,21 @@ graph_fig_3_13_a = nx_graph_from_tuples([
     ('I', 'Z', 5)
 ])
 
+# Figure 3.16a, pg 74
+# Unfortunately, this graph is pictured without weights.  Presumably the
+# author intended for the central path to have unit weights and the other
+# paths to have much larger weights.
+graph_fig_3_16_a = nx.Graph()
+graph_fig_3_16_a.add_path([i for i in 'AJKLMZIHGPNABCDEFZ'])
+edges_to_add = ['JC', 'KD', 'LE', 'LF', 'GD', 'EH', 'IF']
+for e in edges_to_add:
+    graph_fig_3_16_a.add_edge(e[0], e[1])
+set_weights(graph_fig_3_16_a, 5.0)
+for src, dst in edges_on_path([i for i in 'ABCDEFZ']):
+    graph_fig_3_16_a[src][dst]['weight'] = 1.0
+
+
+
 def compare_path_lists(test, one, two):
     '''Compare two path lists.
 
@@ -139,6 +155,13 @@ class TestBFS(unittest.TestCase):
     def test_example_3_13_a(self):
         '''Example 3.13a on pg 65.'''
         g = graph_fig_3_13_a
+        path = BFS(g, 'A', 'Z')
+        self.assertEqual(path, [i for i in 'ABCDEFZ'])
+        self.assertEqual(pathlen(g, path), 6)
+
+    def test_example_3_16_a(self):
+        '''Example 3.16a on pg 74.'''
+        g = graph_fig_3_16_a
         path = BFS(g, 'A', 'Z')
         self.assertEqual(path, [i for i in 'ABCDEFZ'])
         self.assertEqual(pathlen(g, path), 6)
