@@ -11,6 +11,7 @@ import sys
 import networkx as nx
 
 from lib.graph import interlacing_edges, pathlen, edges_on_path
+from lib.graph import flip_and_negate_path
 
 # From http://docs.python.org/library/sys.html:
 # max    DBL_MAX    maximum representable finite float
@@ -143,26 +144,20 @@ def two_step_vertex_disjoint_pair(g, src, dst):
 
 
 def edge_disjoint_shortest_pair(g, src, dst):
-    '''Return list of two edge disjoint paths w/shortest total cost.
+    '''Return list of two edge-disjoint paths w/shortest total cost.
 
     @param g: NetworkX Graph object
     @param src: src node label
     @param dst: dst node label
-    @param paths: two-element list of path lists, arbitary ordering
+    @param paths: two-element list of path lists, arbitrary ordering
     '''
     # 1. Use BFS to get shortest path.
     shortest_path = BFS(g, src, dst)
 
     # 2. Replace each edge of the shortest path (equivalent to two oppositely
     # directed arcs) by a single arc directed toward the source vertex.
-    g2 = nx.DiGraph(g)
-    for i, n in enumerate(shortest_path):
-        if i != len(shortest_path) - 1:
-            n_next = shortest_path[i + 1]
-            # Remove forward edge, leaving only reverse edge.
-            g2.remove_edge(n, n_next)
-            # 3. Make the length of each of the above arcs negative.
-            g2[n_next][n]['weight'] *= -1
+    # 3. Make the length of each of the above arcs negative.
+    g2 = flip_and_negate_path(g, shortest_path)
 
     # 4. Run the modified Dijkstra or the BFS algorithm again and from the
     # source vertex to the destination vertex in the above modified graph.

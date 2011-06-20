@@ -101,9 +101,11 @@ def pathlen(g, path):
             pathlen += g[n][path[i+1]]['weight']
     return pathlen
 
+
 def edges_on_path(l):
     '''Return list of edges on a path list.'''
     return [(l[i], l[i + 1]) for i in range(len(l) - 1)]
+
 
 def interlacing_edges(list1, list2):
     '''Return edges in common between two paths.
@@ -118,3 +120,23 @@ def interlacing_edges(list1, list2):
     l2.extend(edges_on_path([i for i in reversed(list2)]))
     combined = [e for e in l1 if e in l2]
     return nx.Graph(combined).edges()
+
+
+def flip_and_negate_path(g, path):
+    '''Return new directed graph with the given path flipped & negated.
+
+    @param g: NetworkX Graph (undirected)
+    @param path: list of nodes in path
+    @return g2: NetworkX DiGraph, modified
+    '''
+    g2 = nx.DiGraph(g)
+
+    for i, n in enumerate(path):
+        if i != len(path) - 1:
+            n_next = path[i + 1]
+            # Remove forward edge, leaving only reverse edge.
+            g2.remove_edge(n, n_next)
+            # Flip edge weight to negative of the original edge..
+            g2[n_next][n]['weight'] *= -1
+
+    return g2
