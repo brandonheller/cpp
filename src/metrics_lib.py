@@ -65,6 +65,21 @@ def worst_case_latency(g, controllers, apsp, weighted = False):
     closest = closest_controllers(g, controllers, apsp)
     return max([apsp[n][c] for n, c in closest.iteritems()])
 
+
+def fraction_within_latency(g, combo, apsp, lat_bound, weighted = False):
+    '''Returns the fraction of nodes that are under a latency bound.
+
+    @param g: NetworkX graph
+    @param combo: list of controller locations
+    @param apsp: all-pairs shortest paths data
+    @param weighted: is graph weighted?
+    @return fraction_within_latency
+    '''
+    closest = closest_controllers(g, combo, apsp)
+    latencies = [apsp[n][c] for n, c in closest.iteritems()]
+    return sum([l <= lat_bound for l in latencies]) / float(g.number_of_nodes())
+
+
 def fairness(values):
     '''Compute Jain's fairness index for a list of values.
 

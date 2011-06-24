@@ -6,7 +6,8 @@ import networkx as nx
 
 from itertools_recipes import choose
 from lib.graph import set_unit_weights
-from metrics_lib import fairness, availability_one_combo, link_failure_combinations
+from metrics_lib import fairness, availability_one_combo
+from metrics_lib import link_failure_combinations, fraction_within_latency
 from topo.os3e import OS3EGraph
 from os3e_weighted import OS3EWeightedGraph
 
@@ -135,6 +136,32 @@ class AvailabilityTest(unittest.TestCase):
                     apsp_paths, True, link_fail_prob, max_failures)
                 self.assertAlmostEqual(a, a_u)
                 self.assertAlmostEqual(c, c_u)
+
+
+class LatencyTest(unittest.TestCase):
+
+    def test_latency_bound(self):
+        '''Ensure fraction of nodes within bound is reasonable.'''
+        g = OS3EGraph()
+        g_unit = set_unit_weights(g.copy())
+        apsp = nx.all_pairs_shortest_path_length(g)
+        apsp_paths = nx.all_pairs_shortest_path(g)
+        path_lens = []
+        for a in apsp:
+            for b in apsp:
+                path_lens.append(apsp[a][b])
+        max_path_len = max(path_lens)
+        combos = [["Sunnyvale, CA", "Boston"],
+                  ["Portland"],
+                  ["Sunnyvale, CA", "Salt Lake City"],
+                  ["Seattle", "Boston"],
+                  ["Seattle", "Portland"]]
+        for combo in combos:
+            one = fraction_within_latency(g, combo, apsp, max_path_len + 1.0)
+            self.assertEqual(one, 1.0)
+            two = fraction_within_latency(g, combo, apsp, 0.000001)
+            self.assertEqual(two, len(combo) / float(g.number_of_nodes()))
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
