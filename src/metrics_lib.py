@@ -17,17 +17,15 @@ BIG = 10000000
 lg = logging.getLogger("metrics_lib")
 
 
-def get_total_path_len(g, controllers, apsp, weighted = False):
-    '''Returns the total of path lengths from nodes to nearest controllers.
+def closest_controllers(g, controllers, apsp):
+    '''Returns a dict of each node to its closest controller.
     
     @param g: NetworkX graph
     @param controllers: list of controller locations
     @param apsp: all-pairs shortest paths data
-    @param weighted: is graph weighted?
-    @return path_len_total: total of path lengths
+    @return closest_controllers: dict of node to closest controller
     '''
-    # path_lengths[node] = path from node to nearest item in combo
-    path_lengths = {}
+    closest_controllers = {}  # map each node to closest controller
     for n in g.nodes():
         # closest_controller records controller w/shortest distance
         # to the currently-considered node.
@@ -38,11 +36,34 @@ def get_total_path_len(g, controllers, apsp, weighted = False):
             if path_len < shortest_path_len:
                 closest_controller = c
                 shortest_path_len = path_len
-        #  pick the best value from that list
-        path_lengths[n] = shortest_path_len
-    path_len_total = sum(path_lengths.values())
-    return path_len_total
+        closest_controllers[n] = closest_controller
+    return closest_controllers
 
+
+def get_total_path_len(g, controllers, apsp, weighted = False):
+    '''Returns the total of path lengths from nodes to nearest controllers.
+
+    @param g: NetworkX graph
+    @param controllers: list of controller locations
+    @param apsp: all-pairs shortest paths data
+    @param weighted: is graph weighted?
+    @return path_len_total: total of path lengths
+    '''
+    closest = closest_controllers(g, controllers, apsp)
+    return sum([apsp[n][c] for n, c in closest.iteritems()])
+
+
+def worst_case_latency(g, controllers, apsp, weighted = False):
+    '''Returns the latency of the switch farthest from a controller.
+
+    @param g: NetworkX graph
+    @param controllers: list of controller locations
+    @param apsp: all-pairs shortest paths data
+    @param weighted: is graph weighted?
+    @return worst_case_latency
+    '''
+    closest = closest_controllers(g, controllers, apsp)
+    return max([apsp[n][c] for n, c in closest.iteritems()])
 
 def fairness(values):
     '''Compute Jain's fairness index for a list of values.
@@ -269,6 +290,9 @@ def availability_one_combo(g, combo, apsp, apsp_paths, weighted,
 def get_latency(g, combo, apsp, apsp_paths, weighted, extra_params):
     return get_total_path_len(g, combo, apsp, weighted) / float(g.number_of_nodes())
 
+def get_wc_latency(g, combo, apsp, apsp_paths, weighted, extra_params):
+    return worst_case_latency(g, combo, apsp, weighted)
+
 def get_fairness(g, combo, apsp, apsp_paths, weighted, extra_params):
     return controller_split_fairness(g, combo, apsp, weighted)
 
@@ -284,6 +308,7 @@ def get_availability(g, combo, apsp, apsp_paths, weighted, extra_params):
 # (g, combo, apsp, apsp_paths, weighted)
 METRIC_FCNS = {
     'latency': get_latency,
+    'wc_latency': get_wc_latency,
     'fairness': get_fairness,
     'congestion': control_traffic_congestion,
     'availability': get_availability
