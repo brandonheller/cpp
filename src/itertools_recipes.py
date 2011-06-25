@@ -11,6 +11,8 @@ def random_combination(iterable, r):
     return tuple(pool[i] for i in indices)
 
 # From http://stackoverflow.com/questions/3025162/statistics-combinations-in-python
+# binomial coefficient function, returns the number of combinations in a set:
+#  n! / r! / (n-r)!
 def choose(n, k):
     """
     A fast way to calculate binomial coefficients by Andrew Dalke (contrib).
