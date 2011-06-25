@@ -60,8 +60,9 @@ def write_dist_csv_file(filename, data, exclude):
     for i in sorted(data.keys()):
         data_points = data[i]['distribution']
         for point in data_points:
+            row_data = []
             for field in fields:
-                row_data = [point.get(field, 0) for field in fields]
+                row_data.append(point.get(field, 0))
             csv_file.write(tab_sep(["%s" % val for val in ([i] + row_data)]) + '\n')
 
     print "wrote %s" % filename + '.csv'
