@@ -27,6 +27,9 @@ def parse_args():
     opts.add_option("--all_metrics",  action = "store_true",
                     default = False,
                     help = "compute all metrics?")    
+    opts.add_option("--lat_metrics",  action = "store_true",
+                    default = False,
+                    help = "compute all latency metrics?")
     opts.add_option("-w", "--write",  action = "store_true",
                     default = False,
                     help = "write plots, rather than display?")
@@ -35,7 +38,7 @@ def parse_args():
                     help = "used weighted input graph?")
     opts.add_option("--no-multiprocess",  action = "store_false",
                     default = True, dest = 'multiprocess',
-                    help = "use multiple processes?")
+                    help = "don't use multiple processes?")
     opts.add_option("--processes", type = 'int', default = 4,
                     help = "worker pool size; must set multiprocess=True")
     opts.add_option("--chunksize", type = 'int', default = 50,
@@ -48,20 +51,23 @@ def parse_args():
                     help = "write_distribution?")
     opts.add_option("--no-dist_only",  action = "store_false",
                     default = True, dest = 'dist_only',
-                    help = "write out _only_ the full distribution")
+                    help = "don't write out _only_ the full distribution (i.e.,"
+                    "run all algorithms.)")
     opts.add_option("--use_prior_opts",  action = "store_true",
                     default = False,
                     help =  "Pull in previously computed data, rather than recompute?")
     opts.add_option("--no-compute_start",  action = "store_false",
                     default = True, dest = 'compute_start',
-                    help = "compute metrics from start?")
+                    help = "don't compute metrics from start?")
     opts.add_option("--no-compute_end",  action = "store_false",
                     default = True, dest = 'compute_end',
-                    help = "compute metrics from end?")
+                    help = "don't compute metrics from end?")
     options, arguments = opts.parse_args()
 
     if options.all_metrics:
         options.metrics = metrics.METRICS
+    elif options.lat_metrics:
+        options.metrics = ['latency', 'wc_latency']
     else:
         options.metrics = [options.metric]
 
@@ -148,8 +154,10 @@ class Metrics:
         print "*******************************************************************"
         
         # Ignore the actual combinations in CSV outputs as well as single points.
-        exclude = ["combo", "distribution", "metric", "group"]
-        
+        exclude = ["distribution", "metric", "group"]
+        if not options.write_combos:
+            exclude += ['highest_combo', 'lowest_combo']
+
 #        for d in data['data']['1']['distribution']:
 #            print " id: %s latency: %s" % (d['id'], d['latency'])
 #        
