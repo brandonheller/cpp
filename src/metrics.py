@@ -21,6 +21,8 @@ def parse_args():
                     help = "number of controllers from start")
     opts.add_option("--from_end", type = 'int', default = 0,
                     help = "number of controllers from end")
+    opts.add_option("--controller_list", type = 'str', default = None,
+                    help = "list of space-separated controller totals")
     opts.add_option("--metric",
                     default = 'latency',
                     choices = metrics.METRICS,
@@ -72,6 +74,12 @@ def parse_args():
     else:
         options.metrics = [options.metric]
 
+    options.controllers = None
+    if options.controller_list:
+        options.controllers = []
+        for i in options.controller_list.split(' '):
+            options.controllers.append(int(i))
+
     return options
 
 
@@ -81,8 +89,6 @@ EXTRA_PARAMS = {
     'max_failures': 2
 }
 
-CONTROLLERS_OVERRIDE = False #[5]
-
 
 class Metrics:
     
@@ -90,37 +96,44 @@ class Metrics:
 
         options = parse_args()
 
-        FILENAME = "data_out/os3e_"
-        if options.weighted:
-            FILENAME += "weighted"
-        else:
-            FILENAME += "unweighted"
-            PRIOR_OPTS_FILENAME = "data_out/os3e_unweighted_9_9.json"
-        FILENAME += "_%s_%s" % (options.from_start, options.from_end)
         
         if options.weighted:
             g = OS3EWeightedGraph()
         else:
             g = OS3EGraph()
+
+        if options.controllers:
+            controllers = options.controllers
+        else:  
+            # Controller numbers to compute data for.
+            controllers = []
+    
+            # Eventually expand this to n.
+            if options.compute_start:
+                controllers += range(1, options.from_start + 1)
+            
+            if options.compute_end:
+                controllers += (range(g.number_of_nodes() - options.from_end + 1, g.number_of_nodes() + 1))
+
+        filename = "data_out/os3e_"
+        if options.weighted:
+            filename += "weighted"
+        else:
+            filename += "unweighted"
+            PRIOR_OPTS_filename = "data_out/os3e_unweighted_9_9.json"
         
-        # Controller numbers to compute data for.
-        controllers = []
-        
-        # Eventually expand this to n.
-        if options.compute_start:
-            controllers += range(1, options.from_start + 1)
-        
-        if options.compute_end:
-            controllers += (range(g.number_of_nodes() - options.from_end + 1, g.number_of_nodes() + 1))
-        
-        if CONTROLLERS_OVERRIDE:
-            controllers = CONTROLLERS_OVERRIDE
+        if options.controller_list:
+            for c in controllers:
+                filename += "_%s" % c
+        else:
+            filename += "_%s_to_%s" % (options.from_start, options.from_end)
+
 
         # data['data'][num controllers] = [latency:latency, nodes:[best-pos node(s)]]
         # data['metrics'] = [list of metrics included]
         # latency is also equal to 1/closeness centrality.
         data = {}
-        
+
         if options.weighted:
             apsp = nx.all_pairs_dijkstra_path_length(g)
             apsp_paths = nx.all_pairs_dijkstra_path(g)
@@ -134,7 +147,7 @@ class Metrics:
             apsp_paths = nx.all_pairs_shortest_path(g)
         
         if options.use_prior_opts:
-            data = read_json_file(PRIOR_OPTS_FILENAME)
+            data = read_json_file(PRIOR_OPTS_filename)
         else:
             start = time.time()
             metrics.run_all_combos(options.metrics, g, controllers, data, apsp,
