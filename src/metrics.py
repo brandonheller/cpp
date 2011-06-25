@@ -9,6 +9,7 @@ import networkx as nx
 import metrics_lib as metrics
 from topo.os3e import OS3EGraph
 from file_libs import write_csv_file, write_json_file, read_json_file
+from file_libs import write_dist_csv_file
 from os3e_weighted import OS3EWeightedGraph
 
 logging.basicConfig(level=logging.DEBUG)
@@ -154,7 +155,7 @@ class Metrics:
         print "*******************************************************************"
         
         # Ignore the actual combinations in CSV outputs as well as single points.
-        exclude = ["distribution", "metric", "group"]
+        exclude = ["distribution", "metric", "group", "id"]
         if not options.write_combos:
             exclude += ['highest_combo', 'lowest_combo']
 
@@ -164,6 +165,8 @@ class Metrics:
         if options.write:
             write_json_file(FILENAME + '.json', data)
             write_csv_file(FILENAME, data["data"], exclude = exclude)
+            if options.write_dist:
+                write_dist_csv_file(FILENAME + '_dist', data["data"], exclude)
 
 
 if __name__ == '__main__':

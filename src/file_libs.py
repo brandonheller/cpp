@@ -48,3 +48,20 @@ def write_csv_file(filename, data, exclude):
         csv_file.write(tab_sep(["%s" % val for val in ([i] + row_data)]) + '\n')
 
     print "wrote %s" % filename + '.csv'
+
+
+def write_dist_csv_file(filename, data, exclude):
+    '''Given JSON data, convert to CSV and write distribution data to file.'''
+    csv_file = open(filename + ".csv", 'w')
+    # We assume that the lowest-indexed key has a full set of data.
+    fields = data[sorted(data.keys())[0]]['distribution'][0].keys()
+    fields = [f for f in fields if f not in exclude]
+    csv_file.write(tab_sep(["i"] + fields) + '\n')
+    for i in sorted(data.keys()):
+        data_points = data[i]['distribution']
+        for point in data_points:
+            for field in fields:
+                row_data = [point.get(field, 0) for field in fields]
+            csv_file.write(tab_sep(["%s" % val for val in ([i] + row_data)]) + '\n')
+
+    print "wrote %s" % filename + '.csv'
