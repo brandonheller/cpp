@@ -8,8 +8,8 @@ import math
 import plot
 import metrics_lib as metrics
 
-# Highest number of controllers to plot.
-DEF_MAX = 2
+# Highest number of controllers to plot.  If none, plot all.
+DEF_MAX = None
 
 # Weighted or not?
 DEF_WEIGHTED = True
@@ -60,27 +60,35 @@ def parse_args():
             input += 'unweighted_'
         input += str(options.max) + '_0'
         options.input = input
+        options.input = os.path.join(options.input_dir, options.input + '.json')
 
     return options
 
 
 def load_stats(options):
     options = parse_args()
-    input_path = os.path.join(options.input_dir, options.input + '.json')
-    input_file = open(input_path, 'r')
+    input_file = open(options.input, 'r')
     stats = json.load(input_file)
     return stats
 
 
 def do_plot():
     options = parse_args()
+    print "loading JSON data..."
     stats = load_stats(options)
     data = {}
-    for i in range(1, options.max + 1):
-        data[str(i)] = [d[options.metric] for d in stats['data'][str(i)]["distribution"]]
+
+    print "reformatting data..."
+    for i, g in enumerate(stats['group']):
+        if options.max and i >= options.max:
+            break
+        data[str(g)] = [d[options.metric] for d in stats['data'][str(g)]["distribution"]]
+
+    print "doing plot"
     colors = ["r-", "r--", "g-.", "b-", "g--"]
     write_filepath = os.path.join(options.output_dir, options.input + '_' + options.metric)
-    axis_limits = [0, round(math.ceil(max(data["1"]))), 0, 1]
+    xmax = round(math.ceil(max(data[str(stats['group'][0])])))
+    axis_limits = [0, xmax, 0, 1]
     if options.minx:
         axis_limits[0] = options.minx
     if options.maxx:
