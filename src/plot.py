@@ -34,7 +34,8 @@ def plot(ptype, data, colors, axes, label, xscale, yscale,
 
     if ptype == 'cdf':
         index = 0
-        for key, val in data.iteritems():
+        for key in sorted(data.keys()):
+            val = data[key]
             x = sorted(val)
             y = [(float(i + 1) / len(x)) for i in range(len(x))]
             lines.append(pylab.plot(x, y, colors[index]))
