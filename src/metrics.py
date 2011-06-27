@@ -176,10 +176,10 @@ class Metrics:
 #            print " id: %s latency: %s" % (d['id'], d['latency'])
 #        
         if options.write:
-            write_json_file(FILENAME + '.json', data)
-            write_csv_file(FILENAME, data["data"], exclude = exclude)
+            write_json_file(filename + '.json', data)
+            write_csv_file(filename, data["data"], exclude = exclude)
             if options.write_dist:
-                write_dist_csv_file(FILENAME + '_dist', data["data"], exclude)
+                write_dist_csv_file(filename + '_dist', data["data"], exclude)
 
 
 if __name__ == '__main__':
