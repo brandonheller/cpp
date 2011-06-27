@@ -2,9 +2,27 @@
 '''Generic cdf/pdf/ccdf plotting functions.'''
 import os
 
+from matplotlib import rc
+#rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+## for Palatino and other serif fonts use:
+# Computer Modern Roman, Palatino...
+# Example at http://www.scipy.org/Cookbook/Matplotlib/UsingTex
+rc('font',**{'family':'serif','serif':['Computer Modern Roman']})
+rc('text', usetex=True)
+
 import matplotlib.pyplot as plt
 import networkx as nx
 import pylab
+
+
+def escape(s):
+    '''Backslash-escape underscores to use LaTeX output.'''
+    s_escaped = ""
+    for i, letter in enumerate(s):
+        if letter == '_':
+            s_escaped += '\\'
+        s_escaped += letter
+    return s_escaped
 
 
 def plot(ptype, data, colors, axes, label, xscale, yscale,
@@ -13,7 +31,7 @@ def plot(ptype, data, colors, axes, label, xscale, yscale,
     fig = pylab.figure()
     lines = []
     datanames = []
-        
+
     if ptype == 'cdf':
         index = 0
         for key, val in data.iteritems():
@@ -64,7 +82,7 @@ def plot(ptype, data, colors, axes, label, xscale, yscale,
     pylab.axis(axes)
     pylab.xlabel("value")
     pylab.ylabel(ptype)
-    pylab.title(label)
+    pylab.title(escape(label))
     pylab.legend(lines, datanames, loc = "lower right")
     if write:
         filepath = write_filepath + '.' + ext
