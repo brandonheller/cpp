@@ -86,7 +86,7 @@ def do_plot():
 
     print "doing plot"
     colors = ["r-", "g--", "b-.", "c:", "m-", "y--", "k-."]
-    write_filepath = os.path.join(options.output_dir, options.input + '_' + options.metric)
+    write_filepath = options.input + '_' + options.metric
     xmax = round(math.ceil(max(data[str(stats['group'][0])])))
     axis_limits = [0, xmax, 0, 1]
     if options.minx:
@@ -94,7 +94,8 @@ def do_plot():
     if options.maxx:
         axis_limits[1] = options.maxx
     plot.plot('cdf', data, colors, axis_limits,
-              options.metric, "linear", "linear", write_filepath, options.write)
+              options.metric, "linear", "linear", write_filepath, options.write,
+              xlabel = options.metric, ylabel = 'fraction (CDF)')
 
 if __name__ == "__main__":
     do_plot()

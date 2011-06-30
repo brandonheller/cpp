@@ -2,13 +2,29 @@
 '''Generic cdf/pdf/ccdf plotting functions.'''
 import os
 
-from matplotlib import rc
+# See http://matplotlib.sourceforge.net/users/customizing.html
+
+from matplotlib import rc, rcParams
 #rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 ## for Palatino and other serif fonts use:
 # Computer Modern Roman, Palatino...
-# Example at http://www.scipy.org/Cookbook/Matplotlib/UsingTex
-rc('font',**{'family':'serif','serif':['Computer Modern Roman']})
-rc('text', usetex=True)
+# Example at http://www.scipy.org/Cookbook/Matplotlib/UsingTex"
+ESCAPE = False
+# Why does this look like crap?
+#rc('font', **{'family':'sans-serif','sans-serif':['Helvetica'],'size':28})
+#rc('font', **{'family':'serif','serif':['Computer Modern Roman'],'size':28})
+#rc('text', usetex=True)
+
+rc('axes', **{'labelsize' : 'large',
+              'titlesize' : 'large',
+              'linewidth' : 1,
+              'grid' : True})
+rcParams['axes.labelsize'] = 20
+rcParams['xtick.labelsize'] = 20
+rcParams['ytick.labelsize'] = 20
+rcParams['xtick.major.pad'] = 6
+rcParams['figure.subplot.bottom'] = 0.125
+rcParams['lines.linewidth'] = 2
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -26,7 +42,8 @@ def escape(s):
 
 
 def plot(ptype, data, colors, axes, label, xscale, yscale,
-         write_filepath = None, write = False, num_bins = None, ext = 'pdf'):
+         write_filepath = None, write = False, num_bins = None, ext = 'pdf',
+         legend = None, title = False, xlabel = None, ylabel = None):
 
     fig = pylab.figure()
     lines = []
@@ -77,14 +94,22 @@ def plot(ptype, data, colors, axes, label, xscale, yscale,
     else:
         raise Exception("invalid plot type")
 
+    text_override = {'fontsize': '24'}
     pylab.grid(True)
     pylab.xscale(xscale)
     pylab.yscale(yscale)
     pylab.axis(axes)
-    pylab.xlabel("value")
-    pylab.ylabel(ptype)
-    pylab.title(escape(label))
-    pylab.legend(lines, datanames, loc = "lower right")
+    if xlabel:
+        pylab.xlabel(xlabel)
+    if ylabel:
+        pylab.ylabel(ylabel)
+    if title:
+        if ESCAPE:
+            pylab.title(escape(label))
+        else:
+            pylab.title(label)
+    if legend:
+        pylab.legend(lines, datanames, loc = "lower right")
     if write:
         filepath = write_filepath + '.' + ext
         fig.savefig(filepath)
