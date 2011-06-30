@@ -85,7 +85,7 @@ def do_plot():
         data[str(g)] = [d[options.metric] for d in stats['data'][str(g)]["distribution"]]
 
     print "doing plot"
-    colors = ["r-", "g--", "b-.", "c:", "m-", "y--", "k-."]
+    colors = ["r-", "g--", "b-.", "c-", "m--", "y-.", "k--"]
     write_filepath = options.input + '_' + options.metric
     xmax = round(math.ceil(max(data[str(stats['group'][0])])))
     axis_limits = [0, xmax, 0, 1]

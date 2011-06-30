@@ -17,7 +17,7 @@ ESCAPE = False
 
 rc('axes', **{'labelsize' : 'large',
               'titlesize' : 'large',
-              'linewidth' : 1,
+              'linewidth' : 0,
               'grid' : True})
 rcParams['axes.labelsize'] = 20
 rcParams['xtick.labelsize'] = 20
