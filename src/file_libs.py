@@ -62,7 +62,13 @@ def write_dist_csv_file(filename, data, exclude):
         for point in data_points:
             row_data = []
             for field in fields:
-                row_data.append(point.get(field, 0))
-            csv_file.write(tab_sep(["%s" % val for val in ([i] + row_data)]) + '\n')
+                if 'combo' not in field:
+                    row_data.append("%s" % point.get(field, 0))
+                else:
+                    # Python doesn't like writing out tuples as strings,
+                    # so use string instead.  Otherwise we get TypeErrors.
+                    row_data.append(str(point.get(field, 0)))
+            row_data.insert(0, "%s" % i)
+            csv_file.write(tab_sep(row_data) + '\n')
 
     print "wrote %s" % filename + '.csv'
