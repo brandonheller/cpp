@@ -5,6 +5,10 @@ import os
 # See http://matplotlib.sourceforge.net/users/customizing.html
 
 from matplotlib import rc, rcParams
+
+# yet another attempt:
+rc('font',**{'family':'sans-serif','sans-serif':['Arial']})
+
 #rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 ## for Palatino and other serif fonts use:
 # Computer Modern Roman, Palatino...
@@ -22,9 +26,14 @@ rc('axes', **{'labelsize' : 'large',
 rcParams['axes.labelsize'] = 20
 rcParams['xtick.labelsize'] = 20
 rcParams['ytick.labelsize'] = 20
-rcParams['xtick.major.pad'] = 6
-rcParams['figure.subplot.bottom'] = 0.125
+rcParams['xtick.major.pad'] = 4
+rcParams['ytick.major.pad'] = 6
+rcParams['figure.subplot.bottom'] = 0.15
+rcParams['figure.subplot.left'] = 0.15
+rcParams['figure.subplot.right'] = 0.95
 rcParams['lines.linewidth'] = 2
+rcParams['grid.color'] = '#cccccc'
+rcParams['grid.linewidth'] = 0.6
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -46,6 +55,7 @@ def plot(ptype, data, colors, axes, label, xscale, yscale,
          legend = None, title = False, xlabel = None, ylabel = None):
 
     fig = pylab.figure()
+    fig.set_size_inches(6, 4)
     lines = []
     datanames = []
 
