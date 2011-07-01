@@ -24,8 +24,8 @@ rc('axes', **{'labelsize' : 'large',
               'linewidth' : 0,
               'grid' : True})
 rcParams['axes.labelsize'] = 20
-rcParams['xtick.labelsize'] = 20
-rcParams['ytick.labelsize'] = 20
+rcParams['xtick.labelsize'] = 18
+rcParams['ytick.labelsize'] = 18
 rcParams['xtick.major.pad'] = 4
 rcParams['ytick.major.pad'] = 6
 rcParams['figure.subplot.bottom'] = 0.15
