@@ -442,8 +442,8 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
         # Compute summary stats
         for metric in metrics:                    
             this_metric = metric_data[metric]
-            metric_data['mean'] = sum(this_metric['values']) / len(this_metric['values'])
-            metric_data['median'] = numpy.median(this_metric['values'])
+            this_metric['mean'] = sum(this_metric['values']) / len(this_metric['values'])
+            this_metric['median'] = numpy.median(this_metric['values'])
             del this_metric['values']
             # Work around Python annoyance where str(set) doesn't work
             this_metric['lowest_combo'] = list(this_metric['lowest_combo'])
