@@ -39,6 +39,9 @@ def parse_args():
     opts.add_option("--weighted",  action = "store_true",
                     default = False,
                     help = "used weighted input graph?")
+    opts.add_option("--median",  action = "store_true",
+                    default = False,
+                    help = "compute median?")
     opts.add_option("--no-multiprocess",  action = "store_false",
                     default = True, dest = 'multiprocess',
                     help = "don't use multiple processes?")
@@ -153,7 +156,7 @@ class Metrics:
             metrics.run_all_combos(options.metrics, g, controllers, data, apsp,
                                    apsp_paths, options.weighted, options.write_dist,
                                    options.write_combos, EXTRA_PARAMS, options.processes,
-                                   options.multiprocess, options.chunksize)
+                                   options.multiprocess, options.chunksize, options.median)
             total_duration = time.time() - start
             print "%0.6f" % total_duration
         

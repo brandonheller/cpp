@@ -351,7 +351,7 @@ def handle_combo(combo):
 def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
                    weighted = False, write_dist = False, write_combos = False,
                    extra_params = None, processes = None, multiprocess = False,
-                   chunksize = 1):
+                   chunksize = 1, median = False):
     '''Compute best, worst, and mean/median latencies, plus fairness.
 
     @param metrics: metrics to compute: in ['latency', 'fairness']
@@ -404,8 +404,11 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
             this_metric['highest_combo'] = None
             this_metric['lowest'] = BIG
             this_metric['lowest_combo'] = None
-            this_metric['values'] = []
             this_metric['duration'] = 0.0
+            this_metric['sum'] = 0.0
+            this_metric['num'] = 0
+            if median:
+                this_metric['values'] = []
 
         distribution = [] # list of {combo, key:value}'s in JSON, per combo
 
@@ -429,7 +432,10 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
                 if metric_value > this_metric['highest']:
                     this_metric['highest'] = metric_value
                     this_metric['highest_combo'] = combo
-                this_metric['values'].append(metric_value)
+                if median:
+                    this_metric['values'].append(metric_value)
+                this_metric['sum'] += metric_value
+                this_metric['num'] += 1
 
                 json_entry[metric] = metric_value
 
@@ -442,9 +448,11 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
         # Compute summary stats
         for metric in metrics:                    
             this_metric = metric_data[metric]
-            this_metric['mean'] = sum(this_metric['values']) / len(this_metric['values'])
-            this_metric['median'] = numpy.median(this_metric['values'])
-            del this_metric['values']
+            #this_metric['mean'] = sum(this_metric['values']) / len(this_metric['values'])
+            this_metric['mean'] = this_metric['sum'] / float(this_metric['num'])
+            if median:
+                this_metric['median'] = numpy.median(this_metric['values'])
+                del this_metric['values']
             # Work around Python annoyance where str(set) doesn't work
             this_metric['lowest_combo'] = list(this_metric['lowest_combo'])
             this_metric['highest_combo'] = list(this_metric['highest_combo'])
