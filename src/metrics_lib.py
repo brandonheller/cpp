@@ -302,6 +302,9 @@ def availability_one_combo(g, combo, apsp, apsp_paths, weighted,
     return availability, coverage
 
 
+def get_null(g, combo, apsp, apsp_paths, weighted, extra_params):
+    return 0.0
+
 def get_latency(g, combo, apsp, apsp_paths, weighted, extra_params):
     return get_total_path_len(g, combo, apsp, weighted) / float(g.number_of_nodes())
 
@@ -320,8 +323,9 @@ def get_availability(g, combo, apsp, apsp_paths, weighted, extra_params):
 
 # Map of metric names to functions to execute them.
 # Functions must have these parameters:
-# (g, combo, apsp, apsp_paths, weighted)
+# (g, combo, apsp, apsp_paths, weighted, extra_params)
 METRIC_FCNS = {
+    'null': get_null,
     'latency': get_latency,
     'wc_latency': get_wc_latency,
     'fairness': get_fairness,
