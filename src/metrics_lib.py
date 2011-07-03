@@ -452,6 +452,9 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
         # Compute summary stats
         for metric in metrics:                    
             this_metric = metric_data[metric]
+            # Previously, we stored all values - but with so many,
+            # the storage of these values must go to disk swap and the CPU
+            # usage drops to 1% waiting on disk.
             #this_metric['mean'] = sum(this_metric['values']) / len(this_metric['values'])
             this_metric['mean'] = this_metric['sum'] / float(this_metric['num'])
             if median:
