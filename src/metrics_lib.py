@@ -13,6 +13,7 @@ from itertools_recipes import random_combination, choose
 from util import sort_by_val
 
 BIG = 10000000
+RESULTS_TIMEOUT = 1
 
 lg = logging.getLogger("metrics_lib")
 
@@ -352,6 +353,98 @@ def handle_combo(combo):
     return [combo, values]
 
 
+def process_result(metrics, median, write_combos, write_dist, combo, values, point_id, distribution, metric_data):
+    json_entry = {}  # For writing to distribution
+    json_entry['id'] = point_id
+    point_id += 1
+    for metric in metrics:
+        this_metric = metric_data[metric]
+        metric_value, duration = values[metric]
+        this_metric['duration'] += duration
+        if metric_value < this_metric['lowest']:
+            this_metric['lowest'] = metric_value
+            this_metric['lowest_combo'] = combo
+        if metric_value > this_metric['highest']:
+            this_metric['highest'] = metric_value
+            this_metric['highest_combo'] = combo
+        if median:
+            this_metric['values'].append(metric_value)
+        this_metric['sum'] += metric_value
+        this_metric['num'] += 1
+
+        json_entry[metric] = metric_value
+
+        if write_combos:
+            json_entry['combo'] = combo
+
+        if write_dist:
+            distribution.append(json_entry)
+
+
+def handle_combos(combos, metrics, median, write_combos, write_dist, point_id):
+    '''Handle processing for multiple combinations.
+
+    Returns list with two elements:
+        combo: list
+        values: dict of metric, (value, duration) tuples.
+    '''
+    metric_data = init_metric_data(metrics, median)
+    distribution = init_distribution()
+    for combo in combos:
+        values = {}
+        for metric in g_metrics:
+            start_time = time.time()
+            metric_value = METRIC_FCNS[metric](g_g, combo, g_apsp, g_apsp_paths,
+                                               g_weighted, g_extra_params)
+            duration = time.time() - start_time
+            values[metric] = (metric_value, duration)
+        process_result(metrics, median, write_combos, write_dist, combo, values, point_id, distribution, metric_data)
+        point_id += 1
+    return [metric_data, distribution]
+
+
+def init_metric_data(metrics, median):
+    metric_data = {}
+    for metric in metrics:
+        metric_data[metric] = {}
+        this_metric = metric_data[metric]
+        this_metric['highest'] = -BIG
+        this_metric['highest_combo'] = None
+        this_metric['lowest'] = BIG
+        this_metric['lowest_combo'] = None
+        this_metric['duration'] = 0.0
+        this_metric['sum'] = 0.0
+        this_metric['num'] = 0
+        if median:
+            this_metric['values'] = []
+    return metric_data
+
+
+def init_distribution():
+    return [] # list of {combo, key:value}'s in JSON, per combo
+
+
+def merge_metric_data(metric_data, metric_data_in, metrics, median):
+    for metric in metrics:
+        this_metric = metric_data[metric]
+        this_metric_in = metric_data_in[metric]
+        if this_metric_in['highest'] > this_metric['highest']:
+            this_metric['highest'] = this_metric_in['highest']
+            this_metric['highest_combo'] = this_metric_in['highest_combo']
+        if this_metric_in['lowest'] < this_metric['lowest']:
+            this_metric['lowest'] = this_metric_in['lowest']
+            this_metric['lowest_combo'] = this_metric_in['lowest_combo']
+        this_metric['duration'] += this_metric_in['duration']
+        this_metric['sum'] += this_metric_in['sum']
+        this_metric['num'] += this_metric_in['num']
+        if median:
+            this_metric['values'] += this_metric_in['values']
+
+
+def merge_distribution(distribution, distribution_in):
+    distribution += distribution_in
+
+
 def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
                    weighted = False, write_dist = False, write_combos = False,
                    extra_params = None, processes = None, multiprocess = False,
@@ -400,65 +493,58 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
         print "** combo size: %s" % combo_size
 
         # Initialize metric tracking data
-
-        def init_metric_data():
-            metric_data = {}
-            for metric in metrics:
-                metric_data[metric] = {}
-                this_metric = metric_data[metric]
-                this_metric['highest'] = -BIG
-                this_metric['highest_combo'] = None
-                this_metric['lowest'] = BIG
-                this_metric['lowest_combo'] = None
-                this_metric['duration'] = 0.0
-                this_metric['sum'] = 0.0
-                this_metric['num'] = 0
-                if median:
-                    this_metric['values'] = []
-            return metric_data
-
-        metric_data = init_metric_data()
-
+        metric_data = init_metric_data(metrics, median)
         distribution = [] # list of {combo, key:value}'s in JSON, per combo
 
-        def process_result(combo, values, point_id, distribution, metric_data):
-            json_entry = {}  # For writing to distribution
-            json_entry['id'] = point_id
-            point_id += 1
-            for metric in metrics:
-                this_metric = metric_data[metric]
-                metric_value, duration = values[metric]
-                this_metric['duration'] += duration
-                if metric_value < this_metric['lowest']:
-                    this_metric['lowest'] = metric_value
-                    this_metric['lowest_combo'] = combo
-                if metric_value > this_metric['highest']:
-                    this_metric['highest'] = metric_value
-                    this_metric['highest_combo'] = combo
-                if median:
-                    this_metric['values'].append(metric_value)
-                this_metric['sum'] += metric_value
-                this_metric['num'] += 1
-
-                json_entry[metric] = metric_value
-
-                if write_combos:
-                    json_entry['combo'] = combo
-
-                if write_dist:
-                    distribution.append(json_entry)
-
         if multiprocess:
-            results = pool.map(handle_combo, combinations(g.nodes(), combo_size),
-                               chunksize)
-            for combo, values in results:
-                process_result(combo, values, point_id, distribution, metric_data)
-                point_id += 1
+            #results = pool.map(handle_combo, combinations(g.nodes(), combo_size),
+            #                   chunksize)
+            all_combos = combinations(g.nodes(), combo_size)
+            done = False
+            while not done:
+                #print "starting a dispatch round"
+                # Dispatch to each thread up to chunksize
+                results_async = []
+                p = 0
+                while p < processes and not done:
+                    for chunk in range(chunksize):
+                        #print "chunk %s id %s" % (chunk, point_id)
+                        combos = []
+                        try:
+                            combos.append(all_combos.next())
+                            point_id += 1
+                        except StopIteration:
+                            done = True
+                        finally:
+                            if combos:
+                                result_async = pool.apply_async(handle_combos, (combos, metrics, median, write_combos, write_dist, point_id))
+                                results_async.append(result_async)
+                            # handle_combos returns a [metric_data, distribution] result.
+                        if done:
+                            break
+                    p += 1
+                # Wait for results from each thread
+                #print "waiting for results"
+                results = []
+                for r in results_async:
+                    got = r.get()
+                    assert r.successful()
+                    results.append(got)
+
+                # Merge results from each thread
+                #print "merging results"
+                for metric_data_in, distribution_in in results:
+                    merge_metric_data(metric_data, metric_data_in, metrics, median)
+                    merge_distribution(distribution, distribution_in)
+
+            #for combo, values in results:
+            #    process_result(combo, values, point_id, distribution, metric_data)
+            #    point_id += 1
         else:
             #results = map(handle_combo, combinations(g.nodes(), combo_size))
             for combo in combinations(g.nodes(), combo_size):
                 combo, values = handle_combo(combo)
-                process_result(combo, values, point_id, distribution, metric_data)
+                process_result(metrics, median, write_combos, write_dist, combo, values, point_id, distribution, metric_data)
                 point_id += 1
 
 
