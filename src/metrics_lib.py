@@ -392,7 +392,7 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
     if multiprocess:
         pool = multiprocessing.Pool(processes)
 
-    id = 0  # Unique index for every distribution point written out.
+    point_id = 0  # Unique index for every distribution point written out.
     data['data'] = {}  # Where all data point & aggregates are stored.
     for combo_size in sorted(controllers):
         # compute best location(s) for i controllers.
@@ -422,10 +422,10 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
         else:
             results = map(handle_combo, combinations(g.nodes(), combo_size))
 
-        for combo, values in results:
+        def process_result(combo, values, point_id, distribution, metric_data):
             json_entry = {}  # For writing to distribution
-            json_entry['id'] = id
-            id += 1
+            json_entry['id'] = point_id
+            point_id += 1
             for metric in metrics:
                 this_metric = metric_data[metric]
                 metric_value, duration = values[metric]
@@ -448,6 +448,11 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
 
                 if write_dist:
                     distribution.append(json_entry)
+
+            return point_id
+
+        for combo, values in results:
+            point_id = process_result(combo, values, point_id, distribution, metric_data)
 
         # Compute summary stats
         for metric in metrics:                    
