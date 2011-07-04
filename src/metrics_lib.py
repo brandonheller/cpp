@@ -374,11 +374,11 @@ def process_result(metrics, median, write_combos, write_dist, combo, values, poi
 
         json_entry[metric] = metric_value
 
-        if write_combos:
-            json_entry['combo'] = combo
+    if write_combos:
+        json_entry['combo'] = combo
 
-        if write_dist:
-            distribution.append(json_entry)
+    if write_dist:
+        distribution.append(json_entry)
 
 
 def handle_combos(combos, metrics, median, write_combos, write_dist, point_id):
