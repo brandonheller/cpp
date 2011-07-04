@@ -421,12 +421,6 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
 
         distribution = [] # list of {combo, key:value}'s in JSON, per combo
 
-        if multiprocess:
-            results = pool.map(handle_combo, combinations(g.nodes(), combo_size),
-                               chunksize)
-        else:
-            results = map(handle_combo, combinations(g.nodes(), combo_size))
-
         def process_result(combo, values, point_id, distribution, metric_data):
             json_entry = {}  # For writing to distribution
             json_entry['id'] = point_id
@@ -454,13 +448,22 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
                 if write_dist:
                     distribution.append(json_entry)
 
+        if multiprocess:
+            results = pool.map(handle_combo, combinations(g.nodes(), combo_size),
+                               chunksize)
+            for combo, values in results:
+                process_result(combo, values, point_id, distribution, metric_data)
+                point_id += 1
+        else:
+            #results = map(handle_combo, combinations(g.nodes(), combo_size))
+            for combo in combinations(g.nodes(), combo_size):
+                combo, values = handle_combo(combo)
+                process_result(combo, values, point_id, distribution, metric_data)
+                point_id += 1
 
-        for combo, values in results:
-            process_result(combo, values, point_id, distribution, metric_data)
-            point_id += 1
 
         # Compute summary stats
-        for metric in metrics:                    
+        for metric in metrics:
             this_metric = metric_data[metric]
             # Previously, we stored all values - but with so many,
             # the storage of these values must go to disk swap and the CPU
