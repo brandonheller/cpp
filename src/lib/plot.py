@@ -120,7 +120,8 @@ def parse_args():
 
     if (options.metric != DEF_METRIC) and options.metric_list:
         raise Exception("Can't specify both --metric and --metric_list")
-    else:
+
+    if options.metric and not options.metric_list:
         options.metrics = [options.metric]
 
     return options
