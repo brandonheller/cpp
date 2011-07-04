@@ -400,19 +400,24 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
         print "** combo size: %s" % combo_size
 
         # Initialize metric tracking data
-        metric_data = {}
-        for metric in metrics:
-            metric_data[metric] = {}
-            this_metric = metric_data[metric]
-            this_metric['highest'] = -BIG
-            this_metric['highest_combo'] = None
-            this_metric['lowest'] = BIG
-            this_metric['lowest_combo'] = None
-            this_metric['duration'] = 0.0
-            this_metric['sum'] = 0.0
-            this_metric['num'] = 0
-            if median:
-                this_metric['values'] = []
+
+        def init_metric_data():
+            metric_data = {}
+            for metric in metrics:
+                metric_data[metric] = {}
+                this_metric = metric_data[metric]
+                this_metric['highest'] = -BIG
+                this_metric['highest_combo'] = None
+                this_metric['lowest'] = BIG
+                this_metric['lowest_combo'] = None
+                this_metric['duration'] = 0.0
+                this_metric['sum'] = 0.0
+                this_metric['num'] = 0
+                if median:
+                    this_metric['values'] = []
+            return metric_data
+
+        metric_data = init_metric_data()
 
         distribution = [] # list of {combo, key:value}'s in JSON, per combo
 
