@@ -42,6 +42,7 @@ while True:
     if pids != newpids:
         pids = newpids
         print "**** maxmem: %s" % maxmem
+        print "****   pids: %s" % pids
         maxmem = 0.0
 
     time.sleep(1.0)
