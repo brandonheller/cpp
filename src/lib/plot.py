@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 '''Generic cdf/pdf/ccdf plotting functions.'''
+from optparse import OptionParser
 import os
+import json
 
 # See http://matplotlib.sourceforge.net/users/customizing.html
 
@@ -35,9 +37,79 @@ rcParams['lines.linewidth'] = 2
 rcParams['grid.color'] = '#cccccc'
 rcParams['grid.linewidth'] = 0.6
 
+
 import matplotlib.pyplot as plt
 import networkx as nx
 import pylab
+
+import metrics_lib as metrics
+
+# Highest number of controllers to plot.  If none, plot all.
+DEF_MAX = None
+
+# Weighted or not?
+DEF_WEIGHTED = True
+
+# Metric to plot
+METRICS = metrics.METRICS
+DEF_METRIC = metrics.METRICS[0]
+
+DEF_INPUT_DIR = 'data_out'
+DEF_OUTPUT_DIR = DEF_INPUT_DIR
+
+DEF_EXT = 'png'
+
+
+def parse_args():
+    opts = OptionParser()
+    opts.add_option("-i", "--input", type = 'string', 
+                    default = None,
+                    help = "name of input file")
+    opts.add_option("--input_dir", type = 'string',
+                    default = DEF_INPUT_DIR,
+                    help = "name of input dir")
+    opts.add_option("--max", type = 'int', default = DEF_MAX,
+                    help = "highest number of controllers to plot %s" % METRICS)
+    opts.add_option("--minx", type = 'float', default = None,
+                    help = "min X axis value")
+    opts.add_option("--maxx", type = 'float', default = None,
+                    help = "min X axis value")
+    opts.add_option("-e", "--ext", type = 'string',
+                    default = DEF_EXT,
+                    help = "file extension")
+    opts.add_option("--metric",
+                    default = DEF_METRIC,
+                    choices = METRICS,
+                    help = "metric to show, one in %s" % METRICS)
+    opts.add_option("-o", "--output_dir", type = 'string',
+                    default = DEF_OUTPUT_DIR,
+                    help = "name of output file")
+    opts.add_option("-w", "--write",  action = "store_true",
+                    default = False,
+                    help = "write plots, rather than display?")
+    opts.add_option("--weighted",  action = "store_true",
+                    default = False,
+                    help = "used weighted input graph?")
+    options, arguments = opts.parse_args()
+
+    # Input filename of metrics
+    if not options.input:
+        input = 'os3e_'
+        if options.weighted:
+            input += 'weighted_'
+        else:
+            input += 'unweighted_'
+        input += str(options.max) + '_0'
+        options.input = input
+        options.input = os.path.join(options.input_dir, options.input + '.json')
+
+    return options
+
+
+def load_stats(options):
+    input_file = open(options.input, 'r')
+    stats = json.load(input_file)
+    return stats
 
 
 def escape(s):
@@ -49,10 +121,10 @@ def escape(s):
         s_escaped += letter
     return s_escaped
 
-def aspect_lines(stats, metric, aspects, aspect_colors, aspect_fcns,
-                 xscale, yscale, label = None, axes = None,
-                 write_filepath = None, write = False, ext = 'pdf',
-                 legend = None, title = False, xlabel = None, ylabel = None):
+def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
+           xscale, yscale, label = None, axes = None,
+           write_filepath = None, write = False, ext = 'pdf',
+           legend = None, title = False, xlabel = None, ylabel = None):
 
     fig = pylab.figure()
     fig.set_size_inches(6, 4)
@@ -81,8 +153,9 @@ def aspect_lines(stats, metric, aspects, aspect_colors, aspect_fcns,
     else:
         min_y = min([min(lines[aspect]) for aspect in aspects])
         max_y = max([max(lines[aspect]) for aspect in aspects])
-        axes = [0, max(x), 0, max_y]
-        pylab.axis()
+        # Assume these are string-ified nums of controllers.
+        axes = [int(min(x)), int(max(x)), 0, max_y]
+        pylab.axis(axes)
     if xlabel:
         pylab.xlabel(xlabel)
     if ylabel:
