@@ -14,6 +14,7 @@ from util import sort_by_val
 
 BIG = 10000000
 RESULTS_TIMEOUT = 1
+COARSE = True  # Divide up tasks in the beginning, rather than fine-grained.
 
 lg = logging.getLogger("metrics_lib")
 
@@ -403,6 +404,29 @@ def handle_combos(combos, metrics, median, write_combos, write_dist, point_id):
     return [metric_data, distribution]
 
 
+def handle_combos_all(process_index, processes, combo_size, metrics, median, write_combos, write_dist, point_id):
+    '''Handle processing for an even fraction of all combinations.
+
+    Returns list with two (merged) elements:
+        combo: list
+        values: dict of metric, (value, duration) tuples.
+    '''
+    metric_data = init_metric_data(metrics, median)
+    distribution = init_distribution()
+    for combo in combinations(g_g.nodes(), combo_size):
+        if (point_id % processes) == process_index:
+            values = {}
+            for metric in g_metrics:
+                start_time = time.time()
+                metric_value = METRIC_FCNS[metric](g_g, combo, g_apsp, g_apsp_paths,
+                                                   g_weighted, g_extra_params)
+                duration = time.time() - start_time
+                values[metric] = (metric_value, duration)
+            process_result(metrics, median, write_combos, write_dist, combo, values, point_id, distribution, metric_data)
+        point_id += 1
+    return [metric_data, distribution]
+
+
 def init_metric_data(metrics, median):
     metric_data = {}
     for metric in metrics:
@@ -496,7 +520,27 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
         metric_data = init_metric_data(metrics, median)
         distribution = [] # list of {combo, key:value}'s in JSON, per combo
 
-        if multiprocess:
+        if multiprocess and COARSE:
+
+            #all_combos = combinations(g.nodes(), combo_size)
+            print "dispatch each thread"
+            results_async = []
+            for p in range(processes):
+                result_async = pool.apply_async(handle_combos_all, (p, processes, combo_size, metrics, median, write_combos, write_dist, point_id))
+                results_async.append(result_async)
+                # handle_combos returns a [metric_data, distribution] result.
+
+            # Wait for results from each thread
+            print "collecting and merging results"
+            results = []
+            for r in results_async:
+                metric_data_in, distribution_in = r.get()
+                assert r.successful()
+                merge_metric_data(metric_data, metric_data_in, metrics, median)
+                merge_distribution(distribution, distribution_in)
+                results.append([metric_data_in, distribution_in])
+
+        elif multiprocess and not COARSE:
             #results = pool.map(handle_combo, combinations(g.nodes(), combo_size),
             #                   chunksize)
             all_combos = combinations(g.nodes(), combo_size)
