@@ -145,7 +145,8 @@ def escape(s):
 def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
            xscale, yscale, label = None, axes = None,
            write_filepath = None, write = False, ext = 'pdf',
-           legend = None, title = False, xlabel = None, ylabel = None):
+           legend = None, title = False, xlabel = None, ylabel = None,
+           min_x = None):
 
     fig = pylab.figure()
     fig.set_size_inches(6, 4)
@@ -158,10 +159,10 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
             assert aspect in aspects
             if aspect not in lines:
                 lines[aspect] = []
-            lines[aspect].append(fcn(data_agg, metric))
+            lines[aspect].append(fcn(g, data_agg, metric))
     #print lines
 
-    x = sorted(stats['group'])
+    x = [int(a) for a in sorted(stats['group'])]
     for aspect in aspects:
         y = lines[aspect]
         pylab.plot(x, y, aspect_colors[aspect], linestyle = '-', linewidth = 1)
@@ -172,10 +173,12 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
     if axes:
         pylab.axis(axes)
     else:
+        if not min_x:
+            min_x = int(min(x))
         min_y = min([min(lines[aspect]) for aspect in aspects])
         max_y = max([max(lines[aspect]) for aspect in aspects])
         # Assume these are string-ified nums of controllers.
-        axes = [int(min(x)), int(max(x)), 0, max_y]
+        axes = [min_x, int(max(x)), 0, max_y]
         pylab.axis(axes)
     if xlabel:
         pylab.xlabel(xlabel)
