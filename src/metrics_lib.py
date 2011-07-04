@@ -621,7 +621,7 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
         group_data['distribution'] = distribution
 
     data['metric'] = metrics
-    data['group'] = controllers
+    data['group'] = [str(c) for c in controllers]
 
 
 def run_best_n(data, g, apsp, n, weighted):
