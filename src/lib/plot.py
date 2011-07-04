@@ -31,7 +31,7 @@ rcParams['ytick.labelsize'] = 18
 rcParams['xtick.major.pad'] = 4
 rcParams['ytick.major.pad'] = 6
 rcParams['figure.subplot.bottom'] = 0.15
-rcParams['figure.subplot.left'] = 0.15
+rcParams['figure.subplot.left'] = 0.165
 rcParams['figure.subplot.right'] = 0.95
 rcParams['lines.linewidth'] = 2
 rcParams['grid.color'] = '#cccccc'
@@ -81,12 +81,18 @@ def parse_args():
                     default = DEF_METRIC,
                     choices = METRICS,
                     help = "metric to show, one in %s" % METRICS)
+    opts.add_option("--metric_list", type = 'string',
+                    default = None,
+                    help = "metrics to show, from %s" % METRICS)
     opts.add_option("-o", "--output_dir", type = 'string',
                     default = DEF_OUTPUT_DIR,
                     help = "name of output file")
     opts.add_option("-w", "--write",  action = "store_true",
                     default = False,
                     help = "write plots, rather than display?")
+    opts.add_option("-l", "--labels",  action = "store_true",
+                    default = False,
+                    help = "write labels to images (map_combo only)?")
     opts.add_option("--weighted",  action = "store_true",
                     default = False,
                     help = "used weighted input graph?")
@@ -102,6 +108,20 @@ def parse_args():
         input += str(options.max) + '_0'
         options.input = input
         options.input = os.path.join(options.input_dir, options.input + '.json')
+
+    if options.metric_list:
+        metrics_split = options.metric_list.split(',')
+        options.metrics = []
+        for metric in metrics_split:
+            if metric not in METRICS:
+                raise Exception("Invalid metric(s): %s in %s; choose from %s" %
+                                (metric, options.metric_list, METRICS))
+            options.metrics.append(metric)
+
+    if (options.metric != DEF_METRIC) and options.metric_list:
+        raise Exception("Can't specify both --metric and --metric_list")
+    else:
+        options.metrics = [options.metric]
 
     return options
 

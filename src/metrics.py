@@ -36,9 +36,9 @@ def parse_args():
     opts.add_option("-w", "--write",  action = "store_true",
                     default = False,
                     help = "write plots, rather than display?")
-    opts.add_option("--weighted",  action = "store_true",
-                    default = False,
-                    help = "used weighted input graph?")
+    opts.add_option("--no-weighted",  action = "store_false",
+                    default = True, dest = 'weighted',
+                    help = "don't use weighted input graph?")
     opts.add_option("--median",  action = "store_true",
                     default = False,
                     help = "compute median?")
