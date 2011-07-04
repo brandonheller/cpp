@@ -454,10 +454,10 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
                 if write_dist:
                     distribution.append(json_entry)
 
-            return point_id
 
         for combo, values in results:
-            point_id = process_result(combo, values, point_id, distribution, metric_data)
+            process_result(combo, values, point_id, distribution, metric_data)
+            point_id += 1
 
         # Compute summary stats
         for metric in metrics:                    
