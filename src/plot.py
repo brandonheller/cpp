@@ -49,6 +49,59 @@ def escape(s):
         s_escaped += letter
     return s_escaped
 
+def aspect_lines(stats, metric, aspects, aspect_colors, aspect_fcns,
+                 xscale, yscale, label = None, axes = None,
+                 write_filepath = None, write = False, ext = 'pdf',
+                 legend = None, title = False, xlabel = None, ylabel = None):
+
+    fig = pylab.figure()
+    fig.set_size_inches(6, 4)
+
+    # Build lines
+    lines = {}
+    for g in sorted(stats['group']):
+        data_agg = stats['data'][g]
+        for aspect, fcn in aspect_fcns.iteritems():
+            assert aspect in aspects
+            if aspect not in lines:
+                lines[aspect] = []
+            lines[aspect].append(fcn(data_agg, metric))
+    #print lines
+
+    x = sorted(stats['group'])
+    for aspect in aspects:
+        y = lines[aspect]
+        pylab.plot(x, y, aspect_colors[aspect], linestyle = '-', linewidth = 1)
+
+    pylab.grid(True)
+    pylab.xscale(xscale)
+    pylab.yscale(yscale)
+    if axes:
+        pylab.axis(axes)
+    else:
+        min_y = min([min(lines[aspect]) for aspect in aspects])
+        max_y = max([max(lines[aspect]) for aspect in aspects])
+        axes = [0, max(x), 0, max_y]
+        pylab.axis()
+    if xlabel:
+        pylab.xlabel(xlabel)
+    if ylabel:
+        pylab.ylabel(ylabel)
+    if title:
+        if ESCAPE:
+            pylab.title(escape(label))
+        else:
+            pylab.title(label)
+    if legend:
+        pylab.legend(lines, aspect, loc = "lower right")
+    if write:
+        filepath = write_filepath + '.' + ext
+        fig.savefig(filepath)
+        print "wrote file to %s" % filepath
+    else:
+        #pylab.show()
+        pass
+
 
 def plot(ptype, data, colors, axes, label, xscale, yscale,
          write_filepath = None, write = False, num_bins = None, ext = 'pdf',
@@ -104,7 +157,6 @@ def plot(ptype, data, colors, axes, label, xscale, yscale,
     else:
         raise Exception("invalid plot type")
 
-    text_override = {'fontsize': '24'}
     pylab.grid(True)
     pylab.xscale(xscale)
     pylab.yscale(yscale)
@@ -125,4 +177,8 @@ def plot(ptype, data, colors, axes, label, xscale, yscale,
         fig.savefig(filepath)
         print "wrote file to %s" % filepath
     else:
-        pylab.show()
+        #pylab.show()
+        pass
+
+def show():
+    pylab.show()

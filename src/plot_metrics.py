@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-'''Plot CDFs of latency, where each series is a # of controllers.'''
+'''Plot CDFs of latency, where each series is a # of controllers.
+
+Also 
+'''
 import os
 from optparse import OptionParser
 import json
@@ -21,6 +24,8 @@ DEF_METRIC = metrics.METRICS[0]
 DEF_INPUT_DIR = 'data_out'
 DEF_OUTPUT_DIR = DEF_INPUT_DIR
 
+DEF_EXT = 'png'
+
 
 def parse_args():
     opts = OptionParser()
@@ -36,6 +41,9 @@ def parse_args():
                     help = "min X axis value")
     opts.add_option("--maxx", type = 'float', default = None,
                     help = "min X axis value")
+    opts.add_option("-e", "--ext", type = 'string',
+                    default = DEF_EXT,
+                    help = "file extension")
     opts.add_option("--metric",
                     default = DEF_METRIC,
                     choices = METRICS,
@@ -72,7 +80,7 @@ def load_stats(options):
     return stats
 
 
-def do_plot():
+def do_plots():
     options = parse_args()
     print "loading JSON data..."
     stats = load_stats(options)
@@ -82,20 +90,41 @@ def do_plot():
     for i, g in enumerate(stats['group']):
         if options.max and i >= options.max:
             break
-        data[str(g)] = [d[options.metric] for d in stats['data'][str(g)]["distribution"]]
+        data[g] = [d[options.metric] for d in stats['data'][g]["distribution"]]
 
-    print "doing plot"
+    print "plotting CDFs"
     colors = ["r-", "g--", "b-.", "c-", "m--", "y-.", "k--"]
     write_filepath = options.input + '_' + options.metric
-    xmax = round(math.ceil(max(data[str(stats['group'][0])])))
+    write_filepath = write_filepath.replace('.json', '')
+    xmax = round(math.ceil(max(data[stats['group'][0]])))
     axis_limits = [0, xmax, 0, 1]
     if options.minx:
         axis_limits[0] = options.minx
     if options.maxx:
         axis_limits[1] = options.maxx
     plot.plot('cdf', data, colors, axis_limits,
-              options.metric, "linear", "linear", write_filepath, options.write,
-              xlabel = options.metric, ylabel = 'fraction (CDF)')
+              options.metric, "linear", "linear", write_filepath + 'cdfs',
+              options.write,
+              xlabel = options.metric, ylabel = 'fraction', ext = options.ext)
+
+    # Plot raw values
+    print "plotting ranges"
+    aspect_colors = {'highest': 'rx',
+                     'mean': 'bo',
+                     'lowest': 'g+'}
+    aspect_fcns = {'highest': (lambda d, m: d[m]['highest']),
+                   'mean': (lambda d, m: d[m]['mean']),
+                   'lowest': (lambda d, m: d[m]['lowest'])}
+    aspects = aspect_fcns.keys()
+    plot.aspect_lines(stats, options.metric, aspects, aspect_colors,
+                      aspect_fcns,
+                      "linear", "linear", None, None,
+                      write_filepath + '_ranges', options.write,
+                      ext = options.ext,
+                      xlabel = 'number of controllers', ylabel = options.metric)
+
+    if not options.write:
+        plot.show()
 
 if __name__ == "__main__":
-    do_plot()
+    do_plots()
