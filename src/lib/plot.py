@@ -153,8 +153,9 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
 
     # Build lines
     lines = {}
-    for g in sorted(stats['group']):
-        data_agg = stats['data'][g]
+    x = sorted([int(a) for a in stats['group']])
+    for g in x:
+        data_agg = stats['data'][str(g)]
         for aspect, fcn in aspect_fcns.iteritems():
             assert aspect in aspects
             if aspect not in lines:
@@ -162,7 +163,7 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
             lines[aspect].append(fcn(g, data_agg, metric))
     #print lines
 
-    x = [int(a) for a in sorted(stats['group'])]
+
     for aspect in aspects:
         y = lines[aspect]
         pylab.plot(x, y, aspect_colors[aspect], linestyle = '-', linewidth = 1)
