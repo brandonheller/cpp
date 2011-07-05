@@ -4,6 +4,13 @@ import lib.plot as plot
 
 PLOTS = ['ranges', 'ratios', 'durations', 'bc_abs', 'bc_rel']
 
+def divide(left, right):
+    if right == 0:
+        return 0.0
+    else:
+        return (left / float(right))
+
+
 def do_ranges():
     options = plot.parse_args()
     print "loading JSON data..."
@@ -34,8 +41,8 @@ def do_ranges():
             aspect_colors = {'highest': 'rx',
                              'mean': 'bo',
                              'one': 'g+'}
-            aspect_fcns = {'highest': (lambda g, d, m: d[m]['highest'] / d[m]['lowest']),
-                           'mean': (lambda g, d, m: d[m]['mean'] / d[m]['lowest']),
+            aspect_fcns = {'highest': (lambda g, d, m: divide(d[m]['highest'], d[m]['lowest'])),
+                           'mean': (lambda g, d, m: divide(d[m]['mean'], d[m]['lowest'])),
                            'one': (lambda g, d, m: 1.0)}
             aspects = aspect_fcns.keys()
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
@@ -68,7 +75,7 @@ def do_ranges():
         if 'bc_rel' in PLOTS:
             aspect_colors = {'bc_rel': 'rx'}
             value_one = stats['data'][sorted(stats['group'])[0]][metric]['lowest']
-            aspect_fcns = {'bc_rel': (lambda g, d, m: (value_one / float(d[m]['lowest'])) / float(g))}
+            aspect_fcns = {'bc_rel': (lambda g, d, m: divide(value_one, float(d[m]['lowest'])) / float(g))}
             aspects = aspect_fcns.keys()
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
                         "linear", "linear", None, None, write_filepath + '_bc_rel',
