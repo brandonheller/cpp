@@ -13,4 +13,4 @@ EXT=pdf
 
 # BIG job (on Rhone)
 #time ./metrics.py --from_start 12 --from_end 12 --lat_metrics --weighted -w --processes 8
-./plot_ranges.py -i data_saved/os3e_weighted_12_to_12.json -w --metric_list="latency,wc_latency" --maxx 12 --maxy 1  -e ${EXT}
+./plot_ranges.py -i data_out/os3e_weighted_12_to_12.json -w --metric_list="latency,wc_latency" --maxx 12 --maxy 1  -e ${EXT}
