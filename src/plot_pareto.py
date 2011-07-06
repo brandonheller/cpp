@@ -31,6 +31,17 @@ def do_pareto():
                ylabel = y_metric + ' (miles)',
                ext = options.ext,
                x_metric = x_metric,
+               y_metric = y_metric,
+               min_x = 0,
+               min_y = 0)
+
+    plot.pareto(data, colors, None,
+               "linear", "linear", write_filepath + '_pareto_zoom',
+               options.write,
+               xlabel = x_metric + ' (miles)',
+               ylabel = y_metric + ' (miles)',
+               ext = options.ext,
+               x_metric = x_metric,
                y_metric = y_metric)
 
     if not options.write:

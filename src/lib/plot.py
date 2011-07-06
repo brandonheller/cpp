@@ -213,7 +213,7 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
 def pareto(data, colors, axes, xscale, yscale,
           write_filepath = None, write = False, num_bins = None, ext = 'pdf',
           legend = None, title = False, xlabel = None, ylabel = None,
-          x_metric = None, y_metric = None):
+          x_metric = None, y_metric = None, min_x = None, min_y = None):
 
     fig = pylab.figure()
     fig.set_size_inches(6, 4)
@@ -253,9 +253,13 @@ def pareto(data, colors, axes, xscale, yscale,
         pylab.axis(axes)
     else:
         margin_factor = 1.02  # avoid chopping markers at edge of grid
+        if not min_x == 0 and not min_x:
+            min_x = paretos[-1][0][0] / margin_factor
         max_x = paretos[0][-1][0] * margin_factor
+        if not min_y == 0 and not min_y:
+            min_y = paretos[-1][-1][1] / margin_factor
         max_y = paretos[0][0][1] * margin_factor
-        pylab.axis([0, max_x, 0, max_y])
+        pylab.axis([min_x, max_x, min_y, max_y])
     if xlabel:
         pylab.xlabel(xlabel)
     if ylabel:
