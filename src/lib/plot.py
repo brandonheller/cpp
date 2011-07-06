@@ -60,6 +60,8 @@ DEF_OUTPUT_DIR = DEF_INPUT_DIR
 
 DEF_EXT = 'png'
 
+DPI = 300
+
 
 def parse_args():
     opts = OptionParser()
@@ -138,6 +140,12 @@ def load_stats(options):
     return stats
 
 
+def get_fig():
+    fig = pylab.figure()
+    fig.set_size_inches(6, 4)
+    return fig
+
+
 def escape(s):
     '''Backslash-escape underscores to use LaTeX output.'''
     s_escaped = ""
@@ -153,8 +161,7 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
            legend = None, title = False, xlabel = None, ylabel = None,
            min_x = None, max_x = None, min_y = None, max_y = None):
 
-    fig = pylab.figure()
-    fig.set_size_inches(6, 4)
+    fig = get_fig()
 
     # Build lines
     lines = {}
@@ -203,7 +210,7 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
         pylab.legend(lines, aspect, loc = "lower right")
     if write:
         filepath = write_filepath + '.' + ext
-        fig.savefig(filepath)
+        fig.savefig(filepath, dpi = DPI)
         print "wrote file to %s" % filepath
     else:
         #pylab.show()
@@ -216,8 +223,7 @@ def pareto(data, colors, axes, xscale, yscale,
           x_metric = None, y_metric = None, min_x = None, min_y = None,
           normalize = None):
 
-    fig = pylab.figure()
-    fig.set_size_inches(6, 4)
+    fig = get_fig()
     lines = []
     datanames = []
 
@@ -283,7 +289,7 @@ def pareto(data, colors, axes, xscale, yscale,
         pylab.legend(lines, datanames, loc = "lower right")
     if write:
         filepath = write_filepath + '.' + ext
-        fig.savefig(filepath)
+        fig.savefig(filepath, dpi = DPI)
         print "wrote file to %s" % filepath
 
 
@@ -292,8 +298,7 @@ def cloud(data, colors, axes, xscale, yscale,
           legend = None, title = False, xlabel = None, ylabel = None,
           x_metric = None, y_metric = None):
 
-    fig = pylab.figure()
-    fig.set_size_inches(6, 4)
+    fig = get_fig()
     lines = []
     datanames = []
 
@@ -321,7 +326,7 @@ def cloud(data, colors, axes, xscale, yscale,
         pylab.legend(lines, datanames, loc = "lower right")
     if write:
         filepath = write_filepath + '.' + ext
-        fig.savefig(filepath)
+        fig.savefig(filepath, dpi = DPI)
         print "wrote file to %s" % filepath
     else:
         pass
@@ -331,8 +336,7 @@ def plot(ptype, data, colors, axes, label, xscale, yscale,
          write_filepath = None, write = False, num_bins = None, ext = 'pdf',
          legend = None, title = False, xlabel = None, ylabel = None):
 
-    fig = pylab.figure()
-    fig.set_size_inches(6, 4)
+    fig = get_fig()
     lines = []
     datanames = []
 
@@ -398,7 +402,7 @@ def plot(ptype, data, colors, axes, label, xscale, yscale,
         pylab.legend(lines, datanames, loc = "lower right")
     if write:
         filepath = write_filepath + '.' + ext
-        fig.savefig(filepath)
+        fig.savefig(filepath, dpi = DPI)
         print "wrote file to %s" % filepath
     else:
         #pylab.show()
