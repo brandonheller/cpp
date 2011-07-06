@@ -28,17 +28,18 @@ from file_libs import read_json_file
 import metrics_lib as metrics
 
 
+COLORS = ["r", "g", "b", "c", "m", "y", "k"]
 
 
 def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
-              ext = plot.DEF_EXT, labels = False):
+              ext = plot.DEF_EXT, labels = False, color = None):
 
-    def add_city(city, dot, markersize):
+    def add_city(city, dot, markersize, color):
         lon = city_data[city]['longitude']
         lat = city_data[city]['latitude']
         x, y = m(lon, lat)
         plt.plot(x, y, dot, markersize = markersize, markeredgewidth = 3.8,
-                 markerfacecolor = '#ffffff', markeredgecolor = 'r',
+                 markerfacecolor = '#ffffff', markeredgecolor = color,
                  zorder = 3)
         if labels:
             plt.text(x - 100000, y - 220000, city)
@@ -70,14 +71,15 @@ def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
 
     fig = plt.figure()
     fig.set_size_inches(6, 4)
-    
+    colors = []
+
     m = lower_48_basemap()
     for edge in g.edges():
         add_edge(edge)
     for city in avg_combo:
-        add_city(city, 'o', 15)
+        add_city(city, 'o', 15, color)
     for city in wc_combo:
-        add_city(city, 'x', 15)
+        add_city(city, 'x', 15, color)
     if write:
         filename = string.replace(filename, '.json', '')
         filepath =  filename + '.' + ext
@@ -108,7 +110,7 @@ def do_plot():
         avg = data[str(g)]['latency']['lowest_combo']
         wc = data[str(g)]['wc_latency']['lowest_combo']
         write_map(os3e, city_data, avg, wc, write_filepath, options.write,
-                  options.ext, options.labels)
+                  options.ext, options.labels, color = COLORS[i])
 
 
 if __name__ == "__main__":

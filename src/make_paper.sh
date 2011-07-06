@@ -8,6 +8,7 @@ EXT=pdf
 ./plot_ranges.py -i data_out/os3e_weighted_${C}_to_0.json -w --metric_list="${METRICS}" -e ${EXT}
 # generate PNGs for cloud - way too many points otherwise
 ./plot_cloud.py -i data_out/os3e_weighted_${C}_to_0.json -w --metric_list="${METRICS}" -e png
+./plot_pareto.py -i data_out/os3e_weighted_${C}_to_0.json -w --metric_list="${METRICS}" -e ${EXT}
 ./map_combos.py -i data_out/os3e_weighted_${C}_to_0.json -w -e ${EXT}
 
 # BIG job (on Rhone)

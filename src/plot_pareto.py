@@ -4,6 +4,8 @@ import math
 
 import lib.plot as plot
 
+COLORS = ["r", "g", "b", "c", "m", "y", "k"]
+
 
 def do_pareto():
     options = plot.parse_args()
@@ -20,11 +22,10 @@ def do_pareto():
         data[g] = [d for d in stats['data'][g]["distribution"]]
 
     print "plotting point pareto"
-    colors = ["r", "g", "b", "c", "m", "y", "k"]
     write_filepath = options.input
     write_filepath = write_filepath.replace('data_out', 'data_vis')
     write_filepath = write_filepath.replace('.json', '')
-    plot.pareto(data, colors, None,
+    plot.pareto(data, COLORS, None,
                "linear", "linear", write_filepath + '_pareto',
                options.write,
                xlabel = x_metric + ' (miles)',
@@ -35,7 +36,7 @@ def do_pareto():
                min_x = 0,
                min_y = 0)
 
-    plot.pareto(data, colors, None,
+    plot.pareto(data, COLORS, None,
                "linear", "linear", write_filepath + '_pareto_zoom',
                options.write,
                xlabel = x_metric + ' (miles)',
@@ -44,7 +45,7 @@ def do_pareto():
                x_metric = x_metric,
                y_metric = y_metric)
 
-    plot.pareto(data, colors, None,
+    plot.pareto(data, COLORS, None,
                "linear", "linear", write_filepath + '_pareto_norm',
                options.write,
                xlabel = x_metric + ' (miles)',
