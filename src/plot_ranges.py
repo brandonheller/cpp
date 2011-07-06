@@ -64,7 +64,7 @@ def do_ranges():
         if 'bc_abs' in PLOTS:
             aspect_colors = {'bc_abs': 'rx'}
             value_one = stats['data'][sorted(stats['group'])[0]][metric]['lowest']
-            aspect_fcns = {'bc_abs': (lambda g, d, m: (value_one - d[m]['lowest']) / float(g))}
+            aspect_fcns = {'bc_abs': (lambda g, d, m: (value_one - d[m]['lowest']) / max(1, (float(g) - 1)))}
             aspects = aspect_fcns.keys()
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
                         "linear", "linear", None, None, write_filepath + '_bc_abs',

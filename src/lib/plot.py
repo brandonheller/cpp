@@ -74,6 +74,10 @@ def parse_args():
                     help = "min X axis value")
     opts.add_option("--maxx", type = 'float', default = None,
                     help = "min X axis value")
+    opts.add_option("--miny", type = 'float', default = None,
+                    help = "min Y axis value")
+    opts.add_option("--maxy", type = 'float', default = None,
+                    help = "min Y axis value")
     opts.add_option("-e", "--ext", type = 'string',
                     default = DEF_EXT,
                     help = "file extension")
@@ -146,7 +150,7 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
            xscale, yscale, label = None, axes = None,
            write_filepath = None, write = False, ext = 'pdf',
            legend = None, title = False, xlabel = None, ylabel = None,
-           min_x = None):
+           min_x = None, max_x = None, min_y = None, max_y = None):
 
     fig = pylab.figure()
     fig.set_size_inches(6, 4)
@@ -176,10 +180,14 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
     else:
         if not min_x:
             min_x = int(min(x))
-        min_y = min([min(lines[aspect]) for aspect in aspects])
-        max_y = max([max(lines[aspect]) for aspect in aspects])
+        if not max_x:
+            max_x = int(max(x))
+        if not min_y:
+            min_y = min([min(lines[aspect]) for aspect in aspects])
+        if not max_y:
+            max_y = max([max(lines[aspect]) for aspect in aspects])
         # Assume these are string-ified nums of controllers.
-        axes = [min_x, int(max(x)), 0, max_y]
+        axes = [min_x, max_x, 0, max_y]
         pylab.axis(axes)
     if xlabel:
         pylab.xlabel(xlabel)
