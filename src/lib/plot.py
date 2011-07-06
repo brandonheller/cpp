@@ -3,6 +3,7 @@
 from optparse import OptionParser
 import os
 import json
+from operator import itemgetter
 
 # See http://matplotlib.sourceforge.net/users/customizing.html
 
@@ -207,6 +208,64 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
     else:
         #pylab.show()
         pass
+
+
+def pareto(data, colors, axes, xscale, yscale,
+          write_filepath = None, write = False, num_bins = None, ext = 'pdf',
+          legend = None, title = False, xlabel = None, ylabel = None,
+          x_metric = None, y_metric = None):
+
+    fig = pylab.figure()
+    fig.set_size_inches(6, 4)
+    lines = []
+    datanames = []
+
+    pylab.grid(True)
+
+    paretos = []
+    for i, k in enumerate(sorted(data.keys())):
+        # Sort metrics by X
+        points_list = []
+        for d in data[k]:
+            points_list.append((d[x_metric], d[y_metric]))
+        lowest_y = None
+        pareto = []  # List of points on a pareto-optimal curve
+        sorted_by_x = sorted(points_list, key = itemgetter(0))
+        for x, y in sorted_by_x:
+            if not lowest_y or y < lowest_y:
+                pareto.append((x, y))
+                lowest_y = y
+
+        x = [d[0] for d in pareto]
+        y = [d[1] for d in pareto]
+        color = colors[i]
+        lines.append(pylab.plot(x, y, 'o-',
+                                color = color,
+                                markerfacecolor = color,
+                                markeredgecolor = color,
+                                markersize = 4, zorder = 2))
+        datanames.append(k)
+        paretos.append(pareto)
+
+    pylab.xscale(xscale)
+    pylab.yscale(yscale)
+    if axes:
+        pylab.axis(axes)
+    else:
+        margin_factor = 1.02  # avoid chopping markers at edge of grid
+        max_x = paretos[0][-1][0] * margin_factor
+        max_y = paretos[0][0][1] * margin_factor
+        pylab.axis([0, max_x, 0, max_y])
+    if xlabel:
+        pylab.xlabel(xlabel)
+    if ylabel:
+        pylab.ylabel(ylabel)
+    if legend:
+        pylab.legend(lines, datanames, loc = "lower right")
+    if write:
+        filepath = write_filepath + '.' + ext
+        fig.savefig(filepath)
+        print "wrote file to %s" % filepath
 
 
 def cloud(data, colors, axes, xscale, yscale,
