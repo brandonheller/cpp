@@ -44,6 +44,16 @@ def do_pareto():
                x_metric = x_metric,
                y_metric = y_metric)
 
+    plot.pareto(data, colors, None,
+               "linear", "linear", write_filepath + '_pareto_norm',
+               options.write,
+               xlabel = x_metric + ' (miles)',
+               ylabel = y_metric + ' (miles)',
+               ext = options.ext,
+               x_metric = x_metric,
+               y_metric = y_metric,
+               normalize = True)
+
     if not options.write:
         plot.show()
 

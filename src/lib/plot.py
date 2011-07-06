@@ -213,7 +213,8 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
 def pareto(data, colors, axes, xscale, yscale,
           write_filepath = None, write = False, num_bins = None, ext = 'pdf',
           legend = None, title = False, xlabel = None, ylabel = None,
-          x_metric = None, y_metric = None, min_x = None, min_y = None):
+          x_metric = None, y_metric = None, min_x = None, min_y = None,
+          normalize = None):
 
     fig = pylab.figure()
     fig.set_size_inches(6, 4)
@@ -238,6 +239,16 @@ def pareto(data, colors, axes, xscale, yscale,
 
         x = [d[0] for d in pareto]
         y = [d[1] for d in pareto]
+        if normalize:
+            small_x = x[0]
+            small_y = y[-1]
+            pareto_new = []
+            for d in pareto:
+                pareto_new.append((d[0] / float(small_x), d[1] / float(small_y)))
+            pareto = pareto_new
+            x = [d[0] for d in pareto]
+            y = [d[1] for d in pareto]
+
         color = colors[i]
         lines.append(pylab.plot(x, y, 'o-',
                                 color = color,
@@ -255,10 +266,14 @@ def pareto(data, colors, axes, xscale, yscale,
         margin_factor = 1.02  # avoid chopping markers at edge of grid
         if not min_x == 0 and not min_x:
             min_x = paretos[-1][0][0] / margin_factor
-        max_x = paretos[0][-1][0] * margin_factor
+        if normalize:
+            min_x = 0.995
+        max_x = max([x[-1][0] for x in paretos]) * margin_factor
         if not min_y == 0 and not min_y:
             min_y = paretos[-1][-1][1] / margin_factor
-        max_y = paretos[0][0][1] * margin_factor
+        if normalize:
+            min_y = 0.995
+        max_y = max([y[0][1] for y in paretos]) * margin_factor
         pylab.axis([min_x, max_x, min_y, max_y])
     if xlabel:
         pylab.xlabel(xlabel)
