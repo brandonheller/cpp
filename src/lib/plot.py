@@ -209,6 +209,46 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
         pass
 
 
+def cloud(data, colors, axes, xscale, yscale,
+          write_filepath = None, write = False, num_bins = None, ext = 'pdf',
+          legend = None, title = False, xlabel = None, ylabel = None,
+          x_metric = None, y_metric = None):
+
+    fig = pylab.figure()
+    fig.set_size_inches(6, 4)
+    lines = []
+    datanames = []
+
+    pylab.grid(True)
+
+    for i, k in enumerate(sorted(data.keys(), reverse = True)):
+        x = [d[x_metric] for d in data[k]]
+        y = [d[y_metric] for d in data[k]]
+        # Plot in reverse order, so choose colors in reverse order
+        color = colors[len(data) - 1 - i]
+        pylab.plot(x, y, 'o',
+                   markerfacecolor = color,
+                   markeredgecolor = color,
+                   markersize = 3)
+        datanames.append(k)
+
+    pylab.xscale(xscale)
+    pylab.yscale(yscale)
+    pylab.axis(axes)
+    if xlabel:
+        pylab.xlabel(xlabel)
+    if ylabel:
+        pylab.ylabel(ylabel)
+    if legend:
+        pylab.legend(lines, datanames, loc = "lower right")
+    if write:
+        filepath = write_filepath + '.' + ext
+        fig.savefig(filepath)
+        print "wrote file to %s" % filepath
+    else:
+        pass
+
+
 def plot(ptype, data, colors, axes, label, xscale, yscale,
          write_filepath = None, write = False, num_bins = None, ext = 'pdf',
          legend = None, title = False, xlabel = None, ylabel = None):
