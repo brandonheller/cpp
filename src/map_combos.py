@@ -7,13 +7,15 @@ import string
 
 from matplotlib import rc, rcParams
 
+import lib.plot as plot
+
 rc('font',**{'family':'sans-serif','sans-serif':['Arial']})
 rc('axes', **{'linewidth' : 0,
               'grid' : False})
 
 rcParams['figure.subplot.top'] = 1
-rcParams['figure.subplot.bottom'] = 0.0
-rcParams['figure.subplot.left'] = 0.02
+rcParams['figure.subplot.bottom'] = 0
+rcParams['figure.subplot.left'] = 0
 rcParams['figure.subplot.right'] = 0.98
 
 import matplotlib.pyplot as plt
@@ -25,7 +27,7 @@ from os3e_weighted import LATLONG_FILE
 from file_libs import read_json_file
 import metrics_lib as metrics
 
-import lib.plot as plot
+
 
 
 def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
@@ -35,7 +37,7 @@ def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
         lon = city_data[city]['longitude']
         lat = city_data[city]['latitude']
         x, y = m(lon, lat)
-        plt.plot(x, y, dot, markersize = markersize, markeredgewidth = 2,
+        plt.plot(x, y, dot, markersize = markersize, markeredgewidth = 3.8,
                  markerfacecolor = '#ffffff', markeredgecolor = 'r',
                  zorder = 3)
         if labels:
@@ -48,18 +50,19 @@ def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
         lon = city_data[edge[1]]['longitude']
         lat = city_data[edge[1]]['latitude']
         x2, y2 = m(lon, lat)
+        c = '#888888'
         plt.plot([x1, x2], [y1, y2],
-                 marker = 'o', linewidth = 1.5,
-                 color = '#aaaaaa',
-                 markersize = 3, markeredgewidth = 1.4,
-                 markerfacecolor = '#666666', markeredgecolor = 'k',
+                 marker = 'o', linewidth = 2.5,
+                 color = c,
+                 markersize = 5.5, markeredgewidth = 2.0,
+                 markerfacecolor = c, markeredgecolor = c,
                  zorder = 2)
 
     def lower_48_basemap():
         m = Basemap(llcrnrlon=-119, llcrnrlat=22, urcrnrlon=-64,
                 urcrnrlat=49, projection='lcc', lat_1=33,lat_2=45,
                 lon_0=-95, resolution='c')
-        boundary_color = '#dddddd'
+        boundary_color = '#eaeaea'
         m.drawcoastlines(linewidth=0.5, color=boundary_color, antialiased=True)
         m.drawcountries(linewidth=0.5, color=boundary_color, antialiased=True)
         m.drawstates(linewidth=0.2, color=boundary_color, antialiased=True)
@@ -72,9 +75,9 @@ def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
     for edge in g.edges():
         add_edge(edge)
     for city in avg_combo:
-        add_city(city, 'o', 9)
+        add_city(city, 'o', 15)
     for city in wc_combo:
-        add_city(city, '+', 11)
+        add_city(city, 'x', 15)
     if write:
         filename = string.replace(filename, '.json', '')
         filepath =  filename + '.' + ext
