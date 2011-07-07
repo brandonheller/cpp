@@ -24,4 +24,9 @@ cd ..
 cd src
 mkdir -p data_out data_vis geo
 
+# Out of the box, Ubuntu doesn't have a Helvetica-ish font.
+sudo apt-get install msttcorefonts
+# Manually clear matploblib font cache; doesn't seem to update properly.
+rm -r ~/.matplotlib/*cache
+
 ./make_paper.sh
