@@ -3,7 +3,8 @@
 C=5
 METRICS="latency,wc_latency"
 EXT=pdf
-./metrics.py --from_start ${C} --lat_metrics -w --write_dist --write_combos
+TOPO=os3e
+./metrics.py --topo ${TOPO} --from_start ${C} --lat_metrics -w --write_dist --write_combos
 ./plot_cdfs.py -i data_out/os3e_weighted_${C}_to_0.json -w --metric_list="${METRICS}" -e ${EXT}
 ./plot_ranges.py -i data_out/os3e_weighted_${C}_to_0.json -w --metric_list="${METRICS}" -e ${EXT}
 # generate PNGs for cloud - way too many points otherwise
