@@ -4,6 +4,7 @@ import math
 
 import lib.plot as plot
 from lib.colors import COLORS
+from metrics_lib import metric_fullname
 
 
 def do_cdfs():
@@ -32,7 +33,8 @@ def do_cdfs():
         plot.plot('cdf', data, COLORS, axis_limits,
                   metric, "linear", "linear", write_filepath + '_cdfs',
                   options.write,
-                  xlabel = metric + '(miles)', ylabel = 'fraction',
+                  xlabel = metric_fullname(metric) + ' (miles)',
+                  ylabel = 'fraction of \ncontroller placements',
                   ext = options.ext)
 
     if not options.write:

@@ -337,6 +337,15 @@ METRIC_FCNS = {
 
 METRICS = METRIC_FCNS.keys()
 
+# Return long name, suitable for printing
+def metric_fullname(metric):
+    if metric == 'latency':
+        return 'average latency'
+    else:
+        return 'worst-case latency'
+    return metric
+
+
 def handle_combo(combo):
     '''Handle processing for a combination.
     

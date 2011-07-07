@@ -3,6 +3,7 @@
 import lib.plot as plot
 import math
 
+from metrics_lib import metric_fullname
 
 PLOTS = ['ranges', 'ratios', 'durations', 'bc_abs', 'bc_rel', 'bc_rel_sq', 'abs_benefit', 'miles_cost']
 
@@ -24,6 +25,7 @@ def do_ranges():
         write_filepath = options.input + '_' + metric
         write_filepath = write_filepath.replace('data_out', 'data_vis')
         write_filepath = write_filepath.replace('.json', '')
+        xlabel = 'number of controllers (k)'
 
         if 'ranges' in PLOTS:
             print "plotting ranges"
@@ -37,8 +39,8 @@ def do_ranges():
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
                         "linear", "linear", None, None, write_filepath + '_ranges',
                         options.write, ext = options.ext,
-                        xlabel = 'number of controllers',
-                        ylabel = metric + " (miles)")
+                        xlabel = xlabel,
+                        ylabel = metric_fullname(metric) + " (miles)")
 
         if 'miles_cost' in PLOTS:
             print "plotting ranges"
@@ -48,8 +50,8 @@ def do_ranges():
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
                         "linear", "linear", None, None, write_filepath + '_miles_cost',
                         options.write, ext = options.ext,
-                        xlabel = 'number of controllers',
-                        ylabel = metric + " miles over cost")
+                        xlabel = xlabel,
+                        ylabel = metric_fullname(metric) + " miles over cost")
 
 
         if 'ratios' in PLOTS:
@@ -63,8 +65,9 @@ def do_ranges():
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
                         "linear", "linear", None, None, write_filepath + '_ratios',
                         options.write, ext = options.ext,
-                        xlabel = 'number of controllers',
-                        ylabel = metric + " ratio")
+                        xlabel = xlabel,
+                        ylabel = metric_fullname(metric) + "/optimal",
+                        max_y = 10.0)
     
         if 'durations' in PLOTS:
             aspect_colors = {'duration': 'rx'}
@@ -73,7 +76,7 @@ def do_ranges():
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
                         "linear", "linear", None, None, write_filepath + '_durations',
                         options.write, ext = options.ext,
-                        xlabel = 'number of controllers',
+                        xlabel = xlabel,
                         ylabel = "duration (sec)")
 
         if 'bc_abs' in PLOTS:
@@ -84,8 +87,8 @@ def do_ranges():
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
                         "linear", "linear", None, None, write_filepath + '_bc_abs',
                         options.write, ext = options.ext,
-                        xlabel = 'number of controllers',
-                        ylabel = metric + " benefit/cost (miles)", min_x = 2)
+                        xlabel = xlabel,
+                        ylabel = metric_fullname(metric) + " abs reduction/k (miles)", min_x = 2)
 
         if 'bc_rel' in PLOTS:
             aspect_colors = {'bc_rel': 'rx'}
@@ -95,8 +98,8 @@ def do_ranges():
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
                         "linear", "linear", None, None, write_filepath + '_bc_rel',
                         options.write, ext = options.ext,
-                        xlabel = 'number of controllers',
-                        ylabel = metric + " benefit/cost (ratio)", min_x = 1,
+                        xlabel = xlabel,
+                        ylabel = metric_fullname(metric) + "(1) /\n" + metric_fullname(metric) + "/k", min_x = 1,
                         max_x = options.maxx, max_y = options.maxy)
 
         if 'bc_rel_sq' in PLOTS:
@@ -107,8 +110,8 @@ def do_ranges():
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
                         "linear", "linear", None, None, write_filepath + '_bc_rel_sq',
                         options.write, ext = options.ext,
-                        xlabel = 'number of controllers',
-                        ylabel = metric + " benefit/cost (ratio)", min_x = 1,
+                        xlabel = xlabel,
+                        ylabel = metric_fullname(metric) + " benefit/cost (ratio)", min_x = 1,
                         max_x = options.maxx, max_y = options.maxy)
 
         if 'abs_benefit' in PLOTS:
@@ -130,8 +133,8 @@ def do_ranges():
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
                         "linear", "linear", None, None, write_filepath + '_abs_benefits',
                         options.write, ext = options.ext,
-                        xlabel = 'number of controllers',
-                        ylabel = metric + " inc. abs_benefit (miles)", min_x = 2)
+                        xlabel = xlabel,
+                        ylabel = metric_fullname(metric) + " inc. abs_benefit (miles)", min_x = 2)
 
 
     if not options.write:
