@@ -75,9 +75,9 @@ def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
     for edge in g.edges():
         add_edge(edge)
     for city in avg_combo:
-        add_city(city, 'o', 15, color)
+        add_city(city, 'o', 18, color)
     for city in wc_combo:
-        add_city(city, 'x', 15, color)
+        add_city(city, 'x', 18, color)
     if write:
         filename = string.replace(filename, '.json', '')
         filepath =  filename + '.' + ext
