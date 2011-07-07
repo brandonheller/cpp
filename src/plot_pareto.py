@@ -3,9 +3,7 @@
 import math
 
 import lib.plot as plot
-
-COLORS = ["r", "g", "b", "c", "m", "y", "k"]
-
+from lib.colors import COLORS
 
 def do_pareto():
     options = plot.parse_args()

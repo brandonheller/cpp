@@ -3,6 +3,7 @@
 import math
 
 import lib.plot as plot
+from lib.colors import COLORS
 
 
 def do_cdfs():
@@ -19,7 +20,6 @@ def do_cdfs():
             data[g] = [d[metric] for d in stats['data'][g]["distribution"]]
     
         print "plotting CDFs"
-        colors = ["r-", "g--", "b-.", "c-", "m--", "y-.", "k--"]
         write_filepath = options.input + '_' + metric
         write_filepath = write_filepath.replace('data_out', 'data_vis')
         write_filepath = write_filepath.replace('.json', '')
@@ -29,7 +29,7 @@ def do_cdfs():
             axis_limits[0] = options.minx
         if options.maxx:
             axis_limits[1] = options.maxx
-        plot.plot('cdf', data, colors, axis_limits,
+        plot.plot('cdf', data, COLORS, axis_limits,
                   metric, "linear", "linear", write_filepath + '_cdfs',
                   options.write,
                   xlabel = metric + '(miles)', ylabel = 'fraction',

@@ -8,6 +8,7 @@ import string
 from matplotlib import rc, rcParams
 
 import lib.plot as plot
+from lib.colors import COLORS
 
 rc('font',**{'family':'sans-serif','sans-serif':['Arial']})
 rc('axes', **{'linewidth' : 0,
@@ -26,9 +27,6 @@ from os3e_weighted import OS3EWeightedGraph
 from os3e_weighted import LATLONG_FILE
 from file_libs import read_json_file
 import metrics_lib as metrics
-
-
-COLORS = ["r", "g", "b", "c", "m", "y", "k"]
 
 
 def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
