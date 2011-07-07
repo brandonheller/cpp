@@ -221,7 +221,7 @@ def pareto(data, colors, axes, xscale, yscale,
           write_filepath = None, write = False, num_bins = None, ext = 'pdf',
           legend = None, title = False, xlabel = None, ylabel = None,
           x_metric = None, y_metric = None, min_x = None, min_y = None,
-          normalize = None):
+          normalize = None, marks = True):
 
     fig = get_fig()
     lines = []
@@ -261,6 +261,15 @@ def pareto(data, colors, axes, xscale, yscale,
                                 markerfacecolor = color,
                                 markeredgecolor = color,
                                 markersize = 4, zorder = 2))
+        if marks:
+            kwargs = {'color': color,
+                      'markerfacecolor': 'w',
+                      'markeredgecolor': color,
+                      'markeredgewidth': 2}
+            # O to mark X metric optimal, X for Y metric optimal
+            pylab.plot(x[0], y[0], 'o', markersize = 10, **kwargs)
+            pylab.plot(x[-1], y[-1], 'x', markersize = 10, **kwargs)
+
         datanames.append(k)
         paretos.append(pareto)
 
@@ -269,16 +278,19 @@ def pareto(data, colors, axes, xscale, yscale,
     if axes:
         pylab.axis(axes)
     else:
-        margin_factor = 1.02  # avoid chopping markers at edge of grid
+        if normalize:
+            margin_factor = 1.01
+        else:
+            margin_factor = 1.05  # avoid chopping markers at edge of grid
         if not min_x == 0 and not min_x:
             min_x = paretos[-1][0][0] / margin_factor
         if normalize:
-            min_x = 0.995
+            min_x = 1.0 / float(margin_factor)
         max_x = max([x[-1][0] for x in paretos]) * margin_factor
         if not min_y == 0 and not min_y:
             min_y = paretos[-1][-1][1] / margin_factor
         if normalize:
-            min_y = 0.995
+            min_y = 1.0 / float(margin_factor)
         max_y = max([y[0][1] for y in paretos]) * margin_factor
         pylab.axis([min_x, max_x, min_y, max_y])
     if xlabel:
