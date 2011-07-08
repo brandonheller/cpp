@@ -155,6 +155,12 @@ def escape(s):
         s_escaped += letter
     return s_escaped
 
+
+def ensure_dir(dirname):
+    if not os.path.exists(dirname):
+        os.mkdir(dirname)
+
+
 def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
            xscale, yscale, label = None, axes = None,
            write_filepath = None, write = False, ext = 'pdf',
@@ -210,6 +216,7 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
         pylab.legend(lines, aspect, loc = "lower right")
     if write:
         filepath = write_filepath + '.' + ext
+        ensure_dir(os.path.dirname(filepath))
         fig.savefig(filepath, dpi = DPI)
         print "wrote file to %s" % filepath
     else:
@@ -301,6 +308,7 @@ def pareto(data, colors, axes, xscale, yscale,
         pylab.legend(lines, datanames, loc = "lower right")
     if write:
         filepath = write_filepath + '.' + ext
+        ensure_dir(os.path.dirname(filepath))
         fig.savefig(filepath, dpi = DPI)
         print "wrote file to %s" % filepath
 
@@ -338,6 +346,7 @@ def cloud(data, colors, axes, xscale, yscale,
         pylab.legend(lines, datanames, loc = "lower right")
     if write:
         filepath = write_filepath + '.' + ext
+        ensure_dir(os.path.dirname(filepath))
         fig.savefig(filepath, dpi = DPI)
         print "wrote file to %s" % filepath
     else:
@@ -414,6 +423,7 @@ def plot(ptype, data, colors, axes, label, xscale, yscale,
         pylab.legend(lines, datanames, loc = "lower right")
     if write:
         filepath = write_filepath + '.' + ext
+        ensure_dir(os.path.dirname(filepath))
         fig.savefig(filepath, dpi = DPI)
         print "wrote file to %s" % filepath
     else:

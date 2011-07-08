@@ -27,7 +27,7 @@ from os3e_weighted import OS3EWeightedGraph
 from os3e_weighted import LATLONG_FILE
 from file_libs import read_json_file
 import metrics_lib as metrics
-
+from topo_lib import get_topo_graph
 
 def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
               ext = plot.DEF_EXT, labels = False, color = None):
@@ -96,7 +96,7 @@ def do_plot():
     print "loading JSON data..."
     stats = plot.load_stats(options)
     data = {}
-    os3e = OS3EWeightedGraph()
+    graph = get_topo_graph(options.input.split('/')[1])
 
     print "reformatting data & doing plot..."
     for i, g in enumerate(stats['group']):
@@ -107,7 +107,7 @@ def do_plot():
         write_filepath = write_filepath.replace('data_out', 'data_vis')
         avg = data[str(g)]['latency']['lowest_combo']
         wc = data[str(g)]['wc_latency']['lowest_combo']
-        write_map(os3e, city_data, avg, wc, write_filepath, options.write,
+        write_map(graph, city_data, avg, wc, write_filepath, options.write,
                   options.ext, options.labels, color = COLORS[i])
 
 
