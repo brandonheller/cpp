@@ -13,6 +13,22 @@ METERS_TO_MILES = 0.000621371192
 from os3e_weighted import OS3EWeightedGraph
 
 
+def has_weights(g):
+    e1 = g.edges()[0]
+    return 'weight' in g[e1[0]][e1[1]]
+
+def total_weight(g):
+    total = 0.0
+    for src, dst in g.edges():
+        total += g[src][dst]['weight']
+    return total
+
+def geocodable(g):
+    for n in g.nodes():
+        if 'Latitude' not in g.node[n] or 'Longitude' not in g.node[n]:
+            return False
+    return True
+
 def lat_long_pair(node):
     return (float(node["Latitude"]), float(node["Longitude"]))
 
@@ -35,9 +51,10 @@ def import_zoo_graph(topo):
     # latency, but add complications when debugging.
     g = nx.Graph(nx.read_gml(filename))
     # Append weights
-    for src, dst in g.edges():
-        g[src][dst]["weight"] = dist_in_miles(g, src, dst)
-        print "dist between %s and %s is %s" % (src, dst, g[src][dst]["weight"])
+    if geocodable(g):
+        for src, dst in g.edges():
+            g[src][dst]["weight"] = dist_in_miles(g, src, dst)
+            #print "dist between %s and %s is %s" % (src, dst, g[src][dst]["weight"])
     return g
 
 
