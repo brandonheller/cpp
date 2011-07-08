@@ -29,4 +29,9 @@ sudo apt-get install msttcorefonts
 # Manually clear matploblib font cache; doesn't seem to update properly.
 rm -r ~/.matplotlib/*cache
 
+# Install topology zoo
+sudo easy_install topzootools
+wget http://topology-zoo.org/files/archive.zip
+tar xzf archive.zip
+
 ./make_paper.sh
