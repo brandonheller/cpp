@@ -31,7 +31,8 @@ rm -r ~/.matplotlib/*cache
 
 # Install topology zoo
 sudo easy_install topzootools
+sudo apt-get install unzip
 wget http://topology-zoo.org/files/archive.zip
-tar xzf archive.zip
+unzip archive.zip -d zoo
 
 ./make_paper.sh
