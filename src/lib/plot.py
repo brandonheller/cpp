@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 '''Generic cdf/pdf/ccdf plotting functions.'''
+import errno
 from optparse import OptionParser
 import os
 import json
@@ -232,9 +233,14 @@ def escape(s):
     return s_escaped
 
 
-def ensure_dir(dirname):
-    if not os.path.exists(dirname):
-        os.mkdir(dirname)
+# from http://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc: # Python >2.5
+        if exc.errno == errno.EEXIST:
+            pass
+        else: raise
 
 
 def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
@@ -292,7 +298,7 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
         pylab.legend(lines, aspect, loc = "lower right")
     if write:
         filepath = write_filepath + '.' + ext
-        ensure_dir(os.path.dirname(filepath))
+        mkdir_p(os.path.dirname(filepath))
         fig.savefig(filepath, dpi = DPI)
         print "wrote file to %s" % filepath
     else:
@@ -384,7 +390,7 @@ def pareto(data, colors, axes, xscale, yscale,
         pylab.legend(lines, datanames, loc = "lower right")
     if write:
         filepath = write_filepath + '.' + ext
-        ensure_dir(os.path.dirname(filepath))
+        mkdir_p(os.path.dirname(filepath))
         fig.savefig(filepath, dpi = DPI)
         print "wrote file to %s" % filepath
 
@@ -422,7 +428,7 @@ def cloud(data, colors, axes, xscale, yscale,
         pylab.legend(lines, datanames, loc = "lower right")
     if write:
         filepath = write_filepath + '.' + ext
-        ensure_dir(os.path.dirname(filepath))
+        mkdir_p(os.path.dirname(filepath))
         fig.savefig(filepath, dpi = DPI)
         print "wrote file to %s" % filepath
     else:
@@ -499,7 +505,7 @@ def plot(ptype, data, colors, axes, label, xscale, yscale,
         pylab.legend(lines, datanames, loc = "lower right")
     if write:
         filepath = write_filepath + '.' + ext
-        ensure_dir(os.path.dirname(filepath))
+        mkdir_p(os.path.dirname(filepath))
         print "writing file to %s" % filepath
         fig.savefig(filepath, dpi = DPI)
     else:
