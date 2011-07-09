@@ -28,7 +28,7 @@ if __name__ == "__main__":
         #map_combos.do_plot(options, stats, g, filename)
 
     if options.all_topos:
-        topos = zoo_topos()
+        topos = sorted(zoo_topos())
     else:
         topos = options.topos
 
