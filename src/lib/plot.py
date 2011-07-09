@@ -74,6 +74,8 @@ def parse_args():
                     help = "topology name")
     opts.add_option("--topo_list", type = 'str', default = None,
                     help = "list of comma-separated topology names")
+    opts.add_option("--topo_blacklist", type = 'str', default = None,
+                    help = "list of comma-separated topologies to ignore")
     opts.add_option("--all_topos",  action = "store_true",
                     default = False,
                     help = "compute metric(s) for all topos?")
@@ -207,6 +209,11 @@ def parse_args():
             options.topos = options.topo_list.split(',')
         else:
             options.topos = [options.topo]
+
+    if options.topo_blacklist:
+        options.topos_blacklist = options.topo_blacklist.split(',')
+    else:
+        options.topos_blacklist = None
 
     return options
 

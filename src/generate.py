@@ -40,7 +40,9 @@ if __name__ == "__main__":
         g = get_topo_graph(topo)
         if not g:
             raise Exception("WTF?  null graph: %s" % topo)
-        if has_weights(g):
+        if options.topos_blacklist and topo in options.topos_blacklist:
+            print "ignore topo %s - in blacklist" % topo
+        elif has_weights(g):
             do_all(topo, g, 1, 1, None)
         else:
             print "no weights for %s, skipping" % topo

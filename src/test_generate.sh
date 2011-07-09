@@ -1,5 +1,6 @@
 #!/bin/sh
-TOPO=Abilene
+TOPO=Bandcon
 C=3
 EXT=pdf
-./generate.py --topo ${TOPO} --from_start ${C} --lat_metrics -w --write_dist --write_combos -w -e ${EXT}
+BLACKLIST='Bandcon'
+./generate.py --topo ${TOPO} --from_start ${C} --lat_metrics -w --write_dist --write_combos -w -e ${EXT} --no-multiprocess --topo_blacklist ${BLACKLIST}
