@@ -10,5 +10,5 @@ TOPO=os3e
 
 # Generate special big ones for OS3E
 # BIG job (on Rhone)
-#time ./metrics.py --from_start 12 --from_end 12 --lat_metrics --weighted -w --processes 8
+#time ./metrics.py --from_start 12 --from_end 12 --lat_metrics --weighted -w
 ./plot_ranges.py -i data_out/os3e/12_to_12.json -w --lat_metrics --maxx 12 --maxy 1  -e ${EXT}

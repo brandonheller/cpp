@@ -108,7 +108,7 @@ def parse_args():
     opts.add_option("--no-multiprocess",  action = "store_false",
                     default = True, dest = 'multiprocess',
                     help = "don't use multiple processes?")
-    opts.add_option("--processes", type = 'int', default = 4,
+    opts.add_option("--processes", type = 'int', default = 8,
                     help = "worker pool size; must set multiprocess=True")
     opts.add_option("--chunksize", type = 'int', default = 50,
                     help = "batch size for parallel processing")
