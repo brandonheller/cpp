@@ -37,6 +37,6 @@ def get_lat_long(location, appid = 'faypaS6k'):
     result = resultset["Results"][0]
 
     return {
-            "latitude": result["latitude"],
-            "longitude": result["longitude"]
+            "Latitude": result["latitude"],
+            "Longitude": result["longitude"]
     }

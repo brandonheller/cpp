@@ -3,12 +3,10 @@
 import math
 
 import lib.plot as plot
+from lib.colors import COLORS
+from metrics_lib import metric_fullname, get_output_filepath
 
-
-def do_cloud():
-    options = plot.parse_args()
-    print "loading JSON data..."
-    stats = plot.load_stats(options)
+def do_cloud(options, stats, write_filepath, ext = None):
 
     assert len(options.metrics) == 2
     x_metric, y_metric = options.metrics
@@ -21,19 +19,21 @@ def do_cloud():
         data[g] = [d for d in stats['data'][g]["distribution"]]
 
     print "plotting point cloud"
-    colors = ["r", "g", "b", "c", "m", "y", "k"]
-    write_filepath = options.input
-    write_filepath = write_filepath.replace('data_out', 'data_vis')
-    write_filepath = write_filepath.replace('.json', '')
+
+    if not write_filepath:
+        write_filepath = get_output_filepath(options.input)
+
     first_data = stats['data'][sorted(stats['group'])[0]]
     axes = [0, first_data[x_metric]['highest'],
             0, first_data[y_metric]['highest']]
-    plot.cloud(data, colors, axes,
+    if not ext:
+        ext = options.ext
+    plot.cloud(data, COLORS, axes,
                "linear", "linear", write_filepath + '_cloud',
                options.write,
-               xlabel = x_metric + ' (miles)',
-               ylabel = y_metric + ' (miles)',
-               ext = options.ext,
+               xlabel = metric_fullname(x_metric) + ' (miles)',
+               ylabel = metric_fullname(y_metric) + ' (miles)',
+               ext = ext,
                x_metric = x_metric,
                y_metric = y_metric)
 
@@ -41,4 +41,7 @@ def do_cloud():
         plot.show()
 
 if __name__ == "__main__":
-    do_cloud()
+    options = plot.parse_args()
+    print "loading JSON data..."
+    stats = plot.load_stats(options)
+    do_cloud(options, stats, None)

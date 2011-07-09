@@ -18,7 +18,7 @@ from topo.os3e import OS3EGraph
 LATLONG_FILE = "geo/os3e_latlong.json"
 
 def lat_long_pair(node):
-    return (float(node["latitude"]), float(node["longitude"]))
+    return (float(node["Latitude"]), float(node["Longitude"]))
 
 def dist_in_miles(data, src, dst):
     '''Given a dict of names and location data, compute mileage between.'''

@@ -346,6 +346,12 @@ def metric_fullname(metric):
     return metric
 
 
+def get_output_filepath(write_filepath):
+    write_filepath = write_filepath.replace('data_out', 'data_vis')
+    write_filepath = write_filepath.replace('.json', '')
+    return write_filepath
+
+
 def handle_combo(combo):
     '''Handle processing for a combination.
     

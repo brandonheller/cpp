@@ -3,9 +3,9 @@
 import lib.plot as plot
 import math
 
-from metrics_lib import metric_fullname
+from metrics_lib import metric_fullname, get_output_filepath
 
-PLOTS = ['ranges', 'ratios', 'durations', 'bc_abs', 'bc_rel', 'bc_rel_sq', 'abs_benefit', 'miles_cost']
+PLOTS = ['ranges', 'ratios', 'durations', 'bc_abs', 'bc_rel', 'abs_benefit', 'miles_cost']
 
 
 def divide(left, right):
@@ -15,16 +15,14 @@ def divide(left, right):
         return (left / float(right))
 
 
-def do_ranges():
-    options = plot.parse_args()
-    print "loading JSON data..."
-    stats = plot.load_stats(options)
+def do_ranges(options, stats, write_filepath):
+
+    if not write_filepath:
+        write_filepath = get_output_filepath(options.input)
 
     for metric in options.metrics:
 
-        write_filepath = options.input + '_' + metric
-        write_filepath = write_filepath.replace('data_out', 'data_vis')
-        write_filepath = write_filepath.replace('.json', '')
+        this_write_filepath = write_filepath + '_' + metric
         xlabel = 'number of controllers (k)'
 
         if 'ranges' in PLOTS:
@@ -37,7 +35,7 @@ def do_ranges():
                            'lowest': (lambda g, d, m: d[m]['lowest'])}
             aspects = aspect_fcns.keys()
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
-                        "linear", "linear", None, None, write_filepath + '_ranges',
+                        "linear", "linear", None, None, this_write_filepath + '_ranges',
                         options.write, ext = options.ext,
                         xlabel = xlabel,
                         ylabel = metric_fullname(metric) + " (miles)")
@@ -48,10 +46,10 @@ def do_ranges():
             aspect_fcns = {'miles_cost': (lambda g, d, m: d[m]['lowest']  / float(g))}
             aspects = aspect_fcns.keys()
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
-                        "linear", "linear", None, None, write_filepath + '_miles_cost',
+                        "linear", "linear", None, None, this_write_filepath + '_miles_cost',
                         options.write, ext = options.ext,
                         xlabel = xlabel,
-                        ylabel = metric_fullname(metric) + " miles over cost")
+                        ylabel = metric_fullname(metric) + "\nmiles over cost")
 
 
         if 'ratios' in PLOTS:
@@ -63,7 +61,7 @@ def do_ranges():
                            'one': (lambda g, d, m: 1.0)}
             aspects = aspect_fcns.keys()
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
-                        "linear", "linear", None, None, write_filepath + '_ratios',
+                        "linear", "linear", None, None, this_write_filepath + '_ratios',
                         options.write, ext = options.ext,
                         xlabel = xlabel,
                         ylabel = metric_fullname(metric) + "/optimal",
@@ -74,7 +72,7 @@ def do_ranges():
             aspect_fcns = {'duration': (lambda g, d, m: d[m]['duration'])}
             aspects = aspect_fcns.keys()
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
-                        "linear", "linear", None, None, write_filepath + '_durations',
+                        "linear", "linear", None, None, this_write_filepath + '_durations',
                         options.write, ext = options.ext,
                         xlabel = xlabel,
                         ylabel = "duration (sec)")
@@ -85,10 +83,10 @@ def do_ranges():
             aspect_fcns = {'bc_abs': (lambda g, d, m: (value_one - d[m]['lowest']) / max(1, (float(g) - 1)))}
             aspects = aspect_fcns.keys()
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
-                        "linear", "linear", None, None, write_filepath + '_bc_abs',
+                        "linear", "linear", None, None, this_write_filepath + '_bc_abs',
                         options.write, ext = options.ext,
                         xlabel = xlabel,
-                        ylabel = metric_fullname(metric) + " abs reduction/k (miles)", min_x = 2)
+                        ylabel = metric_fullname(metric) + "\nabs reduction/k (miles)", min_x = 2)
 
         if 'bc_rel' in PLOTS:
             aspect_colors = {'bc_rel': 'rx'}
@@ -96,22 +94,10 @@ def do_ranges():
             aspect_fcns = {'bc_rel': (lambda g, d, m: divide(value_one, float(d[m]['lowest'])) / float(g))}
             aspects = aspect_fcns.keys()
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
-                        "linear", "linear", None, None, write_filepath + '_bc_rel',
+                        "linear", "linear", None, None, this_write_filepath + '_bc_rel',
                         options.write, ext = options.ext,
                         xlabel = xlabel,
                         ylabel = metric_fullname(metric) + "(1) /\n" + metric_fullname(metric) + "/k", min_x = 1,
-                        max_x = options.maxx, max_y = options.maxy)
-
-        if 'bc_rel_sq' in PLOTS:
-            aspect_colors = {'bc_rel_sq': 'rx'}
-            value_one = stats['data'][sorted(stats['group'])[0]][metric]['lowest']
-            aspect_fcns = {'bc_rel_sq': (lambda g, d, m: divide(value_one, float(d[m]['lowest'])) / (float(g) ** 2))}
-            aspects = aspect_fcns.keys()
-            plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
-                        "linear", "linear", None, None, write_filepath + '_bc_rel_sq',
-                        options.write, ext = options.ext,
-                        xlabel = xlabel,
-                        ylabel = metric_fullname(metric) + " benefit/cost (ratio)", min_x = 1,
                         max_x = options.maxx, max_y = options.maxy)
 
         if 'abs_benefit' in PLOTS:
@@ -131,14 +117,17 @@ def do_ranges():
             aspect_fcns = {'abs_benefit': (lambda g, d, m: abs_benefits[g])}
             aspects = aspect_fcns.keys()
             plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
-                        "linear", "linear", None, None, write_filepath + '_abs_benefits',
+                        "linear", "linear", None, None, this_write_filepath + '_abs_benefits',
                         options.write, ext = options.ext,
                         xlabel = xlabel,
-                        ylabel = metric_fullname(metric) + " inc. abs_benefit (miles)", min_x = 2)
+                        ylabel = metric_fullname(metric) + "\nincremental abs benefit (miles)", min_x = 2)
 
 
     if not options.write:
         plot.show()
 
 if __name__ == "__main__":
-    do_ranges()
+    options = plot.parse_args()
+    print "loading JSON data..."
+    stats = plot.load_stats(options)
+    do_ranges(options, stats, None)

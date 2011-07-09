@@ -4,11 +4,10 @@ import math
 
 import lib.plot as plot
 from lib.colors import COLORS
+from metrics_lib import metric_fullname, get_output_filepath
 
-def do_pareto():
-    options = plot.parse_args()
-    print "loading JSON data..."
-    stats = plot.load_stats(options)
+
+def do_pareto(options, stats, write_filepath):
 
     assert len(options.metrics) == 2
     x_metric, y_metric = options.metrics
@@ -20,14 +19,14 @@ def do_pareto():
         data[g] = [d for d in stats['data'][g]["distribution"]]
 
     print "plotting point pareto"
-    write_filepath = options.input
-    write_filepath = write_filepath.replace('data_out', 'data_vis')
-    write_filepath = write_filepath.replace('.json', '')
+    if not write_filepath:
+        write_filepath = get_output_filepath(options.input)
+    write_filepath += '_pareto'
     plot.pareto(data, COLORS, None,
-               "linear", "linear", write_filepath + '_pareto',
+               "linear", "linear", write_filepath,
                options.write,
-               xlabel = x_metric + ' (miles)',
-               ylabel = y_metric + ' (miles)',
+               xlabel = metric_fullname(x_metric) + ' (miles)',
+               ylabel = metric_fullname(y_metric) + ' (miles)',
                ext = options.ext,
                x_metric = x_metric,
                y_metric = y_metric,
@@ -35,19 +34,19 @@ def do_pareto():
                min_y = 0)
 
     plot.pareto(data, COLORS, None,
-               "linear", "linear", write_filepath + '_pareto_zoom',
+               "linear", "linear", write_filepath + '_zoom',
                options.write,
-               xlabel = x_metric + ' (miles)',
-               ylabel = y_metric + ' (miles)',
+               xlabel = metric_fullname(x_metric) + ' (miles)',
+               ylabel = metric_fullname(y_metric) + ' (miles)',
                ext = options.ext,
                x_metric = x_metric,
                y_metric = y_metric)
 
     plot.pareto(data, COLORS, None,
-               "linear", "linear", write_filepath + '_pareto_norm',
+               "linear", "linear", write_filepath + '_norm',
                options.write,
-               xlabel = x_metric + ' (miles)',
-               ylabel = y_metric + ' (miles)',
+               xlabel = metric_fullname(x_metric) + ' (miles)',
+               ylabel = metric_fullname(y_metric) + ' (miles)',
                ext = options.ext,
                x_metric = x_metric,
                y_metric = y_metric,
@@ -57,4 +56,7 @@ def do_pareto():
         plot.show()
 
 if __name__ == "__main__":
-    do_pareto()
+    options = plot.parse_args()
+    print "loading JSON data..."
+    stats = plot.load_stats(options)
+    do_pareto(options, stats, None)

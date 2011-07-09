@@ -28,13 +28,14 @@ from os3e_weighted import LATLONG_FILE
 from file_libs import read_json_file
 import metrics_lib as metrics
 from topo_lib import get_topo_graph
+from metrics_lib import get_output_filepath
 
 def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
               ext = plot.DEF_EXT, labels = False, color = None):
 
     def add_city(city, dot, markersize, color):
-        lon = city_data[city]['longitude']
-        lat = city_data[city]['latitude']
+        lon = city_data[city]['Longitude']
+        lat = city_data[city]['Latitude']
         x, y = m(lon, lat)
         plt.plot(x, y, dot, markersize = markersize, markeredgewidth = 3.8,
                  markerfacecolor = '#ffffff', markeredgecolor = color,
@@ -43,11 +44,11 @@ def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
             plt.text(x - 100000, y - 220000, city)
 
     def add_edge(edge):
-        lon = city_data[edge[0]]['longitude']
-        lat = city_data[edge[0]]['latitude']
+        lon = city_data[edge[0]]['Longitude']
+        lat = city_data[edge[0]]['Latitude']
         x1, y1 = m(lon, lat)
-        lon = city_data[edge[1]]['longitude']
-        lat = city_data[edge[1]]['latitude']
+        lon = city_data[edge[1]]['Longitude']
+        lat = city_data[edge[1]]['Latitude']
         x2, y2 = m(lon, lat)
         c = '#888888'
         plt.plot([x1, x2], [y1, y2],
@@ -87,29 +88,30 @@ def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
         plt.show()
 
 
-def do_plot():
+def do_plot(options, stats, g, write_filepath):
     city_data = None
     if os.path.isfile(LATLONG_FILE):
         city_data = read_json_file(LATLONG_FILE)
-    
-    options = plot.parse_args()
-    print "loading JSON data..."
-    stats = plot.load_stats(options)
+
     data = {}
-    graph = get_topo_graph(options.input.split('/')[1])
+    if not write_filepath:
+        write_filepath = get_output_filepath(options.input)
+    write_filepath += '_latencies_'
 
     print "reformatting data & doing plot..."
-    for i, g in enumerate(stats['group']):
+    for i, c in enumerate(stats['group']):
         if options.max and i >= options.max:
             break
-        data[str(g)] = stats['data'][str(g)]
-        write_filepath = options.input + '_latencies_' + str(g)
-        write_filepath = write_filepath.replace('data_out', 'data_vis')
-        avg = data[str(g)]['latency']['lowest_combo']
-        wc = data[str(g)]['wc_latency']['lowest_combo']
-        write_map(graph, city_data, avg, wc, write_filepath, options.write,
+        data[str(c)] = stats['data'][str(c)]
+        avg = data[str(c)]['latency']['lowest_combo']
+        wc = data[str(c)]['wc_latency']['lowest_combo']
+        write_map(g, city_data, avg, wc, write_filepath + str(c), options.write,
                   options.ext, options.labels, color = COLORS[i])
 
 
 if __name__ == "__main__":
-    do_plot()
+    options = plot.parse_args()
+    print "loading JSON data..."
+    stats = plot.load_stats(options)
+    g = get_topo_graph(options.input.split('/')[1])
+    do_plot(options, stats, g, None)

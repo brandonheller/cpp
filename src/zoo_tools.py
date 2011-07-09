@@ -29,7 +29,7 @@ def for_each_zoo_topo(fcn, data, max_iters = None):
     topos = zoo_topos()
     t = len(topos)
     for i, topo in enumerate(topos):
-        if not max == None and i >= max_iters:
+        if not max_iters == None and i >= max_iters:
             break
         g = get_topo_graph(topo)
         fcn(topo, g, i, t, data)

@@ -20,92 +20,9 @@ from file_libs import write_dist_csv_file
 import metrics_lib as metrics
 from topo_lib import get_topo_graph
 
-DEF_TOPO = 'os3e'
+import lib.plot as plot
 
 logging.basicConfig(level=logging.DEBUG)
-
-
-def parse_args():
-    opts = OptionParser()
-    opts.add_option("--topo", type = 'str', default = DEF_TOPO,
-                    help = "topology name")
-    opts.add_option("--topo_list", type = 'str', default = None,
-                    help = "list of comma-separated controller totals")
-    opts.add_option("--from_start", type = 'int', default = 3,
-                    help = "number of controllers from start")
-    opts.add_option("--from_end", type = 'int', default = 0,
-                    help = "number of controllers from end")
-    opts.add_option("--controller_list", type = 'str', default = None,
-                    help = "list of comma-separated controller totals")
-    opts.add_option("--metric",
-                    default = 'latency',
-                    choices = metrics.METRICS,
-                    help = "metric to compute, one in %s" % metrics.METRICS)
-    opts.add_option("--all_metrics",  action = "store_true",
-                    default = False,
-                    help = "compute all metrics?")    
-    opts.add_option("--lat_metrics",  action = "store_true",
-                    default = False,
-                    help = "compute all latency metrics?")
-    opts.add_option("-w", "--write",  action = "store_true",
-                    default = False,
-                    help = "write plots, rather than display?")
-    opts.add_option("--median",  action = "store_true",
-                    default = False,
-                    help = "compute median?")
-    opts.add_option("--no-multiprocess",  action = "store_false",
-                    default = True, dest = 'multiprocess',
-                    help = "don't use multiple processes?")
-    opts.add_option("--processes", type = 'int', default = 4,
-                    help = "worker pool size; must set multiprocess=True")
-    opts.add_option("--chunksize", type = 'int', default = 50,
-                    help = "batch size for parallel processing")
-    opts.add_option("--write_combos",  action = "store_true",
-                    default = False,
-                    help = "write out combinations?")
-    opts.add_option("--write_dist",  action = "store_true",
-                    default = False,
-                    help = "write_distribution?")
-    opts.add_option("--write_csv",  action = "store_true",
-                    default = False,
-                    help = "write csv file?")
-    opts.add_option("--no-dist_only",  action = "store_false",
-                    default = True, dest = 'dist_only',
-                    help = "don't write out _only_ the full distribution (i.e.,"
-                    "run all algorithms.)")
-    opts.add_option("--use_prior",  action = "store_true",
-                    default = False,
-                    help =  "Pull in previously computed data, rather than recompute?")
-    opts.add_option("--no-compute_start",  action = "store_false",
-                    default = True, dest = 'compute_start',
-                    help = "don't compute metrics from start?")
-    opts.add_option("--no-compute_end",  action = "store_false",
-                    default = True, dest = 'compute_end',
-                    help = "don't compute metrics from end?")
-    options, arguments = opts.parse_args()
-
-    if options.all_metrics:
-        options.metrics = metrics.METRICS
-    elif options.lat_metrics:
-        options.metrics = ['latency', 'wc_latency']
-    else:
-        options.metrics = [options.metric]
-
-    options.controllers = None
-    if options.controller_list:
-        options.controllers = []
-        for i in options.controller_list.split(','):
-            options.controllers.append(int(i))
-
-    if options.topo != DEF_TOPO and options.topo_list:
-        raise Exception("Both topo and topo_list provided; pick one please")
-    else:
-        if options.topo_list:
-            options.topos = options.topo_list.split(',')
-        else:
-            options.topos = [options.topo]
-
-    return options
 
 
 def get_controllers(g, options):
@@ -150,58 +67,59 @@ def get_extra_params(g):
     return extra_params
 
 
-def do_metrics():
+def do_metrics(options, topo, g):
+    '''Compute the metrics for a single topology.'''
 
-    options = parse_args()
+    print "computing metricss for topo: %s" % topo
+    controllers = get_controllers(g, options)
+    filename = get_filename(topo, options, controllers)
 
-    for topo in options.topos:
+    data = {}  # See top for data schema details.
+    apsp = nx.all_pairs_dijkstra_path_length(g)
+    apsp_paths = nx.all_pairs_dijkstra_path(g)
 
-        g = get_topo_graph(topo)
-        controllers = get_controllers(g, options)
-        filename = get_filename(topo, options, controllers)
+    extra_params = get_extra_params(g)
+    if options.use_prior:
+        data = read_json_file(filename)
+    else:
+        start = time.time()
+        weighted = True
+        metrics.run_all_combos(options.metrics, g, controllers, data, apsp,
+                               apsp_paths, weighted, options.write_dist,
+                               options.write_combos, extra_params, options.processes,
+                               options.multiprocess, options.chunksize, options.median)
+        total_duration = time.time() - start
+        print "%0.6f" % total_duration
 
-        data = {}  # See top for data schema details.
-        apsp = nx.all_pairs_dijkstra_path_length(g)
-        apsp_paths = nx.all_pairs_dijkstra_path(g)
+    if not options.dist_only:
+        metrics.run_greedy_informed(data, g, apsp, options.weighted)
+        metrics.run_greedy_alg_dict(data, g, 'greedy-cc', 'latency', nx.closeness_centrality(g, weighted_edges = options.weighted), apsp, options.weighted)
+        metrics.run_greedy_alg_dict(data, g, 'greedy-dc', 'latency', nx.degree_centrality(g), apsp, options.weighted)
+        for i in [10, 100, 1000]:
+            metrics.run_best_n(data, g, apsp, i, options.weighted)
+            metrics.run_worst_n(data, g, apsp, i, options.weighted)
 
-        extra_params = get_extra_params(g)
-        if options.use_prior:
-            data = read_json_file(filename)
-        else:
-            start = time.time()
-            weighted = True
-            metrics.run_all_combos(options.metrics, g, controllers, data, apsp,
-                                   apsp_paths, weighted, options.write_dist,
-                                   options.write_combos, extra_params, options.processes,
-                                   options.multiprocess, options.chunksize, options.median)
-            total_duration = time.time() - start
-            print "%0.6f" % total_duration
+    print "*******************************************************************"
 
-        if not options.dist_only:
-            metrics.run_greedy_informed(data, g, apsp, options.weighted)
-            metrics.run_greedy_alg_dict(data, g, 'greedy-cc', 'latency', nx.closeness_centrality(g, weighted_edges = options.weighted), apsp, options.weighted)
-            metrics.run_greedy_alg_dict(data, g, 'greedy-dc', 'latency', nx.degree_centrality(g), apsp, options.weighted)
-            for i in [10, 100, 1000]:
-                metrics.run_best_n(data, g, apsp, i, options.weighted)
-                metrics.run_worst_n(data, g, apsp, i, options.weighted)
+    # Ignore the actual combinations in CSV outputs as well as single points.
+    exclude = ["distribution", "metric", "group", "id"]
+    if not options.write_combos:
+        exclude += ['highest_combo', 'lowest_combo']
 
-        print "*******************************************************************"
+    if options.write:
+        dirname = os.path.dirname(filename)
+        if not os.path.exists(dirname):
+            os.mkdir(dirname)
+        write_json_file(filename + '.json', data)
+        if options.write_csv:
+            write_csv_file(filename, data["data"], exclude = exclude)
+            if options.write_dist:
+                write_dist_csv_file(filename + '_dist', data["data"], exclude)
 
-        # Ignore the actual combinations in CSV outputs as well as single points.
-        exclude = ["distribution", "metric", "group", "id"]
-        if not options.write_combos:
-            exclude += ['highest_combo', 'lowest_combo']
-
-        if options.write:
-            dirname = os.path.dirname(filename)
-            if not os.path.exists(dirname):
-                os.mkdir(dirname)
-            write_json_file(filename + '.json', data)
-            if options.write_csv:
-                write_csv_file(filename, data["data"], exclude = exclude)
-                if options.write_dist:
-                    write_dist_csv_file(filename + '_dist', data["data"], exclude)
-
+    return data, filename
 
 if __name__ == '__main__':
-    do_metrics()
+    options = plot.parse_args()
+    for topo in options.topos:
+        g = get_topo_graph(topo)
+        do_metrics(options, topo, g)
