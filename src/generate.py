@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 '''Generate everything for one or more topos.'''
+import os
+
 import lib.plot as plot
 import metrics
 import plot_cdfs
@@ -19,6 +21,13 @@ if __name__ == "__main__":
     def do_all(name, g, i, t, data):
         global options
         assert options
+        # Don't bother doing work if our metrics are already there.
+        controllers = metrics.get_controllers(g, options)
+        exp_filename = metrics.get_filename(topo, options, controllers)
+        if os.path.exists(exp_filename + '.json'):
+            print "skipping already-analyzed topo: %s" % name
+            return
+
         stats, filename = metrics.do_metrics(options, name, g)
         filename = filename.replace('data_out', 'data_vis')
         plot_cdfs.do_cdfs(options, stats, filename)
@@ -33,6 +42,9 @@ if __name__ == "__main__":
         topos = options.topos
 
     t = len(topos)
+    errors = []
+    successes = 0
+    unweighted = 0
     for i, topo in enumerate(topos):
         if not options.max == None and i >= options.max:
             break
@@ -43,6 +55,16 @@ if __name__ == "__main__":
         if options.topos_blacklist and topo in options.topos_blacklist:
             print "ignore topo %s - in blacklist" % topo
         elif has_weights(g):
-            do_all(topo, g, 1, 1, None)
+            try:
+                do_all(topo, g, 1, 1, None)
+                successes += 1
+            except KeyError:
+                print "KeyError; ignoring and continuing."
+                errors.append(topo)
         else:
+            unweighted += 1
             print "no weights for %s, skipping" % topo
+
+    print "successes: %s of %s" % (successes, t)
+    print "unweighted: %s" % unweighted
+    print "error topos: %s: %s" % (len(errors), errors)
