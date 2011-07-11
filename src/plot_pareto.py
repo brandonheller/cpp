@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 '''Plot CDFs of latency, where each series is a # of controllers.'''
-import math
-
 import lib.plot as plot
 from lib.colors import COLORS
 from metrics_lib import metric_fullname, get_output_filepath
+from lib.options import parse_args
 
 
 def do_pareto(options, stats, write_filepath):
@@ -56,7 +55,7 @@ def do_pareto(options, stats, write_filepath):
         plot.show()
 
 if __name__ == "__main__":
-    options = plot.parse_args()
+    options = parse_args()
     print "loading JSON data..."
     stats = plot.load_stats(options)
     do_pareto(options, stats, None)

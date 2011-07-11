@@ -9,6 +9,7 @@ from matplotlib import rc, rcParams
 
 import lib.plot as plot
 from lib.colors import COLORS
+from lib.options import parse_args, DEF_EXT
 
 rc('font',**{'family':'sans-serif','sans-serif':['Arial']})
 rc('axes', **{'linewidth' : 0,
@@ -21,17 +22,15 @@ rcParams['figure.subplot.right'] = 0.98
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
-import numpy as np
 
 from os3e_weighted import OS3EWeightedGraph
 from os3e_weighted import LATLONG_FILE
 from file_libs import read_json_file
-import metrics_lib as metrics
 from topo_lib import get_topo_graph
 from metrics_lib import get_output_filepath
 
 def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
-              ext = plot.DEF_EXT, labels = False, color = None):
+              ext = DEF_EXT, labels = False, color = None):
 
     def add_city(city, dot, markersize, color):
         lon = city_data[city]['Longitude']
@@ -110,7 +109,7 @@ def do_plot(options, stats, g, write_filepath):
 
 
 if __name__ == "__main__":
-    options = plot.parse_args()
+    options = parse_args()
     print "loading JSON data..."
     stats = plot.load_stats(options)
     g = get_topo_graph(options.input.split('/')[1])

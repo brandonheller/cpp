@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 '''Plot ranges, where each series is a # of controllers.'''
+from lib.options import parse_args
 import lib.plot as plot
-import math
-
 from metrics_lib import metric_fullname, get_output_filepath
 
 PLOTS = ['ranges', 'ratios', 'durations', 'bc_abs', 'bc_rel', 'abs_benefit', 'miles_cost']
@@ -127,7 +126,7 @@ def do_ranges(options, stats, write_filepath):
         plot.show()
 
 if __name__ == "__main__":
-    options = plot.parse_args()
+    options = parse_args()
     print "loading JSON data..."
     stats = plot.load_stats(options)
     do_ranges(options, stats, None)

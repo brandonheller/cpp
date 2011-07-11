@@ -4,6 +4,7 @@ import math
 
 import lib.plot as plot
 from lib.colors import COLORS
+from lib.options import parse_args
 from metrics_lib import metric_fullname, get_output_filepath
 
 
@@ -39,7 +40,7 @@ def do_cdfs(options, stats, write_filepath):
 
 
 if __name__ == "__main__":
-    options = plot.parse_args()
+    options = parse_args()
     print "loading JSON data..."
     stats = plot.load_stats(options)
     do_cdfs(options, stats, None)

@@ -9,7 +9,6 @@ data['group'] = [list of controllers]
 
 '''
 import logging
-from optparse import OptionParser
 import os
 import time
 
@@ -19,8 +18,7 @@ from file_libs import write_csv_file, write_json_file, read_json_file
 from file_libs import write_dist_csv_file
 import metrics_lib as metrics
 from topo_lib import get_topo_graph
-
-import lib.plot as plot
+from lib.options import parse_args
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -119,7 +117,7 @@ def do_metrics(options, topo, g):
     return data, filename
 
 if __name__ == '__main__':
-    options = plot.parse_args()
+    options = parse_args()
     for topo in options.topos:
         g = get_topo_graph(topo)
         do_metrics(options, topo, g)
