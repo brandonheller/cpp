@@ -16,6 +16,9 @@ DEF_METRIC = metrics.METRICS[0]
 DEF_INPUT_DIR = 'data_out'
 DEF_OUTPUT_DIR = DEF_INPUT_DIR
 
+OPERATIONS = ['metrics', 'cdfs', 'ranges', 'pareto', 'cloud']
+DEF_OPERATIONS = OPERATIONS
+
 DEF_EXT = 'png'
 
 DEF_TOPO = 'os3e'
@@ -42,6 +45,11 @@ def parse_args():
                     help = "number of controllers from end")
     opts.add_option("--controller_list", type = 'str', default = None,
                     help = "list of comma-separated controller totals")
+
+    # Operations
+    opts.add_option("--operation_list", type = 'string',
+                    default = None,
+                    help = "operations to show, from %s" % OPERATIONS)
 
     # Metric selection
     opts.add_option("--metric",
@@ -155,6 +163,11 @@ def parse_args():
         options.metrics = ['latency', 'wc_latency']
     else:
         options.metrics = [options.metric]
+
+    if options.operation_list:
+        options.operations = options.operation_list.split(',')
+    else:
+        options.operations = DEF_OPERATIONS
 
     options.controllers = None
     if options.controller_list:

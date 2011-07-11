@@ -23,12 +23,18 @@ if __name__ == "__main__":
     def do_all(name, g, i, t, data):
         global options
         assert options
-        stats, filename = metrics.do_metrics(options, name, g)
-        filename = filename.replace('data_out', 'data_vis')
-        plot_cdfs.do_cdfs(options, stats, filename)
-        plot_ranges.do_ranges(options, stats, filename)
-        plot_pareto.do_pareto(options, stats, filename)
-        plot_cloud.do_cloud(options, stats, filename, 'png')
+        filename = ''
+        if 'metrics' in options.operations:
+            stats, filename = metrics.do_metrics(options, name, g)
+            filename = filename.replace('data_out', 'data_vis')
+        if 'cdfs' in options.operations:
+            plot_cdfs.do_cdfs(options, stats, filename)
+        if 'ranges' in options.operations:
+            plot_ranges.do_ranges(options, stats, filename)
+        if 'pareto' in options.operations:
+            plot_pareto.do_pareto(options, stats, filename)
+        if 'cloud' in options.operations:
+            plot_cloud.do_cloud(options, stats, filename, 'png')
         #map_combos.do_plot(options, stats, g, filename)
 
     if options.all_topos:
