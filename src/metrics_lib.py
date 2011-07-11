@@ -609,27 +609,25 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
 
 
         # Compute summary stats
-        if PRINT_VERBOSE:
-            for metric in metrics:
-                this_metric = metric_data[metric]
-                # Previously, we stored all values - but with so many,
-                # the storage of these values must go to disk swap and the CPU
-                # usage drops to 1% waiting on disk.
-                #this_metric['mean'] = sum(this_metric['values']) / len(this_metric['values'])
-                this_metric['mean'] = this_metric['sum'] / float(this_metric['num'])
-                if median:
-                    this_metric['median'] = numpy.median(this_metric['values'])
-                    del this_metric['values']
-                # Work around Python annoyance where str(set) doesn't work
-                this_metric['lowest_combo'] = list(this_metric['lowest_combo'])
-                this_metric['highest_combo'] = list(this_metric['highest_combo'])
-    
-                PRINT_VALUES = True
-                if PRINT_VALUES:
-                    print "\t" + "%s" % metric
-                    for key in sorted(this_metric.keys()):
-                        if key != 'values':
-                            print "\t\t%s: %s" % (key, this_metric[key])
+        for metric in metrics:
+            this_metric = metric_data[metric]
+            # Previously, we stored all values - but with so many,
+            # the storage of these values must go to disk swap and the CPU
+            # usage drops to 1% waiting on disk.
+            #this_metric['mean'] = sum(this_metric['values']) / len(this_metric['values'])
+            this_metric['mean'] = this_metric['sum'] / float(this_metric['num'])
+            if median:
+                this_metric['median'] = numpy.median(this_metric['values'])
+                del this_metric['values']
+            # Work around Python annoyance where str(set) doesn't work
+            this_metric['lowest_combo'] = list(this_metric['lowest_combo'])
+            this_metric['highest_combo'] = list(this_metric['highest_combo'])
+
+            if PRINT_VERBOSE:
+                print "\t" + "%s" % metric
+                for key in sorted(this_metric.keys()):
+                    if key != 'values':
+                        print "\t\t%s: %s" % (key, this_metric[key])
 
         data['data'][unicode(combo_size)] = {}
         group_data = data['data'][unicode(combo_size)]
