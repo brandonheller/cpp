@@ -85,6 +85,7 @@ def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
         print "wrote file to %s" % filepath
     else:
         plt.show()
+    plt.clear(fig)
 
 
 def do_plot(options, stats, g, write_filepath):

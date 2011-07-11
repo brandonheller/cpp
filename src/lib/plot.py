@@ -67,6 +67,12 @@ def escape(s):
         s_escaped += letter
     return s_escaped
 
+# Matplotlib does not close figures when creating them, leading to a horrendous
+# memory leak.  Solutions at:
+# http://www.mail-archive.com/matplotlib-users@lists.sourceforge.net/msg13222.html
+def clear_fig(fig):
+    plt.close(fig)
+
 
 # from http://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
 def mkdir_p(path):
@@ -139,6 +145,7 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
     else:
         #pylab.show()
         pass
+    clear_fig(fig)
 
 
 def pareto(data, colors, axes, xscale, yscale,
@@ -235,6 +242,7 @@ def pareto(data, colors, axes, xscale, yscale,
         mkdir_p(os.path.dirname(filepath))
         fig.savefig(filepath, dpi = DPI)
         print "wrote file to %s" % filepath
+    clear_fig(fig)
 
 
 def cloud(data, colors, axes, xscale, yscale,
@@ -275,6 +283,7 @@ def cloud(data, colors, axes, xscale, yscale,
         print "wrote file to %s" % filepath
     else:
         pass
+    clear_fig(fig)
 
 
 def plot(ptype, data, colors, axes, label, xscale, yscale,
@@ -353,6 +362,7 @@ def plot(ptype, data, colors, axes, label, xscale, yscale,
     else:
         #pylab.show()
         pass
+    clear_fig(fig)
 
 def show():
     pylab.show()
