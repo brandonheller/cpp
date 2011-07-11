@@ -7,7 +7,7 @@ Script to monitor the mem consumption of some python processes.
 from subprocess import Popen, call, PIPE
 import time
 
-PROCESS_STR = 'python ./metrics.py'
+PROCESS_STR = 'python ./generate.py'
 
 # last PID seen matching string
 lastpid = None
