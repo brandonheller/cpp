@@ -170,14 +170,21 @@ def pareto(data, colors, axes, xscale, yscale,
         x = [d[0] for d in pareto]
         y = [d[1] for d in pareto]
         if normalize:
-            small_x = x[0]
-            small_y = y[-1]
-            pareto_new = []
-            for d in pareto:
-                pareto_new.append((d[0] / float(small_x), d[1] / float(small_y)))
-            pareto = pareto_new
-            x = [d[0] for d in pareto]
-            y = [d[1] for d in pareto]
+            if len(x) == 1 and len(y) == 1 and x[0] == 0.0 and y[0] == 0.0:
+                # Do nothing, because at k = n, we'd incur a divide-by-zero
+                # error trying to optimize.
+                # A cleaner way to detect this case might be to pass in g,
+                # or store N in stats.
+                pass
+            else:
+                small_x = x[0]
+                small_y = y[-1]
+                pareto_new = []
+                for d in pareto:
+                    pareto_new.append((d[0] / float(small_x), d[1] / float(small_y)))
+                pareto = pareto_new
+                x = [d[0] for d in pareto]
+                y = [d[1] for d in pareto]
 
         color = colors[i]
         lines.append(pylab.plot(x, y, 'o-',
