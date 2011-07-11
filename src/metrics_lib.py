@@ -638,6 +638,17 @@ def run_all_combos(metrics, g, controllers, data, apsp, apsp_paths,
     data['metric'] = metrics
     data['group'] = [str(c) for c in controllers]
 
+    # Pool cleanup.  According to the Multiprocessing module docs,
+    # this shouldn't be necessary due to automatic GC, but without this
+    # code, worker processes seem to accumulate until you're out of memory.
+    # Even if it's just a slow GC performance bug and not a correctness one,
+    # it helps run the code on smaller VMs and should help performance a bit.
+    if multiprocess:
+        print "terminating pool"
+        pool.terminate()
+        print "joining pool"
+        pool.join()
+
 
 def run_best_n(data, g, apsp, n, weighted):
     '''Use best of n runs

@@ -17,6 +17,7 @@ maxmem = 0.0
 while True:
     output = Popen(["ps", "aux"], stdout=PIPE).communicate()[0]
     memtotal = 0.0
+    pyprocs = 0.0
     newpids = set()
     for line in output.split('\n'):
         found = False
@@ -34,8 +35,10 @@ while True:
             except ValueError:
                 print "couldn't convert float: %s" % mem
             found = True
+        if 'python' in line:
+            pyprocs += 1
     if memtotal > 0.0:
-        print "%s" % memtotal
+        print "%s %s" % (memtotal, pyprocs)
     if memtotal > maxmem:
         maxmem = memtotal
 
