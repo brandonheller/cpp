@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 '''Generate everything for one or more topos.'''
+import json
 import os
 
 import networkx as nx
@@ -27,6 +28,14 @@ if __name__ == "__main__":
         if 'metrics' in options.operations:
             stats, filename = metrics.do_metrics(options, name, g)
             filename = filename.replace('data_out', 'data_vis')
+        else:
+            controllers = metrics.get_controllers(g, options)
+            exp_filename = metrics.get_filename(name, options, controllers)
+            if not os.path.exists(exp_filename + '.json'):
+                raise Exception("invalid file path: %s" % exp_filename)
+            input_file = open(exp_filename + '.json', 'r')
+            stats = json.load(input_file)
+            filename = exp_filename.replace('data_out', 'data_vis')
         if 'cdfs' in options.operations:
             plot_cdfs.do_cdfs(options, stats, filename)
         if 'ranges' in options.operations:

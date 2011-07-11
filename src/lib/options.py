@@ -108,7 +108,7 @@ def parse_args():
                     help = "compute median?")
     opts.add_option("-f", "--force", action = "store_true",
                     default = False,
-                    help = "force re-compute of already-existing metrics data")
+                    help = "force operations to occur even if metrics are there")
 
     # Plotting-specific input args
     opts.add_option("-i", "--input", type = 'string', 
