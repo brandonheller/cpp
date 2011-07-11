@@ -26,8 +26,9 @@ if __name__ == "__main__":
         exp_filename = metrics.get_filename(topo, options, controllers)
         if os.path.exists(exp_filename + '.json'):
             print "skipping already-analyzed topo: %s" % name
-            return
-
+            return False
+        if g.number_of_nodes() < len(controllers):
+            return False
         stats, filename = metrics.do_metrics(options, name, g)
         filename = filename.replace('data_out', 'data_vis')
         plot_cdfs.do_cdfs(options, stats, filename)
@@ -35,6 +36,7 @@ if __name__ == "__main__":
         plot_pareto.do_pareto(options, stats, filename)
         plot_cloud.do_cloud(options, stats, filename, 'png')
         #map_combos.do_plot(options, stats, g, filename)
+        return True
 
     if options.all_topos:
         topos = sorted(zoo_topos())
