@@ -28,6 +28,13 @@ def print_topo_stats(name, g):
         print "connected components: %s" % c
         print "total weight: %.1f" % w
 
+def custom(g):
+    for n in g.nodes():
+        if 'Latitude' not in g.node[n] or 'Longitude' not in g.node[n]:
+            print "node missing a location: %s" % n
+        else:
+            print "loc OK: %s" % n
+    print "connected components: %s" % nx.connected_components(g)
 
 if __name__ == '__main__':
 
@@ -35,6 +42,8 @@ if __name__ == '__main__':
         print "please provide a topology name"
         exit()
     for topo in sys.argv[1:]:
-        g = get_topo_graph(topo)
-        print_topo_stats(topo, g)
+        g, usable, note = get_topo_graph(topo)
+        if g:
+            print_topo_stats(topo, g)
+            custom(g)
 
