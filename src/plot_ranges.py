@@ -50,7 +50,6 @@ def do_ranges(options, stats, write_filepath):
                         xlabel = xlabel,
                         ylabel = metric_fullname(metric) + "\nmiles over cost")
 
-
         if 'ratios' in PLOTS:
             aspect_colors = {'highest': 'rx',
                              'mean': 'bo',

@@ -84,15 +84,13 @@ def mkdir_p(path):
         else: raise
 
 
-def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
-           xscale, yscale, label = None, axes = None,
-           write_filepath = None, write = False, ext = 'pdf',
-           legend = None, title = False, xlabel = None, ylabel = None,
-           min_x = None, max_x = None, min_y = None, max_y = None):
+def ranges_data(stats, aspect_fcns, aspects, metric):
+    '''Extract out range data given aspect functions.
 
-    fig = get_fig()
-
-    # Build lines
+    Returns two-element list:
+    @param x: sorted list of integer controller values
+    @param lines: dicts keyed by metric value with y-axis data
+    '''
     lines = {}
     x = sorted([int(a) for a in stats['group']])
     for g in x:
@@ -102,8 +100,21 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
             if aspect not in lines:
                 lines[aspect] = []
             lines[aspect].append(fcn(g, data_agg, metric))
-    #print lines
+    return x, lines
 
+
+def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
+           xscale, yscale, label = None, axes = None,
+           write_filepath = None, write = False, ext = 'pdf',
+           legend = None, title = False, xlabel = None, ylabel = None,
+           min_x = None, max_x = None, min_y = None, max_y = None,
+           x = None, lines = None):
+
+    fig = get_fig()
+
+    # Build lines if not already provided.
+    if not x and not lines:
+        x, lines = ranges_data(stats, aspect_fcns, aspects, metric)
 
     for aspect in aspects:
         y = lines[aspect]
