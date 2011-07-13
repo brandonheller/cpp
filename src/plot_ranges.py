@@ -24,6 +24,32 @@ PLOT_FCNS = {
             'mean': (lambda g, d, m: d[m]['mean']),
             'lowest': (lambda g, d, m: d[m]['lowest'])},
         'ylabel': (lambda m: metric_fullname(m) + " (miles)")
+    },
+    'miles_cost': {
+         'aspect_colors':
+            {'miles_cost': 'rx'},
+        'aspect_fcns':
+            {'miles_cost': (lambda g, d, m: d[m]['lowest']  / float(g))},
+        'ylabel': (lambda m: metric_fullname(m) + "\nmiles over cost")
+    },
+    'ratios': {
+        'aspect_colors':
+            {'highest': 'rx',
+             'mean': 'bo',
+             'one': 'g+'},
+        'aspect_fcns':
+            {'highest': (lambda g, d, m: divide(d[m]['highest'], d[m]['lowest'])),
+             'mean': (lambda g, d, m: divide(d[m]['mean'], d[m]['lowest'])),
+             'one': (lambda g, d, m: 1.0)},
+        'ylabel': (lambda m: metric_fullname(m) + "/optimal"),
+        'max_y': 10.0
+    },
+    'durations': {
+        'aspect_colors':
+            {'duration': 'rx'},
+        'aspect_fcns':
+            {'duration': (lambda g, d, m: d[m]['duration'])},
+        'ylabel': (lambda m: metric_fullname(m) + "duration (sec)")
     }
 }
 
@@ -55,49 +81,16 @@ def do_ranges(options, stats, write_filepath):
                 aspect_fcns = p['aspect_fcns']
                 aspect_colors = p['aspect_colors']
                 ylabel = p['ylabel'](this_write_filepath)
+                max_y = p['max_y'] if 'max_y' in p else None
+
                 plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
                             "linear", "linear", None, None, filepath,
                             options.write, ext = options.ext,
                             xlabel = xlabel,
-                            ylabel = ylabel)
-
-            if 'miles_cost' in PLOTS:
-                print "plotting ranges"
-                aspect_colors = {'miles_cost': 'rx'}
-                aspect_fcns = {'miles_cost': (lambda g, d, m: d[m]['lowest']  / float(g))}
-                aspects = aspect_fcns.keys()
-                plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
-                            "linear", "linear", None, None, this_write_filepath + '_miles_cost',
-                            options.write, ext = options.ext,
-                            xlabel = xlabel,
-                            ylabel = metric_fullname(metric) + "\nmiles over cost")
+                            ylabel = ylabel,
+                            max_y = max_y)
     
-            elif 'ratios' in PLOTS:
-                aspect_colors = {'highest': 'rx',
-                                 'mean': 'bo',
-                                 'one': 'g+'}
-                aspect_fcns = {'highest': (lambda g, d, m: divide(d[m]['highest'], d[m]['lowest'])),
-                               'mean': (lambda g, d, m: divide(d[m]['mean'], d[m]['lowest'])),
-                               'one': (lambda g, d, m: 1.0)}
-                aspects = aspect_fcns.keys()
-                plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
-                            "linear", "linear", None, None, this_write_filepath + '_ratios',
-                            options.write, ext = options.ext,
-                            xlabel = xlabel,
-                            ylabel = metric_fullname(metric) + "/optimal",
-                            max_y = 10.0)
-        
-            elif 'durations' in PLOTS:
-                aspect_colors = {'duration': 'rx'}
-                aspect_fcns = {'duration': (lambda g, d, m: d[m]['duration'])}
-                aspects = aspect_fcns.keys()
-                plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
-                            "linear", "linear", None, None, this_write_filepath + '_durations',
-                            options.write, ext = options.ext,
-                            xlabel = xlabel,
-                            ylabel = "duration (sec)")
-    
-            elif 'bc_abs' in PLOTS:
+            if 'bc_abs' in PLOTS:
                 aspect_colors = {'bc_abs': 'rx'}
                 value_one = stats['data'][sorted(stats['group'])[0]][metric]['lowest']
                 aspect_fcns = {'bc_abs': (lambda g, d, m: (value_one - d[m]['lowest']) / max(1, (float(g) - 1)))}
