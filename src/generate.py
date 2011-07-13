@@ -59,7 +59,7 @@ if __name__ == "__main__":
             break
 
         print "topo %s of %s: %s" % (i, t, topo)
-        g = get_topo_graph(topo)
+        g, usable, note = get_topo_graph(topo)
         cc = nx.number_connected_components(g)
         controllers = metrics.get_controllers(g, options)
         exp_filename = metrics.get_filename(topo, options, controllers)
