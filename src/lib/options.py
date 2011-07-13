@@ -22,6 +22,10 @@ DEF_OPERATIONS = OPERATIONS
 DEF_EXT = 'png'
 
 DEF_TOPO = 'os3e'
+TOPO_GROUPS = {
+    'test1': ['Aarnet'],
+    'test2': ['Aarnet', 'Abilene']
+}
 
 DPI = 300
 
@@ -32,6 +36,8 @@ def parse_args():
     # Topology selection
     opts.add_option("--topo", type = 'str', default = DEF_TOPO,
                     help = "topology name")
+    opts.add_option("--topo_group", type = 'str', default = None,
+                    help = "topology group")
     opts.add_option("--topo_list", type = 'str', default = None,
                     help = "list of comma-separated topology names")
     opts.add_option("--topo_blacklist", type = 'str', default = None,
@@ -175,7 +181,11 @@ def parse_args():
         for i in options.controller_list.split(','):
             options.controllers.append(int(i))
 
-    if options.topo != DEF_TOPO and options.topo_list:
+    if options.topo_group:
+        if options.topo_group not in TOPO_GROUPS:
+            raise Exception("Invalid topo group specified: %s" % options.topo_group)
+        options.topos = TOPO_GROUPS[options.topo_group]
+    elif options.topo != DEF_TOPO and options.topo_list:
         raise Exception("Both topo and topo_list provided; pick one please")
     else:
         if options.topo_list:

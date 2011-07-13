@@ -110,15 +110,46 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
            min_x = None, max_x = None, min_y = None, max_y = None,
            x = None, lines = None):
 
-    fig = get_fig()
-
     # Build lines if not already provided.
+    if not x and lines or x and not lines:
+        raise Exception("must specify x and lines together")
+
     if not x and not lines:
         x, lines = ranges_data(stats, aspect_fcns, aspects, metric)
+    data_lines = [{'x': x, 'lines': lines}]
 
-    for aspect in aspects:
-        y = lines[aspect]
-        pylab.plot(x, y, aspect_colors[aspect], linestyle = '-', linewidth = 1)
+    ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
+           xscale, yscale, label, axes,
+           write_filepath = write_filepath, write = write, ext = ext,
+           legend = legend, title = title, xlabel = xlabel, ylabel = ylabel,
+           min_x = min_x, max_x = max_x, min_y = min_y, max_y = max_y,
+           data_lines = data_lines)
+
+
+def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
+           xscale, yscale, label = None, axes = None,
+           write_filepath = None, write = False, ext = 'pdf',
+           legend = None, title = False, xlabel = None, ylabel = None,
+           min_x = None, max_x = None, min_y = None, max_y = None,
+           data_lines = None):
+    '''Plot multiple ranges on one graph.
+    
+    @param data_lines: list of dicts, each of:
+        {x: [list of x's],
+         lines: [dict of data lists, keyed by aspects.]}
+    '''
+    assert data_lines
+
+    fig = get_fig()
+
+    for d in data_lines:
+        x = d['x']
+        lines = d['lines']
+        #print "plotting: %s %s" % (x, lines)
+        for aspect in aspects:
+            y = lines[aspect]
+            pylab.plot(x, y, aspect_colors[aspect], linestyle = '-', linewidth = 1)
+
 
     pylab.grid(True)
     pylab.xscale(xscale)
@@ -126,14 +157,23 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
     if axes:
         pylab.axis(axes)
     else:
+        all_x = []
+        all_y = []
+        for d in data_lines:
+            x = d['x']
+            y = d['lines']
+            all_x.extend(x)
+            for a, l in y.iteritems():
+                all_y.extend(l)
+
         if not min_x:
-            min_x = int(min(x))
+            min_x = int(min(all_x))
         if not max_x:
-            max_x = int(max(x))
+            max_x = int(max(all_x))
         if not min_y:
-            min_y = min([min(lines[aspect]) for aspect in aspects])
+            min_y = min(all_y)
         if not max_y:
-            max_y = max([max(lines[aspect]) for aspect in aspects])
+            max_y = max(all_y)
         # Assume these are string-ified nums of controllers.
         axes = [min_x, max_x, 0, max_y]
         pylab.axis(axes)
