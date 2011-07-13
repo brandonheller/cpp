@@ -7,12 +7,40 @@ from metrics_lib import metric_fullname, get_output_filepath
 PLOT_TYPES = ['ranges', 'ratios', 'durations', 'bc_abs', 'bc_rel', 'abs_benefit', 'miles_cost']
 PLOTS = PLOT_TYPES
 
+def bc_abs_aspect_fcns_gen(stats, metric):
+    value_one = stats['data'][sorted(stats['group'])[0]][metric]['lowest']
+    aspect_fcns = {'bc_abs': (lambda g, d, m: (value_one - d[m]['lowest']) / max(1, (float(g) - 1)))}
+    return aspect_fcns
+
+def bc_rel_aspect_fcns_gen(stats, metric):
+    value_one = stats['data'][sorted(stats['group'])[0]][metric]['lowest']
+    aspect_fcns = {'bc_rel': (lambda g, d, m: divide(value_one, float(d[m]['lowest'])) / float(g))}
+    return aspect_fcns
+
+def abs_benefit_fcns_gen(stats, metric):
+    groups = sorted([int(g) for g in stats['group']])
+    abs_benefits = {}
+    for i, g in enumerate(groups):
+        if i == 0:
+            abs_benefits[g] = 0
+        else:
+            now = stats['data'][str(g)][metric]['lowest']
+            if str(g - 1) not in stats['data']:
+                prev = now
+            else:
+                prev = stats['data'][str(g - 1)][metric]['lowest']
+            abs_benefits[g] = prev - now
+    aspect_fcns = {'abs_benefit': (lambda g, d, m: abs_benefits[g])}
+    return aspect_fcns
+
 # Master dict from plot types to all the info needed to construct them.
 # Now in a declarative style because the code duplication became tedious.
 # Each plot type can include:
 #    aspect_colors: dict from aspect names to color and marker strings
 #    aspect_fcns: dict from aspect names to fcns to extract their data
+#    aspect_fcns_gen: fcn(stats, metrics) that genreates aspect_fcns
 #    ylabel: fcn to generate ylabel, given metric
+#    (opt) min/max-*: fcn(options) to generate corresponding value
 PLOT_FCNS = {
     'ranges': {
         'aspect_colors':
@@ -42,7 +70,7 @@ PLOT_FCNS = {
              'mean': (lambda g, d, m: divide(d[m]['mean'], d[m]['lowest'])),
              'one': (lambda g, d, m: 1.0)},
         'ylabel': (lambda m: metric_fullname(m) + "/optimal"),
-        'max_y': 10.0
+        'max_y': (lambda o: 10.0)
     },
     'durations': {
         'aspect_colors':
@@ -50,6 +78,28 @@ PLOT_FCNS = {
         'aspect_fcns':
             {'duration': (lambda g, d, m: d[m]['duration'])},
         'ylabel': (lambda m: metric_fullname(m) + "duration (sec)")
+    },
+    'bc_abs': {
+        'aspect_colors':
+            {'bc_abs': 'rx'},
+        'aspect_fcns_gen': bc_abs_aspect_fcns_gen,
+        'ylabel': (lambda m: metric_fullname(m) + "\nabs reduction/k (miles)"),
+        'min_x': (lambda o: 2.0)
+    },
+    'bc_rel': {
+        'aspect_colors':
+            {'bc_rel': 'rx'},
+        'aspect_fcns_gen': bc_rel_aspect_fcns_gen,
+        'ylabel': (lambda m: metric_fullname(m) + "(1) /\n" + metric_fullname(m) + "/k"),
+        'min_x': (lambda o: 1.0),
+        'max_x': (lambda o: o.maxx),
+        'max_y': (lambda o: o.maxy)
+    },
+    'abs_benefit': {
+         'aspect_colors': {'abs_benefit': 'rx'},
+         'aspect_fcns_gen': abs_benefit_fcns_gen,
+         'ylabel': (lambda m: metric_fullname(m) + "\nincremental abs benefit (miles)"),
+         'min_x': (lambda o: 2.0)
     }
 }
 
@@ -77,63 +127,27 @@ def do_ranges(options, stats, write_filepath):
                 print "plotting %s" % ptype
 
                 filepath = this_write_filepath + '_' + ptype
-                aspects = p['aspect_fcns'].keys()
-                aspect_fcns = p['aspect_fcns']
+                if 'aspect_fcns_gen' in p:
+                    aspect_fcns = p['aspect_fcns_gen'](stats, metric)
+                else:
+                    aspect_fcns = p['aspect_fcns']
+                aspects = aspect_fcns.keys()
                 aspect_colors = p['aspect_colors']
                 ylabel = p['ylabel'](this_write_filepath)
-                max_y = p['max_y'] if 'max_y' in p else None
+                min_x = p['min_x'](options) if 'min_x' in p else None
+                max_x = p['max_x'](options) if 'max_x' in p else None
+                min_y = p['min_y'](options) if 'min_y' in p else None
+                max_y = p['max_y'](options) if 'max_y' in p else None
 
                 plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
                             "linear", "linear", None, None, filepath,
                             options.write, ext = options.ext,
                             xlabel = xlabel,
                             ylabel = ylabel,
+                            min_x = min_x,
+                            max_x = max_x,
+                            min_y = min_y,
                             max_y = max_y)
-    
-            if 'bc_abs' in PLOTS:
-                aspect_colors = {'bc_abs': 'rx'}
-                value_one = stats['data'][sorted(stats['group'])[0]][metric]['lowest']
-                aspect_fcns = {'bc_abs': (lambda g, d, m: (value_one - d[m]['lowest']) / max(1, (float(g) - 1)))}
-                aspects = aspect_fcns.keys()
-                plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
-                            "linear", "linear", None, None, this_write_filepath + '_bc_abs',
-                            options.write, ext = options.ext,
-                            xlabel = xlabel,
-                            ylabel = metric_fullname(metric) + "\nabs reduction/k (miles)", min_x = 2)
-    
-            elif 'bc_rel' in PLOTS:
-                aspect_colors = {'bc_rel': 'rx'}
-                value_one = stats['data'][sorted(stats['group'])[0]][metric]['lowest']
-                aspect_fcns = {'bc_rel': (lambda g, d, m: divide(value_one, float(d[m]['lowest'])) / float(g))}
-                aspects = aspect_fcns.keys()
-                plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
-                            "linear", "linear", None, None, this_write_filepath + '_bc_rel',
-                            options.write, ext = options.ext,
-                            xlabel = xlabel,
-                            ylabel = metric_fullname(metric) + "(1) /\n" + metric_fullname(metric) + "/k", min_x = 1,
-                            max_x = options.maxx, max_y = options.maxy)
-    
-            elif 'abs_benefit' in PLOTS:
-                aspect_colors = {'abs_benefit': 'rx'}
-                groups = sorted([int(g) for g in stats['group']])
-                abs_benefits = {}
-                for i, g in enumerate(groups):
-                    if i == 0:
-                        abs_benefits[g] = 0
-                    else:
-                        now = stats['data'][str(g)][metric]['lowest']
-                        if str(g - 1) not in stats['data']:
-                            prev = now
-                        else:
-                            prev = stats['data'][str(g - 1)][metric]['lowest']
-                        abs_benefits[g] = prev - now
-                aspect_fcns = {'abs_benefit': (lambda g, d, m: abs_benefits[g])}
-                aspects = aspect_fcns.keys()
-                plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
-                            "linear", "linear", None, None, this_write_filepath + '_abs_benefits',
-                            options.write, ext = options.ext,
-                            xlabel = xlabel,
-                            ylabel = metric_fullname(metric) + "\nincremental abs benefit (miles)", min_x = 2)
             else:
                 raise Exception("undefined ptype: %s" % ptype)
 
