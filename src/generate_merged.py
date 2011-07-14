@@ -137,7 +137,7 @@ MERGED_PLOT_DATA_FCNS = {
         },
         'aspect_fcns_gen': bc_rel_aspect_fcns_gen,
         'ylabel': (lambda m: metric_fullname(m) + "(1) /\n" + metric_fullname(m) + "/k"),
-        'max_y': (lambda o: o.maxy),
+        'max_y': (lambda o: 3.0),
         'get_data_fcns': shared_get_data_fcns
     },
 }
@@ -230,12 +230,14 @@ if __name__ == "__main__":
             controllers = metrics.get_controllers(g, options)
             exp_filename = metrics.get_filename(topo, options, controllers)
 
+            path_exists = os.path.exists(exp_filename + '.json')
+            compute_metrics = 'metrics' in options.operations
+
             # Compute data only when the following conditions hold:
-            # - asked to complete metrics
-            # - AND either the path doesn't exist of we're instructed to force it.      
-            if ('metrics' in options.operations and 
-                (not os.path.exists(exp_filename + '.json') or options.force)):
-                print "skipping already-analyzed topo: %s" % topo
+            # - asked to complete metrics, AND
+            # - asked to force, or data is missing
+            if compute_metrics and (options.force or not path_exists):
+                print "freshly analyzing topo: %s" % topo
                 stats, filename = metrics.do_metrics(options, topo, g)
                 filename = filename.replace('data_out', 'data_vis')
             # Otherwise, load the data:
@@ -260,14 +262,12 @@ if __name__ == "__main__":
 
                     p = MERGED_PLOT_DATA_FCNS[ptype]
                     aspect_fcns = get_aspect_fcns(p, stats, metric)
-                    print "aspect functions: %s" % aspect_fcns
                     aspects = aspect_fcns.keys()
 
                     for name, gdf in p['get_data_fcns'].iteritems():
                         if name not in plot_data[metric][ptype]:
                             plot_data[metric][ptype][name] = {}
                         gdf_fcn = gdf['get_data_fcn']
-                        print "adding to plot data"
                         plot_data[metric][ptype][name][topo] = gdf_fcn(g, stats, aspect_fcns, aspects, metric)
         else:
             print "ignoring unusable topology: %s (%s)" % (topo, note)
