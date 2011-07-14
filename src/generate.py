@@ -58,7 +58,7 @@ if __name__ == "__main__":
         if not options.max == None and i >= options.max:
             break
 
-        print "topo %s of %s: %s" % (i, t, topo)
+        print "topo %s of %s: %s" % (i + 1, t, topo)
         g, usable, note = get_topo_graph(topo)
         cc = nx.number_connected_components(g)
         controllers = metrics.get_controllers(g, options)
