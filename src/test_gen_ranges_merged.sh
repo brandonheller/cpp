@@ -18,7 +18,7 @@ GROUP='--topo_group test1'
 # data_vis/Aarnet/4_to_0_latency_ranges.pdf
 # data_vis/Abilene/4_to_0_latency_ranges.pdf
 GROUP='--topo_group test2'
-./generate_merged.py ${GROUP} ${C} ${METRICS} -w -e ${EXT} ${FORCE} ${MP} ${OPS}
+#./generate_merged.py ${GROUP} ${C} ${METRICS} -w -e ${EXT} ${FORCE} ${MP} ${OPS}
 
 TOPOS='--all_topos'
 #./generate_merged.py ${TOPOS} ${C} ${METRICS} -w -e ${EXT} ${FORCE} ${MP} ${OPS}

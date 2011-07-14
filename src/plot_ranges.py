@@ -3,9 +3,11 @@
 from lib.options import parse_args
 import lib.plot as plot
 from metrics_lib import metric_fullname, get_output_filepath
+from util import divide_def0
 
 PLOT_TYPES = ['ranges', 'ratios', 'durations', 'bc_abs', 'bc_rel', 'abs_benefit', 'miles_cost']
 PLOTS = PLOT_TYPES
+
 
 def bc_abs_aspect_fcns_gen(stats, metric):
     value_one = stats['data'][sorted(stats['group'])[0]][metric]['lowest']
@@ -14,7 +16,7 @@ def bc_abs_aspect_fcns_gen(stats, metric):
 
 def bc_rel_aspect_fcns_gen(stats, metric):
     value_one = stats['data'][sorted(stats['group'])[0]][metric]['lowest']
-    aspect_fcns = {'bc_rel': (lambda g, d, m: divide(value_one, float(d[m]['lowest'])) / float(g))}
+    aspect_fcns = {'bc_rel': (lambda g, d, m: divide_def0(value_one, float(d[m]['lowest'])) / float(g))}
     return aspect_fcns
 
 def abs_benefit_fcns_gen(stats, metric):
@@ -66,8 +68,8 @@ PLOT_FCNS = {
              'mean': 'bo',
              'one': 'g+'},
         'aspect_fcns':
-            {'highest': (lambda g, d, m: divide(d[m]['highest'], d[m]['lowest'])),
-             'mean': (lambda g, d, m: divide(d[m]['mean'], d[m]['lowest'])),
+            {'highest': (lambda g, d, m: divide_def0(d[m]['highest'], d[m]['lowest'])),
+             'mean': (lambda g, d, m: divide_def0(d[m]['mean'], d[m]['lowest'])),
              'one': (lambda g, d, m: 1.0)},
         'ylabel': (lambda m: metric_fullname(m) + "/optimal"),
         'max_y': (lambda o: 10.0)
@@ -102,13 +104,6 @@ PLOT_FCNS = {
          'min_x': (lambda o: 2.0)
     }
 }
-
-
-def divide(left, right):
-    if right == 0:
-        return 0.0
-    else:
-        return (left / float(right))
 
 
 def do_ranges(options, stats, write_filepath):

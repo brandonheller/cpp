@@ -14,10 +14,12 @@ import plot_pareto
 from zoo_tools import zoo_topos
 from topo_lib import get_topo_graph
 from metrics_lib import metric_fullname
+from util import divide_def0
 
 # Quick hack to not throw exception if we come across a topology for which
 # we have no data
 IGNORE_MISSING_DATA = True
+
 
 def norm_y(data):
     data_copy = copy.copy(data)
@@ -32,6 +34,63 @@ def norm_x(data, k):
     return data_copy
 
 
+# Shared ranges data functions
+ranges_get_data_fcns = {
+    'base': {
+        'get_data_fcn':
+            (lambda g, s, af, a, m: plot.ranges_data(s, af, a, m)),
+        'xlabel':
+            (lambda m: 'number of controllers (k)'),
+        'ylabel':
+            (lambda m: metric_fullname(m) + " (miles)")
+    },
+    'norm_xk': {
+        'get_data_fcn':
+            (lambda g, s, af, a, m: norm_x(plot.ranges_data(s, af, a, m), g.number_of_nodes())),
+        'xlabel':
+            (lambda m: 'number of controllers (k) / n'),
+        'ylabel':
+            (lambda m: metric_fullname(m) + " (miles)"),
+        'max_x':
+            (lambda o: 1.0)
+    },
+    'norm_y': {
+        'get_data_fcn':
+            (lambda g, s, af, a, m: norm_y(plot.ranges_data(s, af, a, m))),
+        'xlabel':
+            (lambda m: 'number of controllers (k)'),
+        'ylabel':
+            (lambda m: metric_fullname(m) + "\nrelative to value at k = 1")
+    },
+    'norm_xk_y': {
+        'get_data_fcn':
+            (lambda g, s, af, a, m: norm_x(norm_y(plot.ranges_data(s, af, a, m)), g.number_of_nodes())),
+        'xlabel':
+            (lambda m: 'number of controllers (k) / n'),
+        'ylabel':
+            (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
+        'max_x':
+            (lambda o: 1.0)
+    }
+}
+
+ratios_get_data_fcns = {
+    'base': {
+        'get_data_fcn':
+            (lambda g, s, af, a, m: plot.ranges_data(s, af, a, m)),
+        'xlabel':
+            (lambda m: 'number of controllers (k)'),
+    },
+    'norm_xk': {
+        'get_data_fcn':
+            (lambda g, s, af, a, m: norm_x(plot.ranges_data(s, af, a, m), g.number_of_nodes())),
+        'xlabel':
+            (lambda m: 'number of controllers (k) / n'),
+        'max_x':
+            (lambda o: 1.0)
+    }
+}
+
 # get_data_fcn: fcn(g, stats, aspect_fcns, aspects, metric) that returns JSON data
 MERGED_PLOT_DATA_FCNS = {
     'ranges_all': {
@@ -45,7 +104,7 @@ MERGED_PLOT_DATA_FCNS = {
             'mean': 'bo',
             'lowest': 'g+'
         },
-        'get_data_fcn': (lambda s, af, a, m: plot.ranges_data(s, af, a, m))
+        'get_data_fcns': ranges_get_data_fcns
     },
     'ranges_lowest': {
         'aspect_fcns': {
@@ -54,52 +113,29 @@ MERGED_PLOT_DATA_FCNS = {
         'aspect_colors': {
             'lowest': 'g+'
         },
-        'get_data_fcns': {
-            'base': {
-                'get_data_fcn':
-                    (lambda g, s, af, a, m: plot.ranges_data(s, af, a, m)),
-                'xlabel':
-                    (lambda m: 'number of controllers (k)'),
-                'ylabel':
-                    (lambda m: metric_fullname(m) + " (miles)")
-            },
-            'norm_xk': {
-                'get_data_fcn':
-                    (lambda g, s, af, a, m: norm_x(plot.ranges_data(s, af, a, m), g.number_of_nodes())),
-                'xlabel':
-                    (lambda m: 'number of controllers (k) / n'),
-                'ylabel':
-                    (lambda m: metric_fullname(m) + " (miles)"),
-                'max_x':
-                    (lambda d: 1.0)
-            },
-            'norm_y': {
-                'get_data_fcn':
-                    (lambda g, s, af, a, m: norm_y(plot.ranges_data(s, af, a, m))),
-                'xlabel':
-                    (lambda m: 'number of controllers (k)'),
-                'ylabel':
-                    (lambda m: metric_fullname(m) + "\nrelative to value at k = 1")
-            },
-            'norm_xk_y': {
-                'get_data_fcn':
-                    (lambda g, s, af, a, m: norm_x(norm_y(plot.ranges_data(s, af, a, m)), g.number_of_nodes())),
-                'xlabel':
-                    (lambda m: 'number of controllers (k) / n'),
-                'ylabel':
-                    (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
-                'max_x':
-                    (lambda d: 1.0)
-            }
-        }
+        'get_data_fcns': ranges_get_data_fcns
+    },
+    'ratios_all': {
+        'aspect_colors': {
+            'highest': 'rx',
+            'mean': 'bo',
+            'one': 'g+'
+        },
+        'aspect_fcns': {
+            'highest': (lambda g, d, m: divide_def0(d[m]['highest'], d[m]['lowest'])),
+            'mean': (lambda g, d, m: divide_def0(d[m]['mean'], d[m]['lowest'])),
+            'one': (lambda g, d, m: 1.0)
+        },
+        'ylabel': (lambda m: metric_fullname(m) + "/optimal"),
+        'max_y': (lambda o: 10.0),
+        'get_data_fcns': ratios_get_data_fcns
     }
 }
 
-PLOT_TYPES = ['ranges_lowest']
+PLOT_TYPES = ['ranges_lowest', 'ratios_all']
 
 
 def get_group_str(options):
-    options = None
     if options.topo_group:
         group_str = options.topo_group
     elif options.all_topos:
@@ -132,6 +168,28 @@ def do_all(options, name, g, i, t, data):
     if 'cloud' in options.operations:
         plot_cloud.do_cloud(options, stats, filename, 'png')
     #map_combos.do_plot(options, stats, g, filename)
+
+
+def get_param(name, fcn_args, *args):
+    '''Search chain in order for first hit.
+
+    If none is defined at the end of the args list, and all miss, return None.
+    Else, raise exception.
+    '''
+    for i, arg in enumerate(args):
+        if arg == None:
+            if i == len(args) - 1:
+                return None
+            else:
+                raise Exception("encountered False value in chain before end")
+        elif name in arg:
+            # Is it a function (that is, callable)?
+            if hasattr(arg[name], '__call__'):
+                return arg[name](*fcn_args)
+            else:
+                return arg[name]
+
+    raise Exception("could not find parameter: %s" % name)
 
 
 if __name__ == "__main__":
@@ -209,22 +267,27 @@ if __name__ == "__main__":
         assert options.from_start
         assert not options.from_end
         group_str = get_group_str(options)
+        metric_data = plot_data[metric]
 
         for ptype in PLOT_TYPES:
-
             p = MERGED_PLOT_DATA_FCNS[ptype]
             write_filepath = 'data_vis/merged/%s_%i_to_%i_%s_%s' % (group_str, options.from_start, options.from_end, metric, ptype)
+
+            aspect_fcns = p['aspect_fcns']
             aspect_colors = p['aspect_colors']
-            for gdf_name, values_by_topo in plot_data[metric][ptype].iteritems():
+            aspects = aspect_fcns.keys()
+            for gdf_name, values_by_topo in metric_data[ptype].iteritems():
                 this_data = values_by_topo.values()
                 gdf = p['get_data_fcns'][gdf_name]
-                xlabel = gdf['xlabel'](metric)
-                ylabel = gdf['ylabel'](metric)
-                max_x = gdf['max_x'](this_data) if 'max_x' in gdf else None
+                xlabel = get_param('xlabel', [metric], p, gdf)
+                ylabel = get_param('ylabel', [metric], p, gdf)
+                max_x = get_param('max_x', [options], p, gdf, None)
+                max_y = get_param('max_y', [options], p, gdf, None)
                 plot.ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
                             "linear", "linear", None, None, write_filepath + '_' + gdf_name,
                             options.write, ext = options.ext,
                             xlabel = xlabel,
                             ylabel = ylabel,
                             data = this_data,
-                            max_x = max_x)
+                            max_x = max_x,
+                            max_y = max_y)
