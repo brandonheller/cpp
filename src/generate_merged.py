@@ -226,6 +226,7 @@ if __name__ == "__main__":
 
         if usable:
             # Check for --force here?
+            print "usable topo: %s" % topo
             controllers = metrics.get_controllers(g, options)
             exp_filename = metrics.get_filename(topo, options, controllers)
 
@@ -242,6 +243,7 @@ if __name__ == "__main__":
                 if not os.path.exists(exp_filename + '.json'):
                     if IGNORE_MISSING_DATA:
                         # Ignore, continue.
+                        print "ignoring missing data"
                         continue
                     else:
                         raise Exception("invalid file path: %s" % exp_filename)
@@ -249,27 +251,31 @@ if __name__ == "__main__":
                 stats = json.load(input_file)
 
             for metric in options.metrics:
-
                 for ptype in PLOT_TYPES:
                     if metric not in plot_data:
                         plot_data[metric] = {}
+                        print "intializing metric: %s" % metric
                     if ptype not in plot_data[metric]:
                         plot_data[metric][ptype] = {}
 
                     p = MERGED_PLOT_DATA_FCNS[ptype]
                     aspect_fcns = get_aspect_fcns(p, stats, metric)
+                    print "aspect functions: %s" % aspect_fcns
                     aspects = aspect_fcns.keys()
 
                     for name, gdf in p['get_data_fcns'].iteritems():
                         if name not in plot_data[metric][ptype]:
                             plot_data[metric][ptype][name] = {}
                         gdf_fcn = gdf['get_data_fcn']
-
+                        print "adding to plot data"
                         plot_data[metric][ptype][name][topo] = gdf_fcn(g, stats, aspect_fcns, aspects, metric)
         else:
             print "ignoring unusable topology: %s (%s)" % (topo, note)
 
         print "topo %s of %s: %s" % (i, len(topos), topo)
+
+    if plot_data == {}:
+        raise Exception("null plot_data: verify that the expected data is in the right place.")
 
     # Now that we have the formatted data ready to go, proceed.
     for metric in options.metrics:
