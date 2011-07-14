@@ -143,6 +143,8 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
     '''
     assert data
     # Merge line opts; line_opts will override anything in LINE_OPTS_DEF.
+    if line_opts == None:
+        line_opts = {}
     line_opts = dict(LINE_OPTS_DEF, **line_opts)
 
     fig = get_fig()
