@@ -124,7 +124,7 @@ def do_ranges(options, stats, write_filepath):
         for ptype in PLOTS:
             if ptype in PLOT_FCNS.keys():
                 p = PLOT_FCNS[ptype]
-                print "plotting %s" % ptype
+                #print "plotting %s" % ptype
 
                 filepath = this_write_filepath + '_' + ptype
                 if 'aspect_fcns_gen' in p:

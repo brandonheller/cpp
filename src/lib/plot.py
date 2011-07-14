@@ -87,9 +87,9 @@ def mkdir_p(path):
 def ranges_data(stats, aspect_fcns, aspects, metric):
     '''Extract out range data given aspect functions.
 
-    Returns two-element list:
-    @param x: sorted list of integer controller values
-    @param lines: dicts keyed by metric value with y-axis data
+    @return json_data: dict with two keys, x and lines:
+        @param x: sorted list of integer controller values
+        @param lines: dicts keyed by metric value with y-axis data
     '''
     lines = {}
     x = sorted([int(a) for a in stats['group']])
@@ -100,7 +100,7 @@ def ranges_data(stats, aspect_fcns, aspects, metric):
             if aspect not in lines:
                 lines[aspect] = []
             lines[aspect].append(fcn(g, data_agg, metric))
-    return x, lines
+    return {'x': x, 'lines': lines}
 
 
 def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
@@ -115,15 +115,16 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
         raise Exception("must specify x and lines together")
 
     if not x and not lines:
-        x, lines = ranges_data(stats, aspect_fcns, aspects, metric)
-    data_lines = [{'x': x, 'lines': lines}]
+        data = [ranges_data(stats, aspect_fcns, aspects, metric)]
+    else:
+        data = [{'x': x, 'lines': lines}]
 
     ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
            xscale, yscale, label, axes,
            write_filepath = write_filepath, write = write, ext = ext,
            legend = legend, title = title, xlabel = xlabel, ylabel = ylabel,
            min_x = min_x, max_x = max_x, min_y = min_y, max_y = max_y,
-           data_lines = data_lines)
+           data = data)
 
 
 def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
@@ -131,18 +132,18 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
            write_filepath = None, write = False, ext = 'pdf',
            legend = None, title = False, xlabel = None, ylabel = None,
            min_x = None, max_x = None, min_y = None, max_y = None,
-           data_lines = None):
+           data = None):
     '''Plot multiple ranges on one graph.
     
     @param data_lines: list of dicts, each of:
         {x: [list of x's],
          lines: [dict of data lists, keyed by aspects.]}
     '''
-    assert data_lines
+    assert data
 
     fig = get_fig()
 
-    for d in data_lines:
+    for d in data:
         x = d['x']
         lines = d['lines']
         #print "plotting: %s %s" % (x, lines)
@@ -159,7 +160,7 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
     else:
         all_x = []
         all_y = []
-        for d in data_lines:
+        for d in data:
             x = d['x']
             y = d['lines']
             all_x.extend(x)
