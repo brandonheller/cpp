@@ -162,6 +162,7 @@ MERGED_PLOT_DATA_FCNS = {
         },
         'ylabel': (lambda m: metric_fullname(m) + "/optimal"),
         'min_y': (lambda o: 0.8),
+        'max_y': (lambda o: 5.0),
         'get_data_fcns': shared_get_data_fcns
     },
     'bc_rel': {
