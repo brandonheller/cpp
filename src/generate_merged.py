@@ -43,6 +43,13 @@ ranges_get_data_fcns = {
         'ylabel': (lambda m: metric_fullname(m) + " (miles)"),
         'min_y': (lambda o: 0)
     },
+    'base_ylog': {
+        'get_data_fcn': (lambda g, s, af, a, m: plot.ranges_data(s, af, a, m)),
+        'xlabel': (lambda m: 'number of controllers (k)'),
+        'ylabel': (lambda m: metric_fullname(m) + " (miles)"),
+        'min_y': (lambda o: 1),
+        'yscale': 'log'
+    },
     'norm_xk': {
         'get_data_fcn': (lambda g, s, af, a, m: norm_x(plot.ranges_data(s, af, a, m), g.number_of_nodes())),
         'xlabel': (lambda m: 'number of controllers (k) / n'),
@@ -50,11 +57,26 @@ ranges_get_data_fcns = {
         'max_x': (lambda o: 1.0),
         'min_y': (lambda o: 0)
     },
+    'norm_xk_ylog': {
+        'get_data_fcn': (lambda g, s, af, a, m: norm_x(plot.ranges_data(s, af, a, m), g.number_of_nodes())),
+        'xlabel': (lambda m: 'number of controllers (k) / n'),
+        'ylabel': (lambda m: metric_fullname(m) + " (miles)"),
+        'max_x': (lambda o: 1.0),
+        'min_y': (lambda o: 1),
+        'yscale': 'log'
+    },
     'norm_y': {
         'get_data_fcn': (lambda g, s, af, a, m: norm_y(plot.ranges_data(s, af, a, m))),
         'xlabel': (lambda m: 'number of controllers (k)'),
         'ylabel': (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
         'min_y': (lambda o: 0)
+    },
+    'norm_y_ylog': {
+        'get_data_fcn': (lambda g, s, af, a, m: norm_y(plot.ranges_data(s, af, a, m))),
+        'xlabel': (lambda m: 'number of controllers (k)'),
+        'ylabel': (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
+        'min_y': (lambda o: 0.001),
+        'yscale': 'log'
     },
     'norm_xk_y': {
         'get_data_fcn':
@@ -63,6 +85,15 @@ ranges_get_data_fcns = {
         'ylabel': (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
         'max_x': (lambda o: 1.0),
         'min_y': (lambda o: 0)
+    },
+    'norm_xk_ylog': {
+        'get_data_fcn':
+            (lambda g, s, af, a, m: norm_x(norm_y(plot.ranges_data(s, af, a, m)), g.number_of_nodes())),
+        'xlabel': (lambda m: 'number of controllers (k) / n'),
+        'ylabel': (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
+        'max_x': (lambda o: 1.0),
+        'min_y': (lambda o: 0.0001),
+        'yscale': 'log'
     }
 }
 
@@ -183,27 +214,16 @@ def do_all(options, name, g, i, t, data):
     #map_combos.do_plot(options, stats, g, filename)
 
 
-def get_param(name, fcn_args, *args):
-    '''Search chain in order for first hit.
-
-    If a falsy value is defined at the end of the args list,
-        and all miss, return that falsy value (e.g., None, {}, [], or 0).
-    Else, raise exception.
-    '''
-    for i, arg in enumerate(args):
-        if not arg:
-            if i == len(args) - 1:
-                return args[-1]
-            else:
-                raise Exception("encountered False value in chain before end")
-        elif name in arg:
+def get_param(name, fcn_args, default, *args):
+    '''Search chain in order for first hit; return default if no hits.'''
+    for arg in args:
+        if arg and name in arg:
             # Is it a function (that is, callable)?
             if hasattr(arg[name], '__call__'):
                 return arg[name](*fcn_args)
             else:
                 return arg[name]
-
-    raise Exception("could not find parameter: %s" % name)
+    return default
 
 
 if __name__ == "__main__":
@@ -300,15 +320,17 @@ if __name__ == "__main__":
             for gdf_name, values_by_topo in metric_data[ptype].iteritems():
                 this_data = values_by_topo.values()
                 gdf = p['get_data_fcns'][gdf_name]
-                xlabel = get_param('xlabel', [metric], p, gdf)
-                ylabel = get_param('ylabel', [metric], p, gdf)
-                max_x = get_param('max_x', [options], p, gdf, None)
-                max_y = get_param('max_y', [options], p, gdf, None)
-                min_x = get_param('min_x', [options], p, gdf, None)
-                min_y = get_param('min_y', [options], p, gdf, None)
-                line_opts = get_param('line_opts', None, gdf, {})
+                xlabel = get_param('xlabel', [metric], None, p, gdf)
+                ylabel = get_param('ylabel', [metric], None, p, gdf)
+                max_x = get_param('max_x', [options], None, p, gdf)
+                max_y = get_param('max_y', [options], None, p, gdf)
+                min_x = get_param('min_x', [options], None, p, gdf)
+                min_y = get_param('min_y', [options], None, p, gdf)
+                line_opts = get_param('line_opts', None, {}, p, gdf)
+                xscale = get_param('xscale', None, 'linear', p, gdf)
+                yscale = get_param('yscale', None, 'linear', p, gdf)
                 plot.ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
-                            "linear", "linear", None, None, write_filepath + '_' + gdf_name,
+                            xscale, yscale, None, None, write_filepath + '_' + gdf_name,
                             options.write, ext = options.ext,
                             xlabel = xlabel,
                             ylabel = ylabel,
