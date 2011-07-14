@@ -38,57 +38,44 @@ def norm_x(data, k):
 # Shared ranges data functions
 ranges_get_data_fcns = {
     'base': {
-        'get_data_fcn':
-            (lambda g, s, af, a, m: plot.ranges_data(s, af, a, m)),
-        'xlabel':
-            (lambda m: 'number of controllers (k)'),
-        'ylabel':
-            (lambda m: metric_fullname(m) + " (miles)")
+        'get_data_fcn': (lambda g, s, af, a, m: plot.ranges_data(s, af, a, m)),
+        'xlabel': (lambda m: 'number of controllers (k)'),
+        'ylabel': (lambda m: metric_fullname(m) + " (miles)"),
+        'min_y': (lambda o: 0)
     },
     'norm_xk': {
-        'get_data_fcn':
-            (lambda g, s, af, a, m: norm_x(plot.ranges_data(s, af, a, m), g.number_of_nodes())),
-        'xlabel':
-            (lambda m: 'number of controllers (k) / n'),
-        'ylabel':
-            (lambda m: metric_fullname(m) + " (miles)"),
-        'max_x':
-            (lambda o: 1.0)
+        'get_data_fcn': (lambda g, s, af, a, m: norm_x(plot.ranges_data(s, af, a, m), g.number_of_nodes())),
+        'xlabel': (lambda m: 'number of controllers (k) / n'),
+        'ylabel': (lambda m: metric_fullname(m) + " (miles)"),
+        'max_x': (lambda o: 1.0),
+        'min_y': (lambda o: 0)
     },
     'norm_y': {
-        'get_data_fcn':
-            (lambda g, s, af, a, m: norm_y(plot.ranges_data(s, af, a, m))),
-        'xlabel':
-            (lambda m: 'number of controllers (k)'),
-        'ylabel':
-            (lambda m: metric_fullname(m) + "\nrelative to value at k = 1")
+        'get_data_fcn': (lambda g, s, af, a, m: norm_y(plot.ranges_data(s, af, a, m))),
+        'xlabel': (lambda m: 'number of controllers (k)'),
+        'ylabel': (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
+        'min_y': (lambda o: 0)
     },
     'norm_xk_y': {
         'get_data_fcn':
             (lambda g, s, af, a, m: norm_x(norm_y(plot.ranges_data(s, af, a, m)), g.number_of_nodes())),
-        'xlabel':
-            (lambda m: 'number of controllers (k) / n'),
-        'ylabel':
-            (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
-        'max_x':
-            (lambda o: 1.0)
+        'xlabel': (lambda m: 'number of controllers (k) / n'),
+        'ylabel': (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
+        'max_x': (lambda o: 1.0),
+        'min_y': (lambda o: 0)
     }
 }
 
 shared_get_data_fcns = {
     'base': {
-        'get_data_fcn':
-            (lambda g, s, af, a, m: plot.ranges_data(s, af, a, m)),
-        'xlabel':
-            (lambda m: 'number of controllers (k)'),
+        'get_data_fcn': (lambda g, s, af, a, m: plot.ranges_data(s, af, a, m)),
+        'xlabel': (lambda m: 'number of controllers (k)'),
     },
     'norm_xk': {
         'get_data_fcn':
             (lambda g, s, af, a, m: norm_x(plot.ranges_data(s, af, a, m), g.number_of_nodes())),
-        'xlabel':
-            (lambda m: 'number of controllers (k) / n'),
-        'max_x':
-            (lambda o: 1.0)
+        'xlabel': (lambda m: 'number of controllers (k) / n'),
+        'max_x': (lambda o: 1.0)
     }
 }
 
@@ -114,7 +101,8 @@ MERGED_PLOT_DATA_FCNS = {
         'aspect_colors': {
             'lowest': 'g+'
         },
-        'get_data_fcns': ranges_get_data_fcns
+        'get_data_fcns': ranges_get_data_fcns,
+        'min_y': (lambda o: 0.0)
     },
     'ratios_all': {
         'aspect_colors': {
@@ -128,7 +116,21 @@ MERGED_PLOT_DATA_FCNS = {
             'one': (lambda g, d, m: 1.0)
         },
         'ylabel': (lambda m: metric_fullname(m) + "/optimal"),
-        'max_y': (lambda o: 10.0),
+        'min_y': (lambda o: 0.8),
+        'max_y': (lambda o: 6.0),
+        'get_data_fcns': shared_get_data_fcns
+    },
+    'ratios_mean': {
+        'aspect_colors': {
+            'mean': 'b*',
+            'one': 'g+'
+        },
+        'aspect_fcns': {
+            'mean': (lambda g, d, m: divide_def0(d[m]['mean'], d[m]['lowest'])),
+            'one': (lambda g, d, m: 1.0)
+        },
+        'ylabel': (lambda m: metric_fullname(m) + "/optimal"),
+        'min_y': (lambda o: 0.8),
         'get_data_fcns': shared_get_data_fcns
     },
     'bc_rel': {
@@ -137,12 +139,13 @@ MERGED_PLOT_DATA_FCNS = {
         },
         'aspect_fcns_gen': bc_rel_aspect_fcns_gen,
         'ylabel': (lambda m: metric_fullname(m) + "(1) /\n" + metric_fullname(m) + "/k"),
-        'max_y': (lambda o: 3.0),
+        'max_y': (lambda o: 2.0),
+        'min_y': (lambda o: -0.1),
         'get_data_fcns': shared_get_data_fcns
     },
 }
 
-PLOT_TYPES = ['ranges_lowest', 'ratios_all', 'bc_rel']
+PLOT_TYPES = ['ranges_lowest', 'ratios_all', 'ratios_mean', 'bc_rel']
 
 
 def get_group_str(options):
@@ -183,13 +186,14 @@ def do_all(options, name, g, i, t, data):
 def get_param(name, fcn_args, *args):
     '''Search chain in order for first hit.
 
-    If none is defined at the end of the args list, and all miss, return None.
+    If a falsy value is defined at the end of the args list,
+        and all miss, return that falsy value (e.g., None, {}, [], or 0).
     Else, raise exception.
     '''
     for i, arg in enumerate(args):
-        if arg == None:
+        if not arg:
             if i == len(args) - 1:
-                return None
+                return args[-1]
             else:
                 raise Exception("encountered False value in chain before end")
         elif name in arg:
@@ -278,6 +282,7 @@ if __name__ == "__main__":
         raise Exception("null plot_data: verify that the expected data is in the right place.")
 
     # Now that we have the formatted data ready to go, proceed.
+    common_line_opts = {'alpha': 0.5, 'markersize': 2}
     for metric in options.metrics:
         print "building plots for metric %s" % metric
         assert options.from_start
@@ -299,11 +304,15 @@ if __name__ == "__main__":
                 ylabel = get_param('ylabel', [metric], p, gdf)
                 max_x = get_param('max_x', [options], p, gdf, None)
                 max_y = get_param('max_y', [options], p, gdf, None)
+                min_x = get_param('min_x', [options], p, gdf, None)
+                min_y = get_param('min_y', [options], p, gdf, None)
+                line_opts = get_param('line_opts', None, gdf, {})
                 plot.ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
                             "linear", "linear", None, None, write_filepath + '_' + gdf_name,
                             options.write, ext = options.ext,
                             xlabel = xlabel,
                             ylabel = ylabel,
                             data = this_data,
-                            max_x = max_x,
-                            max_y = max_y)
+                            min_x = min_x, max_x = max_x,
+                            min_y = min_y, max_y = max_y,
+                            line_opts = dict(common_line_opts, **line_opts))

@@ -108,7 +108,7 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
            write_filepath = None, write = False, ext = 'pdf',
            legend = None, title = False, xlabel = None, ylabel = None,
            min_x = None, max_x = None, min_y = None, max_y = None,
-           x = None, lines = None):
+           x = None, lines = None, line_opts = None):
 
     # Build lines if not already provided.
     if not x and lines or x and not lines:
@@ -124,15 +124,17 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
            write_filepath = write_filepath, write = write, ext = ext,
            legend = legend, title = title, xlabel = xlabel, ylabel = ylabel,
            min_x = min_x, max_x = max_x, min_y = min_y, max_y = max_y,
-           data = data)
+           data = data, line_opts = line_opts)
 
+
+LINE_OPTS_DEF = {'linestyle': '-', 'linewidth': 0.75}
 
 def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
            xscale, yscale, label = None, axes = None,
            write_filepath = None, write = False, ext = 'pdf',
            legend = None, title = False, xlabel = None, ylabel = None,
            min_x = None, max_x = None, min_y = None, max_y = None,
-           data = None):
+           data = None, line_opts = None):
     '''Plot multiple ranges on one graph.
     
     @param data_lines: list of dicts, each of:
@@ -140,6 +142,8 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
          lines: [dict of data lists, keyed by aspects.]}
     '''
     assert data
+    # Merge line opts; line_opts will override anything in LINE_OPTS_DEF.
+    line_opts = dict(LINE_OPTS_DEF, **line_opts)
 
     fig = get_fig()
 
@@ -149,7 +153,7 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
         #print "plotting: %s %s" % (x, lines)
         for aspect in aspects:
             y = lines[aspect]
-            pylab.plot(x, y, aspect_colors[aspect], linestyle = '-', linewidth = 1)
+            pylab.plot(x, y, aspect_colors[aspect], **line_opts)
 
 
     pylab.grid(True)
@@ -167,16 +171,16 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
             for a, l in y.iteritems():
                 all_y.extend(l)
 
-        if not min_x:
+        if min_x == None:
             min_x = int(min(all_x))
-        if not max_x:
+        if max_x == None:
             max_x = int(max(all_x))
-        if not min_y:
+        if min_y == None:
             min_y = min(all_y)
-        if not max_y:
+        if max_y == None:
             max_y = max(all_y)
         # Assume these are string-ified nums of controllers.
-        axes = [min_x, max_x, 0, max_y]
+        axes = [min_x, max_x, min_y, max_y]
         pylab.axis(axes)
     if xlabel:
         pylab.xlabel(xlabel)
