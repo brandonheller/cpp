@@ -15,6 +15,7 @@ from zoo_tools import zoo_topos
 from topo_lib import get_topo_graph
 from metrics_lib import metric_fullname
 from util import divide_def0
+from plot_ranges import get_aspect_fcns, bc_rel_aspect_fcns_gen
 
 # Quick hack to not throw exception if we come across a topology for which
 # we have no data
@@ -74,7 +75,7 @@ ranges_get_data_fcns = {
     }
 }
 
-ratios_get_data_fcns = {
+shared_get_data_fcns = {
     'base': {
         'get_data_fcn':
             (lambda g, s, af, a, m: plot.ranges_data(s, af, a, m)),
@@ -128,11 +129,20 @@ MERGED_PLOT_DATA_FCNS = {
         },
         'ylabel': (lambda m: metric_fullname(m) + "/optimal"),
         'max_y': (lambda o: 10.0),
-        'get_data_fcns': ratios_get_data_fcns
-    }
+        'get_data_fcns': shared_get_data_fcns
+    },
+    'bc_rel': {
+        'aspect_colors': {
+            'bc_rel': 'rx'
+        },
+        'aspect_fcns_gen': bc_rel_aspect_fcns_gen,
+        'ylabel': (lambda m: metric_fullname(m) + "(1) /\n" + metric_fullname(m) + "/k"),
+        'max_y': (lambda o: o.maxy),
+        'get_data_fcns': shared_get_data_fcns
+    },
 }
 
-PLOT_TYPES = ['ranges_lowest', 'ratios_all']
+PLOT_TYPES = ['ranges_lowest', 'ratios_all', 'bc_rel']
 
 
 def get_group_str(options):
@@ -247,7 +257,7 @@ if __name__ == "__main__":
                         plot_data[metric][ptype] = {}
 
                     p = MERGED_PLOT_DATA_FCNS[ptype]
-                    aspect_fcns = p['aspect_fcns']
+                    aspect_fcns = get_aspect_fcns(p, stats, metric)
                     aspects = aspect_fcns.keys()
 
                     for name, gdf in p['get_data_fcns'].iteritems():
@@ -273,7 +283,7 @@ if __name__ == "__main__":
             p = MERGED_PLOT_DATA_FCNS[ptype]
             write_filepath = 'data_vis/merged/%s_%i_to_%i_%s_%s' % (group_str, options.from_start, options.from_end, metric, ptype)
 
-            aspect_fcns = p['aspect_fcns']
+            aspect_fcns = get_aspect_fcns(p, stats, metric)
             aspect_colors = p['aspect_colors']
             aspects = aspect_fcns.keys()
             for gdf_name, values_by_topo in metric_data[ptype].iteritems():

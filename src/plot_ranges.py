@@ -105,6 +105,14 @@ PLOT_FCNS = {
     }
 }
 
+def get_aspect_fcns(p, stats, metric):
+    '''Return aspect fcns, whether defined as functions or not.'''
+    if 'aspect_fcns_gen' in p:
+        aspect_fcns = p['aspect_fcns_gen'](stats, metric)
+    else:
+        aspect_fcns = p['aspect_fcns']
+    return aspect_fcns
+
 
 def do_ranges(options, stats, write_filepath):
 
@@ -122,10 +130,7 @@ def do_ranges(options, stats, write_filepath):
                 #print "plotting %s" % ptype
 
                 filepath = this_write_filepath + '_' + ptype
-                if 'aspect_fcns_gen' in p:
-                    aspect_fcns = p['aspect_fcns_gen'](stats, metric)
-                else:
-                    aspect_fcns = p['aspect_fcns']
+                aspect_fcns = get_aspect_fcns(p, stats, metric)
                 aspects = aspect_fcns.keys()
                 aspect_colors = p['aspect_colors']
                 ylabel = p['ylabel'](this_write_filepath)
