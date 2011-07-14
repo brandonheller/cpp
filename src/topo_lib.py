@@ -270,8 +270,7 @@ def import_zoo_graph(topo):
 
 
 def get_topo_graph(topo):
-    '''Return graph if OK, plus description if not.'''
     if topo == 'os3e':
-        return OS3EWeightedGraph(), None
+        return OS3EWeightedGraph(), True, None
     else:
         return import_zoo_graph(topo)

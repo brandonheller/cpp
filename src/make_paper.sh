@@ -3,11 +3,13 @@
 
 C=5
 EXT=pdf
+#FORCE='-f'
 
 # Generate all for OS3E topology
 TOPO=os3e
-./generate.py --topo ${TOPO} --from_start ${C} --lat_metrics -w --write_dist --write_combos -w -e ${EXT} -f
-./map_combos.py -i data_out/${TOPO}/${C}_to_0.json --from_start ${C} --lat_metrics -w --write_dist --write_combos -w -e ${EXT}
+./generate.py --topo ${TOPO} --from_start ${C} --lat_metrics -w --write_dist --write_combos -w -e ${EXT} ${FORCE}
+
+./map_combos.py -i data_out/${TOPO}/${C}_to_0.json --from_start ${C} --lat_metrics -w --write_dist --write_combos -e ${EXT}
 
 # Generate special big ones for OS3E
 # BIG job (on Rhone)

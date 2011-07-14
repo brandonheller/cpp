@@ -85,7 +85,7 @@ def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
         print "wrote file to %s" % filepath
     else:
         plt.show()
-    plt.clear(fig)
+    plt.close(fig)
 
 
 def do_plot(options, stats, g, write_filepath):
@@ -113,5 +113,5 @@ if __name__ == "__main__":
     options = parse_args()
     print "loading JSON data..."
     stats = plot.load_stats(options)
-    g = get_topo_graph(options.input.split('/')[1])
+    g, usable, note = get_topo_graph(options.input.split('/')[1])
     do_plot(options, stats, g, None)
