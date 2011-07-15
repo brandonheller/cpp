@@ -12,7 +12,7 @@ import plot_cloud
 import plot_pareto
 #import map_combos
 from zoo_tools import zoo_topos
-from topo_lib import get_topo_graph
+from topo_lib import get_topo_graph, total_weight
 from metrics_lib import metric_fullname
 from util import divide_def0
 from plot_ranges import get_aspect_fcns, bc_rel_aspect_fcns_gen
@@ -21,6 +21,8 @@ from plot_ranges import get_aspect_fcns, bc_rel_aspect_fcns_gen
 # we have no data
 IGNORE_MISSING_DATA = True
 
+# Options for Matplotlib that are common to all graphs (but overrideable.)
+COMMON_LINE_OPTS = {'alpha': 0.5, 'markersize': 2}
 
 def norm_y(data):
     data_copy = copy.copy(data)
@@ -111,7 +113,7 @@ shared_get_data_fcns = {
 }
 
 # get_data_fcn: fcn(g, stats, aspect_fcns, aspects, metric) that returns JSON data
-MERGED_PLOT_DATA_FCNS = {
+MERGED_RANGE_PLOT_DATA_FCNS = {
     'ranges_all': {
         'aspect_fcns': {
             'highest': (lambda g, d, m: d[m]['highest']),
@@ -177,7 +179,7 @@ MERGED_PLOT_DATA_FCNS = {
     },
 }
 
-PLOT_TYPES = ['ranges_lowest', 'ratios_all', 'ratios_mean', 'bc_rel']
+RANGE_PLOT_TYPES = ['ranges_lowest', 'ratios_all', 'ratios_mean', 'bc_rel']
 
 
 def get_group_str(options):
@@ -227,6 +229,18 @@ def get_param(name, fcn_args, default, *args):
     return default
 
 
+def dump_csv(csv_tuples, csv_fields, options):
+    print "dumping CSV output"
+    group_str = get_group_str(options)
+    filepath = 'data_out/csv/%s_%i_to_%i.csv' % (group_str, options.from_start, options.from_end)
+    plot.mkdir_p(os.path.dirname(filepath))
+    f = open(filepath, 'w')
+    f.write(',\t'.join(csv_fields) + '\n')
+    for csv_tuple in csv_tuples:
+        f.write(',\t'.join([str(s) for s in csv_tuple]) + '\n')
+    f.close()
+
+
 if __name__ == "__main__":
 
     options = plot.parse_args()
@@ -236,6 +250,9 @@ if __name__ == "__main__":
     else:
         topos = options.topos
 
+    assert options.from_start
+    assert not options.from_end
+
     # Grab raw data
     # plot_data[ptype] = [dict of metric data, keyed by ptype]:
     # plot_data[ptype][metric] = [dict of topo data, keyed by metric]
@@ -243,6 +260,9 @@ if __name__ == "__main__":
     # x: list of sorted controller k's
     # lines: dict of y-axis lists, keyed by aspect
     plot_data = {}
+    # CSV format:
+    csv_fields = ['metric', 'ptype', 'name', 'topo', 'n', 'e', 'w', 'gdf_name', 'x', 'y']
+    csv_tuples = []
     for i, topo in enumerate(topos):
         if not options.max == None and i >= options.max:
             break
@@ -250,6 +270,8 @@ if __name__ == "__main__":
         g, usable, note = get_topo_graph(topo)
 
         if usable:
+            w = total_weight(g)
+
             # Check for --force here?
             print "usable topo: %s" % topo
             controllers = metrics.get_controllers(g, options)
@@ -278,14 +300,14 @@ if __name__ == "__main__":
                 stats = json.load(input_file)
 
             for metric in options.metrics:
-                for ptype in PLOT_TYPES:
+                for ptype in RANGE_PLOT_TYPES:
                     if metric not in plot_data:
                         plot_data[metric] = {}
                         print "intializing metric: %s" % metric
                     if ptype not in plot_data[metric]:
                         plot_data[metric][ptype] = {}
 
-                    p = MERGED_PLOT_DATA_FCNS[ptype]
+                    p = MERGED_RANGE_PLOT_DATA_FCNS[ptype]
                     aspect_fcns = get_aspect_fcns(p, stats, metric)
                     aspects = aspect_fcns.keys()
 
@@ -294,25 +316,36 @@ if __name__ == "__main__":
                             plot_data[metric][ptype][name] = {}
                         gdf_fcn = gdf['get_data_fcn']
                         plot_data[metric][ptype][name][topo] = gdf_fcn(g, stats, aspect_fcns, aspects, metric)
+
+                        # Emit tuple for plot data construction:
+                        n = g.number_of_nodes()
+                        e = g.number_of_edges()
+                        x = plot_data[metric][ptype][name][topo]['x']
+                        lines = plot_data[metric][ptype][name][topo]['lines']
+                        for line_name, values in lines.iteritems():
+                            for j, b in enumerate(values):
+                                csv_tuples.append([metric, ptype, name, topo, n, e, w, line_name, x[j], b])
+
         else:
             print "ignoring unusable topology: %s (%s)" % (topo, note)
 
         print "topo %s of %s: %s" % (i, len(topos), topo)
 
+
     if plot_data == {}:
         raise Exception("null plot_data: verify that the expected data is in the right place.")
 
+    # Dump CSV output:
+    dump_csv(csv_tuples, csv_fields, options)
+
     # Now that we have the formatted data ready to go, proceed.
-    common_line_opts = {'alpha': 0.5, 'markersize': 2}
     for metric in options.metrics:
         print "building plots for metric %s" % metric
-        assert options.from_start
-        assert not options.from_end
-        group_str = get_group_str(options)
         metric_data = plot_data[metric]
 
-        for ptype in PLOT_TYPES:
-            p = MERGED_PLOT_DATA_FCNS[ptype]
+        for ptype in RANGE_PLOT_TYPES:
+            p = MERGED_RANGE_PLOT_DATA_FCNS[ptype]
+            group_str = get_group_str(options)
             write_filepath = 'data_vis/merged/%s_%i_to_%i_%s_%s' % (group_str, options.from_start, options.from_end, metric, ptype)
 
             aspect_fcns = get_aspect_fcns(p, stats, metric)
@@ -338,4 +371,4 @@ if __name__ == "__main__":
                             data = this_data,
                             min_x = min_x, max_x = max_x,
                             min_y = min_y, max_y = max_y,
-                            line_opts = dict(common_line_opts, **line_opts))
+                            line_opts = dict(COMMON_LINE_OPTS, **line_opts))
