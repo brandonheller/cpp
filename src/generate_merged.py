@@ -253,6 +253,8 @@ if __name__ == "__main__":
     assert options.from_start
     assert not options.from_end
 
+    used = 0  # topologies that are usable and used.
+
     # Grab raw data
     # plot_data[ptype] = [dict of metric data, keyed by ptype]:
     # plot_data[ptype][metric] = [dict of topo data, keyed by metric]
@@ -274,6 +276,7 @@ if __name__ == "__main__":
 
             # Check for --force here?
             print "usable topo: %s" % topo
+            used += 1
             controllers = metrics.get_controllers(g, options)
             exp_filename = metrics.get_filename(topo, options, controllers)
 
@@ -331,6 +334,8 @@ if __name__ == "__main__":
 
         print "topo %s of %s: %s" % (i, len(topos), topo)
 
+
+    print "used %s topologies" % used
 
     if plot_data == {}:
         raise Exception("null plot_data: verify that the expected data is in the right place.")
