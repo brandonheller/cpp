@@ -56,6 +56,9 @@ def parse_args():
     opts.add_option("--operation_list", type = 'string',
                     default = None,
                     help = "operations to show, from %s" % OPERATIONS)
+    opts.add_option("--plot_list", type = 'string',
+                    default = None,
+                    help = "plots to show")
 
     # Metric selection
     opts.add_option("--metric",
@@ -174,6 +177,11 @@ def parse_args():
         options.operations = options.operation_list.split(',')
     else:
         options.operations = DEF_OPERATIONS
+
+    if options.plot_list:
+        options.plots = options.plot_list.split(',')
+    else:
+        options.plots = None
 
     options.controllers = None
     if options.controller_list:

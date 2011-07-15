@@ -337,7 +337,9 @@ if __name__ == "__main__":
                 stats = json.load(input_file)
 
             for metric in options.metrics:
-                for ptype in RANGE_PLOT_TYPES:
+                for ptype in options.plots:
+                    if ptype not in RANGE_PLOT_TYPES:
+                        raise Exception("invalid plot type specified")
                     if metric not in plot_data:
                         plot_data[metric] = {}
                         print "intializing metric: %s" % metric
@@ -382,7 +384,7 @@ if __name__ == "__main__":
         print "building plots for metric %s" % metric
         metric_data = plot_data[metric]
 
-        for ptype in RANGE_PLOT_TYPES:
+        for ptype in options.plots:
             p = MERGED_RANGE_PLOT_DATA_FCNS[ptype]
             group_str = get_group_str(options)
             write_filepath = 'data_vis/merged/%s_%i_to_%i_%s_%s' % (group_str, options.from_start, options.from_end, metric, ptype)
