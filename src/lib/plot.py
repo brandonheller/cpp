@@ -134,7 +134,7 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
            write_filepath = None, write = False, ext = 'pdf',
            legend = None, title = False, xlabel = None, ylabel = None,
            min_x = None, max_x = None, min_y = None, max_y = None,
-           data = None, line_opts = None):
+           data = None, line_opts = None, box_whisker = False):
     '''Plot multiple ranges on one graph.
     
     @param data_lines: list of dicts, each of:
@@ -149,13 +149,32 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
 
     fig = get_fig()
 
-    for d in data:
-        x = d['x']
-        lines = d['lines']
-        #print "plotting: %s %s" % (x, lines)
+    if not box_whisker:
+        for d in data:
+            x = d['x']
+            lines = d['lines']
+            #print "plotting: %s %s" % (x, lines)
+            for aspect in aspects:
+                y = lines[aspect]
+                pylab.plot(x, y, aspect_colors[aspect], **line_opts)
+    else:
+        assert len(aspects) == 1
+        # box_vals is a dict where keys are aspects, values are:
+        #    boxplot data lists, one per x-value.
+        box_vals = {}
+        x_vals = [int(a) for a in data[0]['x']]
         for aspect in aspects:
-            y = lines[aspect]
-            pylab.plot(x, y, aspect_colors[aspect], **line_opts)
+            # Initialize to a list with one empty list value per x-value
+            box_vals[aspect] = [[] for x_val in x_vals]
+            this_box_val = box_vals[aspect]
+
+            for i, d in enumerate(data):
+                x = d['x']
+                lines = d['lines']
+                for j, x_val in enumerate(x):
+                    this_box_val[j].append(lines[aspect][j])
+
+            pylab.boxplot(this_box_val, sym = 'bx', positions = x_vals, widths = 0.15)
 
 
     pylab.grid(True)

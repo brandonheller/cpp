@@ -191,11 +191,30 @@ MERGED_RANGE_PLOT_DATA_FCNS = {
             }
         },
         'xlabel': (lambda m: 'number of controllers (k)'),
-        'ylabel': (lambda m: 'max tradeoff (fraction)')
+        'ylabel': (lambda m: 'max tradeoff (fraction)'),
+    },
+    'pareto_max_bw': {
+        'aspect_colors': {
+            'max': 'rx'
+        },
+        'aspect_fcns': {
+            'max': (lambda g, d, m: d[m])
+        },
+        'min_y': -0.1,
+        'get_data_fcns': {
+            'base': {
+                'get_data_fcn': (lambda g, s, af, a, m: plot.pareto_norm(s, af, a, m)),
+            }
+        },
+        'min_x': 0.5,
+        'max_x': (lambda o: o.from_start + 0.5),
+        'xlabel': (lambda m: 'number of controllers (k)'),
+        'ylabel': (lambda m: 'other metric increase when\nopt for %s' % metric_fullname(m)),
+        'box_whisker': True
     }
 }
 
-RANGE_PLOT_TYPES = ['ranges_lowest', 'ratios_all', 'ratios_mean', 'bc_rel', 'pareto_max']
+RANGE_PLOT_TYPES = ['ranges_lowest', 'ratios_all', 'ratios_mean', 'bc_rel', 'pareto_max', 'pareto_max_bw']
 
 def get_group_str(options):
     if options.topo_group:
@@ -383,6 +402,7 @@ if __name__ == "__main__":
                 line_opts = get_param('line_opts', None, {}, p, gdf)
                 xscale = get_param('xscale', None, 'linear', p, gdf)
                 yscale = get_param('yscale', None, 'linear', p, gdf)
+                box_whisker = get_param('box_whisker', None, False, p, gdf)
                 plot.ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
                             xscale, yscale, None, None, write_filepath + '_' + gdf_name,
                             options.write, ext = options.ext,
@@ -391,4 +411,5 @@ if __name__ == "__main__":
                             data = this_data,
                             min_x = min_x, max_x = max_x,
                             min_y = min_y, max_y = max_y,
-                            line_opts = dict(COMMON_LINE_OPTS, **line_opts))
+                            line_opts = dict(COMMON_LINE_OPTS, **line_opts),
+                            box_whisker = box_whisker)
