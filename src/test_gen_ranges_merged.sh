@@ -2,8 +2,10 @@
 # Simple test case to validate that ranges generation is working.
 EXT=pdf
 C='--from_start 4'
+#C='--from_start 5'
 MP='--no-multiprocess'
 OPS='--operation_list ranges'
+OPS='--operation_list pareto'
 FORCE='--force'
 METRICS='--lat_metrics'
 
@@ -18,7 +20,13 @@ GROUP='--topo_group test1'
 # data_vis/Aarnet/4_to_0_latency_ranges.pdf
 # data_vis/Abilene/4_to_0_latency_ranges.pdf
 GROUP='--topo_group test2'
-./generate_merged.py ${GROUP} ${C} ${METRICS} -w -e ${EXT} ${FORCE} ${MP} ${OPS}
+#./generate_merged.py ${GROUP} ${C} ${METRICS} -w -e ${EXT} ${FORCE} ${MP} ${OPS}
 
 TOPOS='--all_topos'
-#./generate_merged.py ${TOPOS} ${C} ${METRICS} -w -e ${EXT} ${FORCE} ${MP} ${OPS}
+./generate_merged.py ${TOPOS} ${C} ${METRICS} -w -e ${EXT} ${FORCE} ${MP} ${OPS}
+
+# Should yield more interesting data:
+C='--from_start 8'
+#MAX='--max 8'
+#METRICS='--metric latency'
+#./generate_merged.py ${TOPOS} ${C} ${METRICS} -w -e ${EXT} ${FORCE} ${MP} ${OPS} ${MAX}
