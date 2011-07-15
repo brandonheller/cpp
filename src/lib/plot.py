@@ -206,19 +206,15 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
     clear_fig(fig)
 
 
-def pareto(data, colors, axes, xscale, yscale,
-          write_filepath = None, write = False, num_bins = None, ext = 'pdf',
-          legend = None, title = False, xlabel = None, ylabel = None,
-          x_metric = None, y_metric = None, min_x = None, min_y = None,
-          normalize = None, marks = True):
+def pareto_data(data, x_metric, y_metric, normalize):
+    '''Generate pareto curve data from a distribution.
 
-    fig = get_fig()
-    lines = []
+    @return pareto_data: list of pareto data lists, where each data list
+        contains (x, y) tuples.
+    @return datanames: list of controller k's, corresponding to pareto_data.
+    '''
+    pareto_data = []
     datanames = []
-
-    pylab.grid(True)
-
-    paretos = []
     for i, k in enumerate(sorted(data.keys())):
         # Sort metrics by X
         points_list = []
@@ -248,9 +244,29 @@ def pareto(data, colors, axes, xscale, yscale,
                 for d in pareto:
                     pareto_new.append((d[0] / float(small_x), d[1] / float(small_y)))
                 pareto = pareto_new
-                x = [d[0] for d in pareto]
-                y = [d[1] for d in pareto]
 
+        pareto_data.append(pareto)
+        datanames.append(k)
+    return pareto_data, datanames
+
+
+def pareto(data, colors, axes, xscale, yscale,
+          write_filepath = None, write = False, num_bins = None, ext = 'pdf',
+          legend = None, title = False, xlabel = None, ylabel = None,
+          x_metric = None, y_metric = None, min_x = None, min_y = None,
+          normalize = None, marks = True):
+
+    fig = get_fig()
+
+    pylab.grid(True)
+
+    pd, datanames = pareto_data(data, x_metric, y_metric, normalize)
+
+    lines = []
+    for i, k in enumerate(sorted(data.keys())):
+        pareto = pd[i]
+        x = [d[0] for d in pareto]
+        y = [d[1] for d in pareto]
         color = colors[i]
         lines.append(pylab.plot(x, y, 'o-',
                                 color = color,
@@ -266,9 +282,6 @@ def pareto(data, colors, axes, xscale, yscale,
             pylab.plot(x[0], y[0], 'o', markersize = 10, **kwargs)
             pylab.plot(x[-1], y[-1], 'x', markersize = 10, **kwargs)
 
-        datanames.append(k)
-        paretos.append(pareto)
-
     pylab.xscale(xscale)
     pylab.yscale(yscale)
     if axes:
@@ -279,15 +292,15 @@ def pareto(data, colors, axes, xscale, yscale,
         else:
             margin_factor = 1.05  # avoid chopping markers at edge of grid
         if not min_x == 0 and not min_x:
-            min_x = paretos[-1][0][0] / margin_factor
+            min_x = pd[-1][0][0] / margin_factor
         if normalize:
             min_x = 1.0 / float(margin_factor)
-        max_x = max([x[-1][0] for x in paretos]) * margin_factor
+        max_x = max([x[-1][0] for x in pd]) * margin_factor
         if not min_y == 0 and not min_y:
-            min_y = paretos[-1][-1][1] / margin_factor
+            min_y = pd[-1][-1][1] / margin_factor
         if normalize:
             min_y = 1.0 / float(margin_factor)
-        max_y = max([y[0][1] for y in paretos]) * margin_factor
+        max_y = max([y[0][1] for y in pd]) * margin_factor
         pylab.axis([min_x, max_x, min_y, max_y])
     if xlabel:
         pylab.xlabel(xlabel)
