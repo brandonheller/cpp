@@ -89,7 +89,7 @@ def ranges_data(stats, aspect_fcns, aspects, metric):
 
     @return json_data: dict with two keys, x and lines:
         @param x: sorted list of integer controller values
-        @param lines: dicts keyed by metric value with y-axis data
+        @param lines: dicts keyed by apsect value with y-axis data
     '''
     lines = {}
     x = sorted([int(a) for a in stats['group']])
@@ -206,7 +206,7 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
     clear_fig(fig)
 
 
-def pareto_data(data, x_metric, y_metric, normalize):
+def pareto_data_raw(data, x_metric, y_metric, normalize,):
     '''Generate pareto curve data from a distribution.
 
     @return pareto_data: list of pareto data lists, where each data list
@@ -250,6 +250,42 @@ def pareto_data(data, x_metric, y_metric, normalize):
     return pareto_data, datanames
 
 
+PARETO_X = 'latency'
+PARETO_Y = 'wc_latency'
+
+def pareto_norm(stats, aspect_fcns, aspects, metric):
+    '''Return normalized pareto metrics
+
+    @return json_data: dict with two keys, x and lines:
+        @param x: sorted list of integer controller values
+        @param lines: dicts keyed by aspect value with y-axis data
+    '''
+    data = {}
+    for i, g in enumerate(stats['group']):
+        data[g] = [d for d in stats['data'][g]["distribution"]]
+
+    pd, datanames = pareto_data_raw(data, PARETO_X, PARETO_Y, True)
+    json_data = {
+        'x': [],
+        'lines': {}
+    }
+    for i, k in enumerate(sorted(data.keys())):
+        pareto = pd[i]
+        x = [d[0] for d in pareto]
+        y = [d[1] for d in pareto]
+        # Drop 1.0 to leave just the fractional difference
+        de = {
+            PARETO_X: y[0] - 1.0,
+            PARETO_Y: x[-1] - 1.0
+        }
+        json_data['x'].append(datanames[i])
+        for aspect, fcn in aspect_fcns.iteritems():
+            if aspect not in json_data['lines']:
+                json_data['lines'][aspect] = []
+            json_data['lines'][aspect].append(fcn(g, de, metric))
+    return json_data
+
+
 def pareto(data, colors, axes, xscale, yscale,
           write_filepath = None, write = False, num_bins = None, ext = 'pdf',
           legend = None, title = False, xlabel = None, ylabel = None,
@@ -260,7 +296,7 @@ def pareto(data, colors, axes, xscale, yscale,
 
     pylab.grid(True)
 
-    pd, datanames = pareto_data(data, x_metric, y_metric, normalize)
+    pd, datanames = pareto_data_raw(data, x_metric, y_metric, normalize)
 
     lines = []
     for i, k in enumerate(sorted(data.keys())):

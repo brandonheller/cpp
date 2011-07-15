@@ -177,10 +177,25 @@ MERGED_RANGE_PLOT_DATA_FCNS = {
         'min_y': (lambda o: -0.1),
         'get_data_fcns': shared_get_data_fcns
     },
+    'pareto_max': {
+        'aspect_colors': {
+            'max': 'rx'
+        },
+        'aspect_fcns': {
+            'max': (lambda g, d, m: d[m])
+        },
+        'min_y': 0.0,
+        'get_data_fcns': {
+            'base': {
+                'get_data_fcn': (lambda g, s, af, a, m: plot.pareto_norm(s, af, a, m)),
+            }
+        },
+        'xlabel': (lambda m: 'number of controllers (k)'),
+        'ylabel': (lambda m: 'max tradeoff (fraction)')
+    }
 }
 
-RANGE_PLOT_TYPES = ['ranges_lowest', 'ratios_all', 'ratios_mean', 'bc_rel']
-
+RANGE_PLOT_TYPES = ['ranges_lowest', 'ratios_all', 'ratios_mean', 'bc_rel', 'pareto_max']
 
 def get_group_str(options):
     if options.topo_group:
