@@ -282,6 +282,8 @@ def pareto_norm(stats, aspect_fcns, aspects, metric):
     data = {}
     for i, g in enumerate(stats['group']):
         data[g] = [d for d in stats['data'][g]["distribution"]]
+        if not data[g]:
+            raise Exception("missing distribution field in stats - check data")
 
     pd, datanames = pareto_data_raw(data, PARETO_X, PARETO_Y, True)
     json_data = {
