@@ -133,7 +133,7 @@ def do_ranges(options, stats, write_filepath):
                 aspect_fcns = get_aspect_fcns(p, stats, metric)
                 aspects = aspect_fcns.keys()
                 aspect_colors = p['aspect_colors']
-                ylabel = p['ylabel'](this_write_filepath)
+                ylabel = p['ylabel'](metric)
                 min_x = p['min_x'](options) if 'min_x' in p else None
                 max_x = p['max_x'](options) if 'max_x' in p else None
                 min_y = p['min_y'](options) if 'min_y' in p else None

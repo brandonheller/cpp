@@ -342,7 +342,7 @@ METRICS = METRIC_FCNS.keys()
 def metric_fullname(metric):
     if metric == 'latency':
         return 'average latency'
-    else:
+    elif metric == 'wc_latency':
         return 'worst-case latency'
     return metric
 
