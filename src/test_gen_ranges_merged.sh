@@ -9,7 +9,8 @@ OPS='--operation_list pareto'
 FORCE='--force'
 METRICS='--lat_metrics'
 
-PLOT_LIST='--plot_list pareto_max,pareto_max_bw'
+#PLOT_LIST='--plot_list pareto_max,pareto_max_bw'
+PLOT_LIST='--plot_list ranges_lowest'
 
 # Should generate an identical plot to generate.py w/operations_list='ranges'
 # data_vis/merged/4_to_0_latency_ranges.pdf
