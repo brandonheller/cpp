@@ -19,9 +19,9 @@ TOPO=os3e
 #time ./metrics.py --from_start 12 --from_end 12 --lat_metrics --weighted -w
 ./plot_ranges.py -i data_out/os3e/12_to_12.json -w --lat_metrics --maxx 12 --maxy 1  -e ${EXT}
 
-# Requires all output from Rhone for up to k = 4.  To get such output, run:
-#   cd cc/src
-#   time rsync -v rhone:~/cc/src/data_out .
+# Requires all output from Rhone for up to k = 4.  To get such output,
+# from the cc/src dir:
+#   rsync_rhone.sh
 # Don't use multiprocessing; MPL backend is not thread-safe at the moment.
 MP='--no-multiprocess'
 # Doesn't actually do anything in generate_merged, but prevents metrics from getting built.
