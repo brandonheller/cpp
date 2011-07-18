@@ -24,6 +24,13 @@ IGNORE_MISSING_DATA = True
 # Options for Matplotlib that are common to all graphs (but overrideable.)
 COMMON_LINE_OPTS = {'alpha': 0.5, 'markersize': 2}
 
+# Conversion factor for dual-y-scale graphs
+# Assume speed of light in fiber is 2/3 that in other media
+# (1m / 0.00062137 miles) * (1 sec / 2e8 m) * (1000 ms /sec)
+# Comes to 0.0080467354394322243 ms / mile
+MILES_TO_MS = (1/0.00062137) * (1/2e8) * 1000
+
+
 def norm_y(data):
     data_copy = copy.copy(data)
     for metric, line in data['lines'].iteritems():
@@ -43,7 +50,9 @@ ranges_get_data_fcns = {
         'get_data_fcn': (lambda g, s, af, a, m: plot.ranges_data(s, af, a, m)),
         'xlabel': (lambda m: 'number of controllers (k)'),
         'ylabel': (lambda m: metric_fullname(m) + " (miles)"),
-        'min_y': (lambda o: 0)
+        'min_y': (lambda o: 0.0),
+        'ylabel2': (lambda m: metric_fullname(m) + " (ms)"),
+        'y2_scale_factor': MILES_TO_MS
     },
     'base_ylog': {
         'get_data_fcn': (lambda g, s, af, a, m: plot.ranges_data(s, af, a, m)),
@@ -51,14 +60,18 @@ ranges_get_data_fcns = {
         'ylabel': (lambda m: metric_fullname(m) + " (miles)"),
         'max_y': (lambda o: 10000),
         'min_y': (lambda o: 10),
-        'yscale': 'log'
+        'yscale': 'log',
+        'ylabel2': (lambda m: metric_fullname(m) + " (ms)"),
+        'y2_scale_factor': MILES_TO_MS
     },
     'norm_xk': {
         'get_data_fcn': (lambda g, s, af, a, m: norm_x(plot.ranges_data(s, af, a, m), g.number_of_nodes())),
         'xlabel': (lambda m: 'number of controllers (k) / n'),
         'ylabel': (lambda m: metric_fullname(m) + " (miles)"),
         'max_x': (lambda o: 1.0),
-        'min_y': (lambda o: 0)
+        'min_y': (lambda o: 0),
+        'ylabel2': (lambda m: metric_fullname(m) + " (ms)"),
+        'y2_scale_factor': MILES_TO_MS
     },
     'norm_xk_ylog': {
         'get_data_fcn': (lambda g, s, af, a, m: norm_x(plot.ranges_data(s, af, a, m), g.number_of_nodes())),
@@ -67,7 +80,9 @@ ranges_get_data_fcns = {
         'max_x': (lambda o: 1.0),
         'max_y': (lambda o: 10000),
         'min_y': (lambda o: 10),
-        'yscale': 'log'
+        'yscale': 'log',
+        'ylabel2': (lambda m: metric_fullname(m) + " (ms)"),
+        'y2_scale_factor': MILES_TO_MS
     },
     'norm_y': {
         'get_data_fcn': (lambda g, s, af, a, m: norm_y(plot.ranges_data(s, af, a, m))),
@@ -82,7 +97,7 @@ ranges_get_data_fcns = {
         'min_y': (lambda o: 0.01),
         'yscale': 'log'
     },
-    'norm_xk_y': {
+    'norm_xk_norm_y': {
         'get_data_fcn':
             (lambda g, s, af, a, m: norm_x(norm_y(plot.ranges_data(s, af, a, m)), g.number_of_nodes())),
         'xlabel': (lambda m: 'number of controllers (k) / n'),
@@ -90,7 +105,7 @@ ranges_get_data_fcns = {
         'max_x': (lambda o: 1.0),
         'min_y': (lambda o: 0)
     },
-    'norm_xk_ylog': {
+    'norm_xk_norm_ylog': {
         'get_data_fcn':
             (lambda g, s, af, a, m: norm_x(norm_y(plot.ranges_data(s, af, a, m)), g.number_of_nodes())),
         'xlabel': (lambda m: 'number of controllers (k) / n'),
@@ -398,6 +413,7 @@ if __name__ == "__main__":
                 gdf = p['get_data_fcns'][gdf_name]
                 xlabel = get_param('xlabel', [metric], None, p, gdf)
                 ylabel = get_param('ylabel', [metric], None, p, gdf)
+                ylabel2 = get_param('ylabel2', [metric], None, p, gdf)
                 max_x = get_param('max_x', [options], None, p, gdf)
                 max_y = get_param('max_y', [options], None, p, gdf)
                 min_x = get_param('min_x', [options], None, p, gdf)
@@ -405,6 +421,7 @@ if __name__ == "__main__":
                 line_opts = get_param('line_opts', None, {}, p, gdf)
                 xscale = get_param('xscale', None, 'linear', p, gdf)
                 yscale = get_param('yscale', None, 'linear', p, gdf)
+                y2_scale_factor = get_param('y2_scale_factor', None, None, p, gdf)
                 box_whisker = get_param('box_whisker', None, False, p, gdf)
                 plot.ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
                             xscale, yscale, None, None, write_filepath + '_' + gdf_name,
@@ -415,4 +432,6 @@ if __name__ == "__main__":
                             min_x = min_x, max_x = max_x,
                             min_y = min_y, max_y = max_y,
                             line_opts = dict(COMMON_LINE_OPTS, **line_opts),
-                            box_whisker = box_whisker)
+                            box_whisker = box_whisker,
+                            ylabel2 = ylabel2,
+                            y2_scale_factor = y2_scale_factor)

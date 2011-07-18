@@ -22,6 +22,19 @@ ESCAPE = False
 #rc('font', **{'family':'serif','serif':['Computer Modern Roman'],'size':28})
 #rc('text', usetex=True)
 
+DEF_AXIS_LEFT = 0.2
+DEF_AXIS_RIGHT = 0.95
+DEF_AXIS_BOTTOM = 0.14
+DEF_AXIS_TOP = 0.9
+DEF_AXIS_WIDTH = DEF_AXIS_RIGHT - DEF_AXIS_LEFT
+DEF_AXIS_HEIGHT = DEF_AXIS_TOP - DEF_AXIS_BOTTOM
+# add_axes takes [left, bottom, width, height]
+DEF_AXES = [DEF_AXIS_LEFT, DEF_AXIS_BOTTOM, DEF_AXIS_WIDTH, DEF_AXIS_HEIGHT]
+
+AXIS_2Y_RIGHT = 0.8
+AXIS_2Y_WIDTH = AXIS_2Y_RIGHT - DEF_AXIS_LEFT
+AXES_2Y = [DEF_AXIS_LEFT, DEF_AXIS_BOTTOM, AXIS_2Y_WIDTH, DEF_AXIS_HEIGHT]
+
 rc('axes', **{'labelsize' : 'large',
               'titlesize' : 'large',
               'linewidth' : 0,
@@ -31,9 +44,9 @@ rcParams['xtick.labelsize'] = 18
 rcParams['ytick.labelsize'] = 18
 rcParams['xtick.major.pad'] = 4
 rcParams['ytick.major.pad'] = 6
-rcParams['figure.subplot.bottom'] = 0.14
-rcParams['figure.subplot.left'] = 0.2
-rcParams['figure.subplot.right'] = 0.95
+rcParams['figure.subplot.bottom'] = DEF_AXIS_LEFT
+rcParams['figure.subplot.left'] = DEF_AXIS_LEFT
+rcParams['figure.subplot.right'] = DEF_AXIS_RIGHT
 rcParams['lines.linewidth'] = 2
 rcParams['grid.color'] = '#cccccc'
 rcParams['grid.linewidth'] = 0.6
@@ -108,7 +121,8 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
            write_filepath = None, write = False, ext = 'pdf',
            legend = None, title = False, xlabel = None, ylabel = None,
            min_x = None, max_x = None, min_y = None, max_y = None,
-           x = None, lines = None, line_opts = None):
+           x = None, lines = None, line_opts = None,
+           ylabel2 = None, y2_scale_factor = None):
 
     # Build lines if not already provided.
     if not x and lines or x and not lines:
@@ -124,7 +138,8 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
            write_filepath = write_filepath, write = write, ext = ext,
            legend = legend, title = title, xlabel = xlabel, ylabel = ylabel,
            min_x = min_x, max_x = max_x, min_y = min_y, max_y = max_y,
-           data = data, line_opts = line_opts)
+           data = data, line_opts = line_opts,
+           ylabel2 = ylabel2, y2_scale_factor = y2_scale_factor)
 
 
 LINE_OPTS_DEF = {'linestyle': '-', 'linewidth': 0.75}
@@ -134,7 +149,8 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
            write_filepath = None, write = False, ext = 'pdf',
            legend = None, title = False, xlabel = None, ylabel = None,
            min_x = None, max_x = None, min_y = None, max_y = None,
-           data = None, line_opts = None, box_whisker = False):
+           data = None, line_opts = None, box_whisker = False,
+           ylabel2 = None, y2_scale_factor = None):
     '''Plot multiple ranges on one graph.
     
     @param data_lines: list of dicts, each of:
@@ -149,6 +165,12 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
 
     fig = get_fig()
 
+    if not ylabel2:
+        ax1 = fig.add_axes(DEF_AXES)
+    else:
+        ax1 = fig.add_axes(AXES_2Y)
+        ax2 = ax1.twinx()
+
     if not box_whisker:
         for d in data:
             x = d['x']
@@ -156,7 +178,10 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
             #print "plotting: %s %s" % (x, lines)
             for aspect in aspects:
                 y = lines[aspect]
-                pylab.plot(x, y, aspect_colors[aspect], **line_opts)
+                ax1.plot(x, y, aspect_colors[aspect], **line_opts)
+                if ylabel2:
+                    y2 = [val * y2_scale_factor for val in y]
+                    ax2.plot(x, y2, aspect_colors[aspect], **line_opts)
     else:
         assert len(aspects) == 1
         # box_vals is a dict where keys are aspects, values are:
@@ -174,7 +199,7 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
                 for j, x_val in enumerate(x):
                     this_box_val[j].append(lines[aspect][j])
 
-            pylab.boxplot(this_box_val, sym = 'bx', positions = x_vals, widths = 0.15)
+            ax1.boxplot(this_box_val, sym = 'bx', positions = x_vals, widths = 0.15)
 
 
     pylab.grid(True)
@@ -202,11 +227,17 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
             max_y = max(all_y)
         # Assume these are string-ified nums of controllers.
         axes = [min_x, max_x, min_y, max_y]
-        pylab.axis(axes)
+        #pylab.axis(axes)
+        ax1.set_xlim([min_x, max_x])
+        ax1.set_ylim([min_y, max_y])
+        if ylabel2:
+            ax2.set_ylim([min_y * y2_scale_factor, max_y * y2_scale_factor])
     if xlabel:
-        pylab.xlabel(xlabel)
+        ax1.set_xlabel(xlabel)
     if ylabel:
-        pylab.ylabel(ylabel)
+        ax1.set_ylabel(ylabel)
+    if ylabel2:
+        ax2.set_ylabel(ylabel2)
     if title:
         if ESCAPE:
             pylab.title(escape(label))
