@@ -49,7 +49,8 @@ ranges_get_data_fcns = {
         'get_data_fcn': (lambda g, s, af, a, m: plot.ranges_data(s, af, a, m)),
         'xlabel': (lambda m: 'number of controllers (k)'),
         'ylabel': (lambda m: metric_fullname(m) + " (miles)"),
-        'min_y': (lambda o: 1),
+        'max_y': (lambda o: 10000),
+        'min_y': (lambda o: 10),
         'yscale': 'log'
     },
     'norm_xk': {
@@ -64,7 +65,8 @@ ranges_get_data_fcns = {
         'xlabel': (lambda m: 'number of controllers (k) / n'),
         'ylabel': (lambda m: metric_fullname(m) + " (miles)"),
         'max_x': (lambda o: 1.0),
-        'min_y': (lambda o: 1),
+        'max_y': (lambda o: 10000),
+        'min_y': (lambda o: 10),
         'yscale': 'log'
     },
     'norm_y': {
@@ -77,7 +79,7 @@ ranges_get_data_fcns = {
         'get_data_fcn': (lambda g, s, af, a, m: norm_y(plot.ranges_data(s, af, a, m))),
         'xlabel': (lambda m: 'number of controllers (k)'),
         'ylabel': (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
-        'min_y': (lambda o: 0.001),
+        'min_y': (lambda o: 0.01),
         'yscale': 'log'
     },
     'norm_xk_y': {
@@ -94,7 +96,7 @@ ranges_get_data_fcns = {
         'xlabel': (lambda m: 'number of controllers (k) / n'),
         'ylabel': (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
         'max_x': (lambda o: 1.0),
-        'min_y': (lambda o: 0.0001),
+        'min_y': (lambda o: 0.01),
         'yscale': 'log'
     }
 }
@@ -134,8 +136,7 @@ MERGED_RANGE_PLOT_DATA_FCNS = {
         'aspect_colors': {
             'lowest': 'g+'
         },
-        'get_data_fcns': ranges_get_data_fcns,
-        'min_y': (lambda o: 0.0)
+        'get_data_fcns': ranges_get_data_fcns
     },
     'ratios_all': {
         'aspect_colors': {
