@@ -140,6 +140,16 @@ def old_version(topo):
                 return True            
     return False
 
+BLACKLIST = [
+    'Globalcenter',  # Full mesh != physical topo.
+    'Gblnet',  # only 8 nodes - too small.
+    'Gridnet'  # also too small, with only 9.
+]
+def blacklisted(topo):
+    '''Return True if topo is in a blacklist.'''
+    return topo in BLACKLIST
+
+
 #No locations at all (node labels hard to read, imprecisely defined, or didn't get to)
 KNOWN_NO_LOCATIONS_ERR = ['Ai3', 'Azrena', 'Cudi', 'Cynet', 'Harnet', 'Nordu2010', 'Nsfcnet', 'Singaren', 'Twaren', 'Uninet']
 def known_no_loc(topo):
@@ -220,6 +230,8 @@ def import_zoo_graph(topo):
     # Ignore old graphs
     if old_version(topo):
         return None, False, "Old version"
+    if blacklisted(topo):
+        return None, False, "Blacklisted topology"
 
     # Convert multigraphs to regular graphs; multiple edges don't affect
     # latency, but add complications when debugging.
@@ -251,6 +263,9 @@ def import_zoo_graph(topo):
             return None, False, "Known no-weight topo"
         else:
             return None, False, "Unknown no-weight topo"
+
+    if g.number_of_nodes() <= 9:
+        print "********%s%s" % (topo, g.number_of_nodes())
 
     # Append weights
     if has_all_locs(g):
