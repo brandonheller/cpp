@@ -4,12 +4,14 @@ import copy
 import json
 import os
 
+from lib.colors import COLORS
 import lib.plot as plot
 import metrics
 import plot_cdfs
 import plot_ranges
 import plot_cloud
 import plot_pareto
+
 #import map_combos
 from zoo_tools import zoo_topos
 from topo_lib import get_topo_graph, total_weight
@@ -44,9 +46,9 @@ def norm_x(data, k):
     return data_copy
 
 # Half the two-way totals, to compare to one-way latencies.
-HLINES = [[5, 'switch processing'],
-          [25, 'ring protection'],
-          [100, 'mesh restoration']]
+LATENCY_LINES = [[5, 'switch processing'],
+                 [25, 'ring protection'],
+                 [100, 'mesh restoration']]
 
 # Shared ranges data functions
 ranges_get_data_fcns = {
@@ -58,7 +60,7 @@ ranges_get_data_fcns = {
         'ylabel2': (lambda m: metric_fullname(m) + " (ms)"),
         'max_y': (lambda o: 13000),
         'y2_scale_factor': MILES_TO_MS,
-        'hlines': HLINES
+        'hlines': LATENCY_LINES
     },
     'base_ylog': {
         'get_data_fcn': (lambda g, s, af, a, m: plot.ranges_data(s, af, a, m)),
@@ -69,7 +71,7 @@ ranges_get_data_fcns = {
         'yscale': 'log',
         'ylabel2': (lambda m: metric_fullname(m) + " (ms)"),
         'y2_scale_factor': MILES_TO_MS,
-        'hlines': HLINES
+        'hlines': LATENCY_LINES
     },
     'norm_xk': {
         'get_data_fcn': (lambda g, s, af, a, m: norm_x(plot.ranges_data(s, af, a, m), g.number_of_nodes())),
@@ -79,7 +81,7 @@ ranges_get_data_fcns = {
         'min_y': (lambda o: 0),
         'ylabel2': (lambda m: metric_fullname(m) + " (ms)"),
         'y2_scale_factor': MILES_TO_MS,
-        'hlines': HLINES
+        'hlines': LATENCY_LINES
     },
     'norm_xk_ylog': {
         'get_data_fcn': (lambda g, s, af, a, m: norm_x(plot.ranges_data(s, af, a, m), g.number_of_nodes())),
@@ -91,7 +93,7 @@ ranges_get_data_fcns = {
         'yscale': 'log',
         'ylabel2': (lambda m: metric_fullname(m) + " (ms)"),
         'y2_scale_factor': MILES_TO_MS,
-        'hlines': HLINES
+        'hlines': LATENCY_LINES
     },
     'norm_y': {
         'get_data_fcn': (lambda g, s, af, a, m: norm_y(plot.ranges_data(s, af, a, m))),
@@ -103,7 +105,7 @@ ranges_get_data_fcns = {
         },
         'overlay_line' : {
             'fcn': (lambda c: 1.0 / float(c)),
-            'text': "proportional\nbenefit",
+            'text': "proportional\nreduction",
             'xy': (1.45, 0.4),
         }
     },
@@ -248,6 +250,9 @@ MERGED_RANGE_PLOT_DATA_FCNS = {
 }
 
 RANGE_PLOT_TYPES = ['ranges_lowest', 'ratios_all', 'ratios_mean', 'bc_rel', 'pareto_max', 'pareto_max_bw']
+
+DO_LATENCY_CDFS = True
+
 
 def get_group_str(options):
     if options.topo_group:
@@ -416,6 +421,33 @@ if __name__ == "__main__":
     for metric in options.metrics:
         print "building plots for metric %s" % metric
         metric_data = plot_data[metric]
+
+        if DO_LATENCY_CDFS:
+            assert 'ranges_lowest' in metric_data
+            assert 'base' in metric_data['ranges_lowest']
+            topo_data = metric_data['ranges_lowest']['base']
+            combined = {}  # keys are values for k; values are distribution of optimal latencies
+            for topo, data_lines in topo_data.iteritems():
+                x = data_lines['x']
+                lines = data_lines['lines']
+                for line_name, values in lines.iteritems():
+                    for j, b in enumerate(values):
+                        if x[j] not in combined:
+                            combined[x[j]] = []
+                        combined[x[j]].append(b)
+
+            ptype = 'cdfs'
+            group_str = get_group_str(options)
+            write_filepath = 'data_vis/merged/%s_%i_to_%i_%s_%s' % (group_str, options.from_start, options.from_end, metric, ptype)
+            # Assume the loweest-numbered element is the smallest
+            xmax = max(combined[sorted(combined.keys())[0]])
+            axis_limits = [0, xmax, 0, 1]
+            plot.plot('cdf', combined, COLORS, axis_limits,
+                      metric, "linear", "linear", write_filepath,
+                      options.write,
+                      xlabel = 'optimal ' + metric_fullname(metric) + ' (miles)',
+                      ylabel = 'fraction of topologies',
+                      ext = options.ext)
 
         for ptype in options.plots:
             p = MERGED_RANGE_PLOT_DATA_FCNS[ptype]

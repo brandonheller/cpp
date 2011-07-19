@@ -1,1 +1,1 @@
-COLORS = ["r", "g", "b", "c", "m", "y", "k"]
+COLORS = ["r", "g", "b", "c", "m", "y", "k", "purple"]
