@@ -60,6 +60,8 @@ def parse_args():
                     default = None, help = "plots to show")
     opts.add_option("--cdf_plot_list", type = 'string',
                     default = None, help = "CDF plots to show")
+    opts.add_option("--gen_1ctrl_table",action = "store_true",
+                    default = False, help = "generate LaTeX one-ctrl table?")
 
     # Metric selection
     opts.add_option("--metric",

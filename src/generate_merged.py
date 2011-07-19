@@ -32,6 +32,8 @@ COMMON_LINE_OPTS = {'alpha': 0.5, 'markersize': 2}
 # Comes to 0.0080467354394322243 ms / mile
 MILES_TO_MS = (1/0.00062137) * (1/2e8) * 1000
 
+USE_FRACTIONS = True  # Use fractions rather than raw for latex one-ctrl table?
+SAFETY_MARGINS = [1.0, 1.5, 2.0]  # For use in one-ctrl table
 
 def norm_y(data):
     data_copy = copy.copy(data)
@@ -311,6 +313,29 @@ def dump_csv(csv_tuples, csv_fields, options):
     f.close()
 
 
+def dump_1ctrl_latex_table(latencies, write_filepath, safety_margins, fraction = False):
+    latencies = sorted(latencies)
+    write_filepath += '.latex'
+    f = open(write_filepath, 'w')
+    # Columns: Goals(2), Safety Margins(n)
+    s = "\\begin{tabular}{*{%i}{l}}\n" % (len(safety_margins) + 2)
+    s += "\\multicolumn{2}{c}{Round-trip Latency Target} & \\multicolumn{%i}{l}{Safety Margin} \\\\ \n" % len(safety_margins)
+    s += "Name & Delay(ms) & %s\\\\ \n" % ' & '.join([str(a) + 'x' for a in safety_margins])
+    s += "\hline\n"
+    for ms, name in LATENCY_LINES:
+        s += ' & '.join([name, str(ms * 2)])
+        for i, safety_margin in enumerate(safety_margins):
+            num_ok = len([a for a in latencies if a * MILES_TO_MS * safety_margin < ms])
+            s += ' & '
+            if fraction:
+                s += "%0.2f" % (num_ok / float(len(latencies)))
+            else:
+                s += str(num_ok)
+        s += "\\\\ \n"
+    s += "\end{tabular}"
+    print "wrote file to %s" % write_filepath
+    f.write(s)
+
 if __name__ == "__main__":
 
     options = plot.parse_args()
@@ -323,7 +348,8 @@ if __name__ == "__main__":
     assert options.from_start
     assert not options.from_end
 
-    used = 0  # topologies that are usable and used.
+    total_usable = 0  # usable topologies: if data is computed, use them.
+    total_used = 0  # topologies with data that we derive stats from
 
     # Grab raw data
     # plot_data[ptype] = [dict of metric data, keyed by ptype]:
@@ -346,7 +372,7 @@ if __name__ == "__main__":
 
             # Check for --force here?
             print "usable topo: %s" % topo
-            used += 1
+            total_usable += 1
             controllers = metrics.get_controllers(g, options)
             exp_filename = metrics.get_filename(topo, options, controllers)
 
@@ -360,6 +386,7 @@ if __name__ == "__main__":
                 print "freshly analyzing topo: %s" % topo
                 stats, filename = metrics.do_metrics(options, topo, g)
                 filename = filename.replace('data_out', 'data_vis')
+                total_used += 1
             # Otherwise, load the data:
             else:
                 if not os.path.exists(exp_filename + '.json'):
@@ -371,6 +398,7 @@ if __name__ == "__main__":
                         raise Exception("invalid file path: %s" % exp_filename)
                 input_file = open(exp_filename + '.json', 'r')
                 stats = json.load(input_file)
+                total_used += 1
 
             for metric in options.metrics:
                 for ptype in options.plots:
@@ -406,8 +434,10 @@ if __name__ == "__main__":
 
         print "topo %s of %s: %s" % (i, len(topos), topo)
 
+    print "total topologies: %s" % len(topos)
+    print "usable topologies: %s" % total_usable
+    print "used topologies: %s" % total_used
 
-    print "used %s topologies" % used
 
     if plot_data == {}:
         raise Exception("null plot_data: verify that the expected data is in the right place.")
@@ -448,6 +478,10 @@ if __name__ == "__main__":
                           ylabel = 'fraction of topologies',
                           ext = options.ext,
                           legend = True)
+
+            if options.gen_1ctrl_table:
+                write_filepath = 'data_vis/merged/%s_%i_to_%i_%s_%s' % (group_str, options.from_start, options.from_end, metric, '1ctrl_table')
+                dump_1ctrl_latex_table(combined[1], write_filepath, SAFETY_MARGINS, USE_FRACTIONS)
 
         if 'pareto' in options.cdf_plots:
             assert 'pareto_max' in metric_data
