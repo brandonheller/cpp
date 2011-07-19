@@ -251,8 +251,6 @@ MERGED_RANGE_PLOT_DATA_FCNS = {
 
 RANGE_PLOT_TYPES = ['ranges_lowest', 'ratios_all', 'ratios_mean', 'bc_rel', 'pareto_max', 'pareto_max_bw']
 
-DO_LATENCY_CDFS = True
-
 
 def get_group_str(options):
     if options.topo_group:
@@ -422,7 +420,7 @@ if __name__ == "__main__":
         print "building plots for metric %s" % metric
         metric_data = plot_data[metric]
 
-        if DO_LATENCY_CDFS:
+        if 'latency' in options.cdf_plots:
             assert 'ranges_lowest' in metric_data
             assert 'base' in metric_data['ranges_lowest']
             topo_data = metric_data['ranges_lowest']['base']
@@ -436,18 +434,57 @@ if __name__ == "__main__":
                             combined[x[j]] = []
                         combined[x[j]].append(b)
 
-            ptype = 'cdfs'
+            group_str = get_group_str(options)
+            xmax = max(combined[sorted(combined.keys())[0]])
+            axis_limits = [0, xmax, 0, 1]
+            for xscale in ["linear", "log"]:
+                ptype = 'latency_cdfs_' + xscale
+                write_filepath = 'data_vis/merged/%s_%i_to_%i_%s_%s' % (group_str, options.from_start, options.from_end, metric, ptype)
+                # Assume the loweest-numbered element is the smallest
+                plot.plot('cdf', combined, COLORS, axis_limits,
+                          metric, xscale, "linear", write_filepath,
+                          options.write,
+                          xlabel = 'optimal ' + metric_fullname(metric) + ' (miles)',
+                          ylabel = 'fraction of topologies',
+                          ext = options.ext,
+                          legend = True)
+
+        if 'pareto' in options.cdf_plots:
+            assert 'pareto_max' in metric_data
+            assert 'base' in metric_data['pareto_max']
+            topo_data = metric_data['pareto_max']['base']
+            combined = {}  # keys are values for k; values are distribution of optimal latencies
+            for topo, data_lines in topo_data.iteritems():
+                x = data_lines['x']
+                lines = data_lines['lines']
+                for aspect, values in lines.iteritems():
+                    for j, b in enumerate(values):
+                        if x[j] not in combined:
+                            combined[x[j]] = []
+                        combined[x[j]].append(b)
+
+            ptype = 'pareto_cdfs'
             group_str = get_group_str(options)
             write_filepath = 'data_vis/merged/%s_%i_to_%i_%s_%s' % (group_str, options.from_start, options.from_end, metric, ptype)
             # Assume the loweest-numbered element is the smallest
-            xmax = max(combined[sorted(combined.keys())[0]])
+            all_x = []
+            for values in combined.values():
+                all_x.extend(values)
+            xmax = max(all_x)
             axis_limits = [0, xmax, 0, 1]
+            def metric_shortname(metric):
+                if metric == 'latency':
+                    return 'avg lat'
+                if metric == 'wc_latency':
+                    return 'w-c lat'
             plot.plot('cdf', combined, COLORS, axis_limits,
                       metric, "linear", "linear", write_filepath,
                       options.write,
-                      xlabel = 'optimal ' + metric_fullname(metric) + ' (miles)',
+                      xlabel = 'other metric increase for opt %s' % metric_shortname(metric),
                       ylabel = 'fraction of topologies',
-                      ext = options.ext)
+                      ext = options.ext,
+                      legend = True)
+
 
         for ptype in options.plots:
             p = MERGED_RANGE_PLOT_DATA_FCNS[ptype]

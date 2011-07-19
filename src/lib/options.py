@@ -57,8 +57,9 @@ def parse_args():
                     default = None,
                     help = "operations to show, from %s" % OPERATIONS)
     opts.add_option("--plot_list", type = 'string',
-                    default = None,
-                    help = "plots to show")
+                    default = None, help = "plots to show")
+    opts.add_option("--cdf_plot_list", type = 'string',
+                    default = None, help = "CDF plots to show")
 
     # Metric selection
     opts.add_option("--metric",
@@ -182,6 +183,11 @@ def parse_args():
         options.plots = options.plot_list.split(',')
     else:
         options.plots = None
+
+    if options.cdf_plot_list:
+        options.cdf_plots = options.cdf_plot_list.split(',')
+    else:
+        options.cdf_plots = []
 
     options.controllers = None
     if options.controller_list:

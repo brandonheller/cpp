@@ -29,12 +29,14 @@ OPS='--operation_list pareto, ranges'
 
 # Generate all ranges plots
 PLOT_LIST='--plot_list ranges_lowest,ratios_all,ratios_mean,bc_rel'
+CDF_PLOT_LIST='--cdf_plot_list latency'
 # For now, only go up to 8.
 C=8
-./generate_merged.py --all_topos --from_start ${C} --lat_metrics -w -e ${EXT} ${FORCE} ${MP} ${OPS} ${PLOT_LIST}
+./generate_merged.py --all_topos --from_start ${C} --lat_metrics -w -e ${EXT} ${FORCE} ${MP} ${OPS} ${PLOT_LIST} ${CDF_PLOT_LIST}
 
 # Generate tradeoffs output
 # Only go up to 4, because going to 5 requires > 1 GB of RAM.
 C=4
 PLOT_LIST='--plot_list pareto_max,pareto_max_bw'
-./generate_merged.py --all_topos --from_start ${C} --lat_metrics -w -e ${EXT} ${FORCE} ${MP} ${OPS} ${PLOT_LIST}
+CDF_PLOT_LIST='--cdf_plot_list pareto'
+./generate_merged.py --all_topos --from_start ${C} --lat_metrics -w -e ${EXT} ${FORCE} ${MP} ${OPS} ${PLOT_LIST} ${CDF_PLOT_LIST}
