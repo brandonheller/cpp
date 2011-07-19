@@ -194,6 +194,10 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
             x_vals = data[0]['x']
             ax1.plot(x_vals, [overlay_line["fcn"](a) for a in x_vals],
                      color = 'black', linewidth = 2.5)
+            xy = overlay_line['xy']
+            text = overlay_line['text']
+            ax1.text(xy[0], xy[1], text, fontsize = TEXT_LABELSIZE,
+                     va = 'top', ha = 'left')
     else:
         assert len(aspects) == 1
         # box_vals is a dict where keys are aspects, values are:

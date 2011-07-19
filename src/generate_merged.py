@@ -101,16 +101,18 @@ ranges_get_data_fcns = {
         'overlay_line' : {
             'fcn': (lambda c: 1.0 / float(c))
         },
+        'overlay_line' : {
+            'fcn': (lambda c: 1.0 / float(c)),
+            'text': "proportional\nbenefit",
+            'xy': (1.45, 0.4),
+        }
     },
     'norm_y_ylog': {
         'get_data_fcn': (lambda g, s, af, a, m: norm_y(plot.ranges_data(s, af, a, m))),
         'xlabel': (lambda m: 'number of controllers (k)'),
         'ylabel': (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
         'min_y': (lambda o: 0.01),
-        'yscale': 'log',
-        'overlay_line' : {
-            'fcn': (lambda c: 1.0 / float(c))
-        },
+        'yscale': 'log'
     },
     'norm_xk_norm_y': {
         'get_data_fcn':
@@ -118,10 +120,7 @@ ranges_get_data_fcns = {
         'xlabel': (lambda m: 'number of controllers (k) / n'),
         'ylabel': (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
         'max_x': (lambda o: 1.0),
-        'min_y': (lambda o: 0),
-        'overlay_line' : {
-            'fcn': (lambda c: 1.0 / float(c))
-        },
+        'min_y': (lambda o: 0)
     },
     'norm_xk_norm_ylog': {
         'get_data_fcn':
@@ -130,10 +129,7 @@ ranges_get_data_fcns = {
         'ylabel': (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
         'max_x': (lambda o: 1.0),
         'min_y': (lambda o: 0.01),
-        'yscale': 'log',
-        'overlay_line' : {
-            'fcn': (lambda c: 1.0 / float(c))
-        },
+        'yscale': 'log'
     }
 }
 
