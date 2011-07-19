@@ -43,6 +43,10 @@ def norm_x(data, k):
     data_copy['x'] = [d / float(k) for d in data['x']]
     return data_copy
 
+# Half the two-way totals, to compare to one-way latencies.
+HLINES = [[5, 'switch processing'],
+          [25, 'ring protection'],
+          [100, 'mesh restoration']]
 
 # Shared ranges data functions
 ranges_get_data_fcns = {
@@ -52,17 +56,20 @@ ranges_get_data_fcns = {
         'ylabel': (lambda m: metric_fullname(m) + " (miles)"),
         'min_y': (lambda o: 0.0),
         'ylabel2': (lambda m: metric_fullname(m) + " (ms)"),
-        'y2_scale_factor': MILES_TO_MS
+        'max_y': (lambda o: 13000),
+        'y2_scale_factor': MILES_TO_MS,
+        'hlines': HLINES
     },
     'base_ylog': {
         'get_data_fcn': (lambda g, s, af, a, m: plot.ranges_data(s, af, a, m)),
         'xlabel': (lambda m: 'number of controllers (k)'),
         'ylabel': (lambda m: metric_fullname(m) + " (miles)"),
-        'max_y': (lambda o: 10000),
+        'max_y': (lambda o: 13000),
         'min_y': (lambda o: 10),
         'yscale': 'log',
         'ylabel2': (lambda m: metric_fullname(m) + " (ms)"),
-        'y2_scale_factor': MILES_TO_MS
+        'y2_scale_factor': MILES_TO_MS,
+        'hlines': HLINES
     },
     'norm_xk': {
         'get_data_fcn': (lambda g, s, af, a, m: norm_x(plot.ranges_data(s, af, a, m), g.number_of_nodes())),
@@ -71,18 +78,20 @@ ranges_get_data_fcns = {
         'max_x': (lambda o: 1.0),
         'min_y': (lambda o: 0),
         'ylabel2': (lambda m: metric_fullname(m) + " (ms)"),
-        'y2_scale_factor': MILES_TO_MS
+        'y2_scale_factor': MILES_TO_MS,
+        'hlines': HLINES
     },
     'norm_xk_ylog': {
         'get_data_fcn': (lambda g, s, af, a, m: norm_x(plot.ranges_data(s, af, a, m), g.number_of_nodes())),
         'xlabel': (lambda m: 'number of controllers (k) / n'),
         'ylabel': (lambda m: metric_fullname(m) + " (miles)"),
         'max_x': (lambda o: 1.0),
-        'max_y': (lambda o: 10000),
+        'max_y': (lambda o: 13000),
         'min_y': (lambda o: 10),
         'yscale': 'log',
         'ylabel2': (lambda m: metric_fullname(m) + " (ms)"),
-        'y2_scale_factor': MILES_TO_MS
+        'y2_scale_factor': MILES_TO_MS,
+        'hlines': HLINES
     },
     'norm_y': {
         'get_data_fcn': (lambda g, s, af, a, m: norm_y(plot.ranges_data(s, af, a, m))),
@@ -423,6 +432,7 @@ if __name__ == "__main__":
                 yscale = get_param('yscale', None, 'linear', p, gdf)
                 y2_scale_factor = get_param('y2_scale_factor', None, None, p, gdf)
                 box_whisker = get_param('box_whisker', None, False, p, gdf)
+                hlines = get_param('hlines', None, None, p, gdf)
                 plot.ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
                             xscale, yscale, None, None, write_filepath + '_' + gdf_name,
                             options.write, ext = options.ext,
@@ -434,4 +444,5 @@ if __name__ == "__main__":
                             line_opts = dict(COMMON_LINE_OPTS, **line_opts),
                             box_whisker = box_whisker,
                             ylabel2 = ylabel2,
-                            y2_scale_factor = y2_scale_factor)
+                            y2_scale_factor = y2_scale_factor,
+                            hlines = hlines)

@@ -35,20 +35,26 @@ AXIS_2Y_RIGHT = 0.8
 AXIS_2Y_WIDTH = AXIS_2Y_RIGHT - DEF_AXIS_LEFT
 AXES_2Y = [DEF_AXIS_LEFT, DEF_AXIS_BOTTOM, AXIS_2Y_WIDTH, DEF_AXIS_HEIGHT]
 
+TICK_LABELSIZE = 18
+TEXT_LABELSIZE = 18
+
+COLOR_LIGHTGRAY = '#cccccc'
+COLOR_MEDGRAY = '#606060'
+
 rc('axes', **{'labelsize' : 'large',
               'titlesize' : 'large',
               'linewidth' : 0,
               'grid' : True})
 rcParams['axes.labelsize'] = 20
-rcParams['xtick.labelsize'] = 18
-rcParams['ytick.labelsize'] = 18
+rcParams['xtick.labelsize'] = TICK_LABELSIZE
+rcParams['ytick.labelsize'] = TICK_LABELSIZE
 rcParams['xtick.major.pad'] = 4
 rcParams['ytick.major.pad'] = 6
 rcParams['figure.subplot.bottom'] = DEF_AXIS_LEFT
 rcParams['figure.subplot.left'] = DEF_AXIS_LEFT
 rcParams['figure.subplot.right'] = DEF_AXIS_RIGHT
 rcParams['lines.linewidth'] = 2
-rcParams['grid.color'] = '#cccccc'
+rcParams['grid.color'] = COLOR_LIGHTGRAY
 rcParams['grid.linewidth'] = 0.6
 
 
@@ -122,7 +128,7 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
            legend = None, title = False, xlabel = None, ylabel = None,
            min_x = None, max_x = None, min_y = None, max_y = None,
            x = None, lines = None, line_opts = None,
-           ylabel2 = None, y2_scale_factor = None):
+           ylabel2 = None, y2_scale_factor = None, hlines = None):
 
     # Build lines if not already provided.
     if not x and lines or x and not lines:
@@ -139,7 +145,8 @@ def ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
            legend = legend, title = title, xlabel = xlabel, ylabel = ylabel,
            min_x = min_x, max_x = max_x, min_y = min_y, max_y = max_y,
            data = data, line_opts = line_opts,
-           ylabel2 = ylabel2, y2_scale_factor = y2_scale_factor)
+           ylabel2 = ylabel2, y2_scale_factor = y2_scale_factor,
+           hlines = hlines)
 
 
 LINE_OPTS_DEF = {'linestyle': '-', 'linewidth': 0.75}
@@ -150,7 +157,7 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
            legend = None, title = False, xlabel = None, ylabel = None,
            min_x = None, max_x = None, min_y = None, max_y = None,
            data = None, line_opts = None, box_whisker = False,
-           ylabel2 = None, y2_scale_factor = None):
+           ylabel2 = None, y2_scale_factor = None, hlines = None):
     '''Plot multiple ranges on one graph.
     
     @param data_lines: list of dicts, each of:
@@ -201,11 +208,23 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
 
             ax1.boxplot(this_box_val, sym = 'bx', positions = x_vals, widths = 0.15)
 
+    if ylabel2:
+        ax1.set_xscale(xscale)
+        ax1.set_yscale(yscale)
+        ax2.set_yscale(yscale)
+        # Disable grid for double axes because the two lines are too hard
+        # to follow.
+        # Setting grid to False does not change anything, which appears to be
+        # a bug, so use a grid with zero-size lines instead.
+        ax1.grid(which = 'majorminor', linestyle='None')
+        ax2.grid(which = 'majorminor', linestyle='None')
+    else:
+        #ax1.grid(True)
+        ax1.set_xscale(xscale)
+        ax1.set_yscale(yscale)
 
-    pylab.grid(True)
-    pylab.xscale(xscale)
-    pylab.yscale(yscale)
     if axes:
+        raise Exception("check this - axis use discouraged")
         pylab.axis(axes)
     else:
         all_x = []
@@ -228,10 +247,29 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
         # Assume these are string-ified nums of controllers.
         axes = [min_x, max_x, min_y, max_y]
         #pylab.axis(axes)
+        # We assume that hlines should go on the second Y axis.
+        HORIZ_POS = 0.98
+        if hlines and ylabel2:
+            for y_val, text in hlines:
+                y_in_ax1 = y_val / float(y2_scale_factor)
+                if min_y < y_in_ax1 < max_y:
+                    ax2.plot([min_x, max_x], [y_val, y_val],
+                             color = COLOR_MEDGRAY, marker = 'None', linewidth = 1.0)
+
+                    ax2.text(max_x - 0.1, y_val, text,
+                             horizontalalignment='right',
+                             verticalalignment='bottom',
+                             fontsize = TEXT_LABELSIZE)
+
+        # NOTE: make sure to set axis limits AFTER adding stuff - apparently
+        # one axis will auto-scale itself to fix text, and then the two
+        # axes representing the same thing will get all out of sync.
         ax1.set_xlim([min_x, max_x])
         ax1.set_ylim([min_y, max_y])
         if ylabel2:
+            ax2.set_xlim([min_x, max_x])
             ax2.set_ylim([min_y * y2_scale_factor, max_y * y2_scale_factor])
+
     if xlabel:
         ax1.set_xlabel(xlabel)
     if ylabel:
@@ -245,6 +283,7 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
             pylab.title(label)
     if legend:
         pylab.legend(lines, aspect, loc = "lower right")
+
     if write:
         filepath = write_filepath + '.' + ext
         mkdir_p(os.path.dirname(filepath))
