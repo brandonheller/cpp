@@ -157,7 +157,8 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
            legend = None, title = False, xlabel = None, ylabel = None,
            min_x = None, max_x = None, min_y = None, max_y = None,
            data = None, line_opts = None, box_whisker = False,
-           ylabel2 = None, y2_scale_factor = None, hlines = None):
+           ylabel2 = None, y2_scale_factor = None, hlines = None,
+           overlay_line = None):
     '''Plot multiple ranges on one graph.
     
     @param data_lines: list of dicts, each of:
@@ -189,6 +190,10 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
                 if ylabel2:
                     y2 = [val * y2_scale_factor for val in y]
                     ax2.plot(x, y2, aspect_colors[aspect], **line_opts)
+        if overlay_line:
+            x_vals = data[0]['x']
+            ax1.plot(x_vals, [overlay_line["fcn"](a) for a in x_vals],
+                     color = 'black', linewidth = 2.5)
     else:
         assert len(aspects) == 1
         # box_vals is a dict where keys are aspects, values are:

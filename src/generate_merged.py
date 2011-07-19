@@ -97,14 +97,20 @@ ranges_get_data_fcns = {
         'get_data_fcn': (lambda g, s, af, a, m: norm_y(plot.ranges_data(s, af, a, m))),
         'xlabel': (lambda m: 'number of controllers (k)'),
         'ylabel': (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
-        'min_y': (lambda o: 0)
+        'min_y': (lambda o: 0),
+        'overlay_line' : {
+            'fcn': (lambda c: 1.0 / float(c))
+        },
     },
     'norm_y_ylog': {
         'get_data_fcn': (lambda g, s, af, a, m: norm_y(plot.ranges_data(s, af, a, m))),
         'xlabel': (lambda m: 'number of controllers (k)'),
         'ylabel': (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
         'min_y': (lambda o: 0.01),
-        'yscale': 'log'
+        'yscale': 'log',
+        'overlay_line' : {
+            'fcn': (lambda c: 1.0 / float(c))
+        },
     },
     'norm_xk_norm_y': {
         'get_data_fcn':
@@ -112,7 +118,10 @@ ranges_get_data_fcns = {
         'xlabel': (lambda m: 'number of controllers (k) / n'),
         'ylabel': (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
         'max_x': (lambda o: 1.0),
-        'min_y': (lambda o: 0)
+        'min_y': (lambda o: 0),
+        'overlay_line' : {
+            'fcn': (lambda c: 1.0 / float(c))
+        },
     },
     'norm_xk_norm_ylog': {
         'get_data_fcn':
@@ -121,7 +130,10 @@ ranges_get_data_fcns = {
         'ylabel': (lambda m: metric_fullname(m) + "\nrelative to value at k = 1"),
         'max_x': (lambda o: 1.0),
         'min_y': (lambda o: 0.01),
-        'yscale': 'log'
+        'yscale': 'log',
+        'overlay_line' : {
+            'fcn': (lambda c: 1.0 / float(c))
+        },
     }
 }
 
@@ -433,6 +445,7 @@ if __name__ == "__main__":
                 y2_scale_factor = get_param('y2_scale_factor', None, None, p, gdf)
                 box_whisker = get_param('box_whisker', None, False, p, gdf)
                 hlines = get_param('hlines', None, None, p, gdf)
+                overlay_line = get_param('overlay_line', None, None, p, gdf)
                 plot.ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
                             xscale, yscale, None, None, write_filepath + '_' + gdf_name,
                             options.write, ext = options.ext,
@@ -445,4 +458,5 @@ if __name__ == "__main__":
                             box_whisker = box_whisker,
                             ylabel2 = ylabel2,
                             y2_scale_factor = y2_scale_factor,
-                            hlines = hlines)
+                            hlines = hlines,
+                            overlay_line = overlay_line)
