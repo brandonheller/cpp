@@ -328,7 +328,8 @@ def dump_1ctrl_latex_table(latencies, write_filepath, safety_margins, fraction =
             num_ok = len([a for a in latencies if a * MILES_TO_MS * safety_margin < ms])
             s += ' & '
             if fraction:
-                s += "%0.2f" % (num_ok / float(len(latencies)))
+                # Make a percentage:
+                s += "%0.0f\\%%" % (num_ok * 100.0 / float(len(latencies)))
             else:
                 s += str(num_ok)
         s += "\\\\ \n"
