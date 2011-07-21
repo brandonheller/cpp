@@ -59,7 +59,7 @@ def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
 
     def lower_48_basemap():
         m = Basemap(llcrnrlon=-119, llcrnrlat=22, urcrnrlon=-64,
-                urcrnrlat=49, projection='lcc', lat_1=33,lat_2=45,
+                urcrnrlat=50, projection='lcc', lat_1=33,lat_2=46,
                 lon_0=-95, resolution='c')
         boundary_color = '#eaeaea'
         m.drawcoastlines(linewidth=0.5, color=boundary_color, antialiased=True)
@@ -75,9 +75,9 @@ def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
     for edge in g.edges():
         add_edge(edge)
     for city in avg_combo:
-        add_city(city, 'o', 18, color)
+        add_city(city, 'o', 24, color)
     for city in wc_combo:
-        add_city(city, 'x', 18, color)
+        add_city(city, 'x', 24, color)
     if write:
         filename = string.replace(filename, '.json', '')
         filepath =  filename + '.' + ext
