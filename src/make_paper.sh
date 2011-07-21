@@ -12,6 +12,11 @@ TOPO=os3e
 ./generate.py --topo ${TOPO} --from_start ${C} --lat_metrics -w --write_dist --write_combos -w -e ${EXT} ${FORCE}
 ./plot_cdfs.py -i data_out/${TOPO}/${C}_to_0.json --from_start ${C} -w --lat_metrics -e ${EXT}
 
+# For now, change TICK_LABELSIZE to 18 in plot.py before generating these two.
+./plot_pareto.py -i data_out/${TOPO}/${C}_to_0.json --from_start ${C} -w --lat_metrics -e ${EXT}
+./plot_cloud.py -i data_out/${TOPO}/${C}_to_0.json --from_start ${C} -w --lat_metrics -e ${EXT}
+
+
 # Generate mini topology images for OS3 topology
 ./map_combos.py -i data_out/${TOPO}/${C}_to_0.json --from_start ${C} --lat_metrics -w --write_dist --write_combos -e ${EXT}
 
