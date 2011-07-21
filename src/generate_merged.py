@@ -320,10 +320,10 @@ def dump_1ctrl_latex_table(latencies, write_filepath, safety_margins, fraction =
     # Columns: Goals(2), Safety Margins(n)
     s = "\\begin{tabular}{*{%i}{l}}\n" % (len(safety_margins) + 2)
     s += "\\multicolumn{2}{c}{Round-trip Latency Target} & \\multicolumn{%i}{l}{Safety Margin} \\\\ \n" % len(safety_margins)
-    s += "Name & Delay(ms) & %s\\\\ \n" % ' & '.join([str(a) + 'x' for a in safety_margins])
+    s += "Name & Delay & %s\\\\ \n" % ' & '.join([str(a) + 'x' for a in safety_margins])
     s += "\hline\n"
     for ms, name in LATENCY_LINES:
-        s += ' & '.join([name, str(ms * 2)])
+        s += ' & '.join([name, str(ms * 2) + ' ms'])
         for i, safety_margin in enumerate(safety_margins):
             num_ok = len([a for a in latencies if a * MILES_TO_MS * safety_margin < ms])
             s += ' & '
