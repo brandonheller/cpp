@@ -24,7 +24,7 @@ ESCAPE = False
 
 DEF_AXIS_LEFT = 0.2
 DEF_AXIS_RIGHT = 0.95
-DEF_AXIS_BOTTOM = 0.14
+DEF_AXIS_BOTTOM = 0.15
 DEF_AXIS_TOP = 0.9
 DEF_AXIS_WIDTH = DEF_AXIS_RIGHT - DEF_AXIS_LEFT
 DEF_AXIS_HEIGHT = DEF_AXIS_TOP - DEF_AXIS_BOTTOM
@@ -35,8 +35,9 @@ AXIS_2Y_RIGHT = 0.8
 AXIS_2Y_WIDTH = AXIS_2Y_RIGHT - DEF_AXIS_LEFT
 AXES_2Y = [DEF_AXIS_LEFT, DEF_AXIS_BOTTOM, AXIS_2Y_WIDTH, DEF_AXIS_HEIGHT]
 
-TICK_LABELSIZE = 18
-TEXT_LABELSIZE = 18
+AXES_LABELSIZE = 22
+TICK_LABELSIZE = 20
+TEXT_LABELSIZE = 22
 
 COLOR_LIGHTGRAY = '#cccccc'
 COLOR_MEDGRAY = '#606060'
@@ -45,7 +46,7 @@ rc('axes', **{'labelsize' : 'large',
               'titlesize' : 'large',
               'linewidth' : 0,
               'grid' : True})
-rcParams['axes.labelsize'] = 20
+rcParams['axes.labelsize'] = AXES_LABELSIZE
 rcParams['xtick.labelsize'] = TICK_LABELSIZE
 rcParams['ytick.labelsize'] = TICK_LABELSIZE
 rcParams['xtick.major.pad'] = 4
