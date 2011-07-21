@@ -10,6 +10,7 @@ EXT=pdf
 # Generate all latency metrics data for OS3E topology
 TOPO=os3e
 ./generate.py --topo ${TOPO} --from_start ${C} --lat_metrics -w --write_dist --write_combos -w -e ${EXT} ${FORCE}
+./plot_cdfs.py -i data_out/${TOPO}/${C}_to_0.json --from_start ${C} -w --lat_metrics -e ${EXT}
 
 # Generate mini topology images for OS3 topology
 ./map_combos.py -i data_out/${TOPO}/${C}_to_0.json --from_start ${C} --lat_metrics -w --write_dist --write_combos -e ${EXT}
