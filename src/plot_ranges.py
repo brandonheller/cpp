@@ -55,8 +55,8 @@ PLOT_FCNS = {
             'mean': (lambda g, d, m: d[m]['mean']),
             'lowest': (lambda g, d, m: d[m]['lowest'])},
         'ylabel': (lambda m: metric_fullname(m) + " (miles)"),
-        'y2_scale_factor': MILES_TO_MS,
-        'hlines': LATENCY_LINES
+        'ylabel2': (lambda m: metric_fullname(m) + " (ms)"),
+        'y2_scale_factor': MILES_TO_MS
     },
     'miles_cost': {
          'aspect_colors':
@@ -142,6 +142,7 @@ def do_ranges(options, stats, write_filepath):
                 max_x = p['max_x'](options) if 'max_x' in p else None
                 min_y = p['min_y'](options) if 'min_y' in p else None
                 max_y = p['max_y'](options) if 'max_y' in p else None
+                ylabel2 = p['ylabel2'](metric) if 'ylabel2' in p else None
                 y2_scale_factor = p['y2_scale_factor'] if 'y2_scale_factor' in p else None
                 hlines = p['hlines'] if 'hlines' in p else None
 
@@ -154,6 +155,7 @@ def do_ranges(options, stats, write_filepath):
                             max_x = max_x,
                             min_y = min_y,
                             max_y = max_y,
+                            ylabel2 = ylabel2,
                             y2_scale_factor = y2_scale_factor,
                             hlines = hlines)
             else:
