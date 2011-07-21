@@ -64,15 +64,16 @@ PLOT_FCNS = {
     },
     'ratios': {
         'aspect_colors':
-            {'highest': 'rx',
+            {#'highest': 'rx',
              'mean': 'bo',
              'one': 'g+'},
         'aspect_fcns':
-            {'highest': (lambda g, d, m: divide_def0(d[m]['highest'], d[m]['lowest'])),
+            {#'highest': (lambda g, d, m: divide_def0(d[m]['highest'], d[m]['lowest'])),
              'mean': (lambda g, d, m: divide_def0(d[m]['mean'], d[m]['lowest'])),
              'one': (lambda g, d, m: 1.0)},
         'ylabel': (lambda m: metric_fullname(m) + "/optimal"),
-        'max_y': (lambda o: 10.0)
+        'min_y': (lambda o: 1.0),
+        'max_y': (lambda o: 3.2)
     },
     'durations': {
         'aspect_colors':
