@@ -46,11 +46,11 @@ def abs_benefit_fcns_gen(stats, metric):
 PLOT_FCNS = {
     'ranges': {
         'aspect_colors':
-            {'highest': 'rx',
+            {#'highest': 'rx',
              'mean': 'bo',
              'lowest': 'g+'},
         'aspect_fcns':
-            {'highest': (lambda g, d, m: d[m]['highest']),
+            {#'highest': (lambda g, d, m: d[m]['highest']),
             'mean': (lambda g, d, m: d[m]['mean']),
             'lowest': (lambda g, d, m: d[m]['lowest'])},
         'ylabel': (lambda m: metric_fullname(m) + " (miles)")
