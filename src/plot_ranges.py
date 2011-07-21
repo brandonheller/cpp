@@ -4,6 +4,7 @@ from lib.options import parse_args
 import lib.plot as plot
 from metrics_lib import metric_fullname, get_output_filepath
 from util import divide_def0
+from lib.dist import MILES_TO_MS, LATENCY_LINES
 
 PLOT_TYPES = ['ranges', 'ratios', 'durations', 'bc_abs', 'bc_rel', 'abs_benefit', 'miles_cost']
 PLOTS = PLOT_TYPES
@@ -53,7 +54,9 @@ PLOT_FCNS = {
             {#'highest': (lambda g, d, m: d[m]['highest']),
             'mean': (lambda g, d, m: d[m]['mean']),
             'lowest': (lambda g, d, m: d[m]['lowest'])},
-        'ylabel': (lambda m: metric_fullname(m) + " (miles)")
+        'ylabel': (lambda m: metric_fullname(m) + " (miles)"),
+        'y2_scale_factor': MILES_TO_MS,
+        'hlines': LATENCY_LINES
     },
     'miles_cost': {
          'aspect_colors':
@@ -139,6 +142,8 @@ def do_ranges(options, stats, write_filepath):
                 max_x = p['max_x'](options) if 'max_x' in p else None
                 min_y = p['min_y'](options) if 'min_y' in p else None
                 max_y = p['max_y'](options) if 'max_y' in p else None
+                y2_scale_factor = p['y2_scale_factor'] if 'y2_scale_factor' in p else None
+                hlines = p['hlines'] if 'hlines' in p else None
 
                 plot.ranges(stats, metric, aspects, aspect_colors, aspect_fcns,
                             "linear", "linear", None, None, filepath,
@@ -148,7 +153,9 @@ def do_ranges(options, stats, write_filepath):
                             min_x = min_x,
                             max_x = max_x,
                             min_y = min_y,
-                            max_y = max_y)
+                            max_y = max_y,
+                            y2_scale_factor = y2_scale_factor,
+                            hlines = hlines)
             else:
                 raise Exception("undefined ptype: %s" % ptype)
 

@@ -18,6 +18,7 @@ from topo_lib import get_topo_graph, total_weight
 from metrics_lib import metric_fullname
 from util import divide_def0
 from plot_ranges import get_aspect_fcns, bc_rel_aspect_fcns_gen
+from lib.dist import MILES_TO_MS, LATENCY_LINES
 
 # Quick hack to not throw exception if we come across a topology for which
 # we have no data
@@ -25,12 +26,6 @@ IGNORE_MISSING_DATA = True
 
 # Options for Matplotlib that are common to all graphs (but overrideable.)
 COMMON_LINE_OPTS = {'alpha': 0.5, 'markersize': 2}
-
-# Conversion factor for dual-y-scale graphs
-# Assume speed of light in fiber is 2/3 that in other media
-# (1m / 0.00062137 miles) * (1 sec / 2e8 m) * (1000 ms /sec)
-# Comes to 0.0080467354394322243 ms / mile
-MILES_TO_MS = (1/0.00062137) * (1/2e8) * 1000
 
 USE_FRACTIONS = True  # Use fractions rather than raw for latex one-ctrl table?
 SAFETY_MARGINS = [1.0, 1.5, 2.0]  # For use in one-ctrl table
@@ -46,11 +41,6 @@ def norm_x(data, k):
     data_copy = copy.copy(data)
     data_copy['x'] = [d / float(k) for d in data['x']]
     return data_copy
-
-# Half the two-way totals, to compare to one-way latencies.
-LATENCY_LINES = [[5, 'switch processing'],
-                 [25, 'ring protection'],
-                 [100, 'mesh restoration']]
 
 # Shared ranges data functions
 ranges_get_data_fcns = {
