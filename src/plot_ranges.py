@@ -75,8 +75,9 @@ PLOT_FCNS = {
              'mean': (lambda g, d, m: divide_def0(d[m]['mean'], d[m]['lowest'])),
              'one': (lambda g, d, m: 1.0)},
         'ylabel': (lambda m: metric_fullname(m) + "/optimal"),
+        'max_x': (lambda o: 12.0),
         'min_y': (lambda o: 1.0),
-        'max_y': (lambda o: 3.2)
+        'max_y': (lambda o: 2.5)
     },
     'durations': {
         'aspect_colors':
