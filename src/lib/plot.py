@@ -9,6 +9,8 @@ from operator import itemgetter
 
 from matplotlib import rc, rcParams
 
+from matplotlib.font_manager import FontProperties
+
 # yet another attempt:
 rc('font',**{'family':'sans-serif','sans-serif':['Arial']})
 
@@ -391,7 +393,7 @@ def pareto(data, colors, axes, xscale, yscale,
           write_filepath = None, write = False, num_bins = None, ext = 'pdf',
           legend = None, title = False, xlabel = None, ylabel = None,
           x_metric = None, y_metric = None, min_x = None, min_y = None,
-          normalize = None, marks = True):
+          normalize = None, marks = True, max_x = None, max_y = None, loc = None):
 
     fig = get_fig()
 
@@ -432,19 +434,23 @@ def pareto(data, colors, axes, xscale, yscale,
             min_x = pd[-1][0][0] / margin_factor
         if normalize:
             min_x = 1.0 / float(margin_factor)
-        max_x = max([x[-1][0] for x in pd]) * margin_factor
+        if not max_x:
+            max_x = max([x[-1][0] for x in pd]) * margin_factor
         if not min_y == 0 and not min_y:
             min_y = pd[-1][-1][1] / margin_factor
         if normalize:
             min_y = 1.0 / float(margin_factor)
-        max_y = max([y[0][1] for y in pd]) * margin_factor
+        if not max_y:
+            max_y = max([y[0][1] for y in pd]) * margin_factor
         pylab.axis([min_x, max_x, min_y, max_y])
     if xlabel:
         pylab.xlabel(xlabel)
     if ylabel:
         pylab.ylabel(ylabel)
     if legend:
-        pylab.legend(lines, datanames, loc = "lower right")
+        f = FontProperties(size = 18)
+        pylab.legend(reversed(lines), datanames, loc = loc, numpoints = 1,
+                     markerscale = 0, prop = f, columnspacing = 0, borderpad = 0.3)
     if write:
         filepath = write_filepath + '.' + ext
         mkdir_p(os.path.dirname(filepath))
@@ -469,10 +475,15 @@ def cloud(data, colors, axes, xscale, yscale,
         y = [d[y_metric] for d in data[k]]
         # Plot in reverse order, so choose colors in reverse order
         color = colors[len(data) - 1 - i]
-        pylab.plot(x, y, 'o',
-                   markerfacecolor = color,
-                   markeredgecolor = color,
-                   markersize = 3)
+        line = pylab.plot(x, y, 'o',
+                      markerfacecolor = color,
+                      markeredgecolor = color,
+                      markersize = 3)
+        point = pylab.plot(x[0], y[0], 'o',
+                      markerfacecolor = color,
+                      markeredgecolor = color,
+                      markersize = 3)
+        lines.append(point)
         datanames.append(k)
 
     pylab.xscale(xscale)
@@ -483,7 +494,9 @@ def cloud(data, colors, axes, xscale, yscale,
     if ylabel:
         pylab.ylabel(ylabel)
     if legend:
-        pylab.legend(lines, datanames, loc = "lower right")
+        f = FontProperties(size = 18)
+        pylab.legend(reversed(lines), reversed(datanames), loc = "lower right", numpoints = 1,
+                     markerscale =0, prop = f, columnspacing = 0, borderpad = 0.3)
     if write:
         filepath = write_filepath + '.' + ext
         mkdir_p(os.path.dirname(filepath))

@@ -38,18 +38,25 @@ def do_pareto(options, stats, write_filepath):
                xlabel = metric_fullname(x_metric) + ' (miles)',
                ylabel = metric_fullname(y_metric) + ' (miles)',
                ext = options.ext,
+               min_x = 0,
+               min_y = 0,
                x_metric = x_metric,
-               y_metric = y_metric)
+               y_metric = y_metric,
+               loc = "lower right")
 
     plot.pareto(data, COLORS, None,
                "linear", "linear", write_filepath + '_norm',
                options.write,
-               xlabel = metric_fullname(x_metric) + ' (miles)',
-               ylabel = metric_fullname(y_metric) + ' (miles)',
+               xlabel = metric_fullname(x_metric) + ' (ratio)',
+               ylabel = metric_fullname(y_metric) + ' (ratio)',
                ext = options.ext,
                x_metric = x_metric,
                y_metric = y_metric,
-               normalize = True)
+               max_x = 1.2,
+               max_y = 1.2,
+               normalize = True,
+               legend = True,
+               loc = "upper right")
 
     if not options.write:
         plot.show()

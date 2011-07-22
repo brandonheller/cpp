@@ -34,7 +34,8 @@ def do_cloud(options, stats, write_filepath, ext = None):
                ylabel = metric_fullname(y_metric) + ' (miles)',
                ext = ext,
                x_metric = x_metric,
-               y_metric = y_metric)
+               y_metric = y_metric,
+               legend = True)
 
     if not options.write:
         plot.show()
