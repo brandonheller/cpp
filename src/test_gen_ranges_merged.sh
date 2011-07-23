@@ -11,8 +11,8 @@ METRICS='--lat_metrics'
 # Pick one of these:
 
 # Latency CDFs
-#PLOT_LIST='--plot_list ranges_lowest'
-#CDF_PLOT_LIST='--cdf_plot_list latency'
+PLOT_LIST='--plot_list ranges_lowest'
+CDF_PLOT_LIST='--cdf_plot_list latency'
 
 # Pareto CDFs
 #PLOT_LIST='--plot_list pareto_max,pareto_max_bw'

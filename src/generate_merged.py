@@ -98,7 +98,7 @@ ranges_get_data_fcns = {
         'overlay_line' : {
             'fcn': (lambda c: 1.0 / float(c)),
             'text': "proportional\nreduction",
-            'xy': (1.45, 0.4),
+            'xy': (1.25, 0.25),
         }
     },
     'norm_y_ylog': {
