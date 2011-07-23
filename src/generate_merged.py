@@ -25,7 +25,7 @@ from lib.dist import MILES_TO_MS, LATENCY_LINES
 IGNORE_MISSING_DATA = True
 
 # Options for Matplotlib that are common to all graphs (but overrideable.)
-COMMON_LINE_OPTS = {'alpha': 0.5, 'markersize': 2}
+COMMON_LINE_OPTS = {'alpha': 0.4, 'markersize': 2, 'linewidth': 1.5}
 
 USE_FRACTIONS = True  # Use fractions rather than raw for latex one-ctrl table?
 SAFETY_MARGINS = [1.0, 1.5, 2.0]  # For use in one-ctrl table
@@ -63,7 +63,8 @@ ranges_get_data_fcns = {
         'yscale': 'log',
         'ylabel2': (lambda m: metric_fullname(m) + " (ms)"),
         'y2_scale_factor': MILES_TO_MS,
-        'hlines': LATENCY_LINES
+        'hlines': LATENCY_LINES,
+        'alpha': 0.18
     },
     'norm_xk': {
         'get_data_fcn': (lambda g, s, af, a, m: norm_x(plot.ranges_data(s, af, a, m), g.number_of_nodes())),
@@ -536,6 +537,7 @@ if __name__ == "__main__":
                 box_whisker = get_param('box_whisker', None, False, p, gdf)
                 hlines = get_param('hlines', None, None, p, gdf)
                 overlay_line = get_param('overlay_line', None, None, p, gdf)
+                alpha = get_param('alpha', None, None, p, gdf)
                 plot.ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
                             xscale, yscale, None, None, write_filepath + '_' + gdf_name,
                             options.write, ext = options.ext,
@@ -549,4 +551,5 @@ if __name__ == "__main__":
                             ylabel2 = ylabel2,
                             y2_scale_factor = y2_scale_factor,
                             hlines = hlines,
-                            overlay_line = overlay_line)
+                            overlay_line = overlay_line,
+                            alpha = alpha)

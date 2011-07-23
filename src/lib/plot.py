@@ -42,7 +42,10 @@ TICK_LABELSIZE = 22
 TEXT_LABELSIZE = 22
 
 COLOR_LIGHTGRAY = '#cccccc'
-COLOR_MEDGRAY = '#606060'
+#COLOR_HLINES = '#606060'
+COLOR_HLINES = 'black'
+HLINE_LABELSIZE = 24
+HLINE_LINEWIDTH = 2
 
 rc('axes', **{'labelsize' : 'large',
               'titlesize' : 'large',
@@ -161,7 +164,7 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
            min_x = None, max_x = None, min_y = None, max_y = None,
            data = None, line_opts = None, box_whisker = False,
            ylabel2 = None, y2_scale_factor = None, hlines = None,
-           overlay_line = None):
+           overlay_line = None, alpha = None):
     '''Plot multiple ranges on one graph.
     
     @param data_lines: list of dicts, each of:
@@ -189,6 +192,8 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
             #print "plotting: %s %s" % (x, lines)
             for aspect in aspects:
                 y = lines[aspect]
+                if alpha:
+                    line_opts['alpha'] = alpha
                 ax1.plot(x, y, aspect_colors[aspect], **line_opts)
                 if ylabel2:
                     y2 = [val * y2_scale_factor for val in y]
@@ -266,12 +271,12 @@ def ranges_multiple(stats, metric, aspects, aspect_colors, aspect_fcns,
                 y_in_ax1 = y_val / float(y2_scale_factor)
                 if min_y < y_in_ax1 < max_y:
                     ax2.plot([min_x, max_x], [y_val, y_val],
-                             color = COLOR_MEDGRAY, marker = 'None', linewidth = 1.0)
+                             color = COLOR_HLINES, marker = 'None', linewidth = HLINE_LINEWIDTH)
 
                     ax2.text(max_x - 0.1, y_val, text,
                              horizontalalignment='right',
-                             verticalalignment='bottom',
-                             fontsize = TEXT_LABELSIZE)
+                             verticalalignment='top',
+                             fontsize = HLINE_LABELSIZE)
 
         # NOTE: make sure to set axis limits AFTER adding stuff - apparently
         # one axis will auto-scale itself to fix text, and then the two
