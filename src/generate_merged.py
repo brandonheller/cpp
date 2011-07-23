@@ -200,7 +200,8 @@ MERGED_RANGE_PLOT_DATA_FCNS = {
             'bc_rel': 'rx'
         },
         'aspect_fcns_gen': bc_rel_aspect_fcns_gen,
-        'ylabel': (lambda m: metric_fullname(m) + "(1) /\n" + metric_fullname(m) + "/k"),
+#        'ylabel': (lambda m: metric_fullname(m) + "(1) /\n" + metric_fullname(m) + "/k"),
+        'ylabel': (lambda m: "cost/benefit ratio for\noptimized " + metric_fullname(m)),
         'max_y': (lambda o: 2.0),
         'min_y': (lambda o: -0.1),
         'get_data_fcns': shared_get_data_fcns

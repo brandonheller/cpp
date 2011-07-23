@@ -97,7 +97,8 @@ PLOT_FCNS = {
         'aspect_colors':
             {'bc_rel': 'rx'},
         'aspect_fcns_gen': bc_rel_aspect_fcns_gen,
-        'ylabel': (lambda m: metric_fullname(m) + "(1) /\n" + metric_fullname(m) + "/k"),
+#        'ylabel': (lambda m: metric_fullname(m) + "(1) /\n" + metric_fullname(m) + "/k"),
+        'ylabel': (lambda m: "cost/benefit ratio for\noptimized " + metric_fullname(m)),
         'min_x': (lambda o: 1.0),
         'max_x': (lambda o: o.maxx),
         'max_y': (lambda o: o.maxy)
