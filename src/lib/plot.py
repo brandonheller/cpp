@@ -449,7 +449,7 @@ def pareto(data, colors, axes, xscale, yscale,
         pylab.ylabel(ylabel)
     if legend:
         f = FontProperties(size = 18)
-        pylab.legend(reversed(lines), datanames, loc = loc, numpoints = 1,
+        pylab.legend(lines, datanames, loc = loc, numpoints = 1,
                      markerscale = 0, prop = f, columnspacing = 0, borderpad = 0.3)
     if write:
         filepath = write_filepath + '.' + ext
