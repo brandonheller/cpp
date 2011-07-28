@@ -22,9 +22,14 @@ def do_cloud(options, stats, write_filepath, ext = None):
     if not write_filepath:
         write_filepath = get_output_filepath(options.input)
 
-    first_data = stats['data'][sorted(stats['group'])[0]]
-    axes = [0, first_data[x_metric]['highest'],
-            0, first_data[y_metric]['highest']]
+    # Series may not have values that monotonically decrease by the controller
+    # number, so consider each value when choosing axis extents.
+    extra_margin = 1.02
+    maxes = {x_metric: [], y_metric: []}
+    for c in stats['group']:
+        for metric in options.metrics:
+            maxes[metric].append(stats['data'][c][metric]['highest'])
+    axes = [0, max(maxes[x_metric]) * extra_margin, 0, max(maxes[y_metric]) * extra_margin]
     if not ext:
         ext = options.ext
     plot.cloud(data, COLORS, axes,
