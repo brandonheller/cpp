@@ -32,6 +32,7 @@ DPI = 300
 
 def parse_args():
     opts = OptionParser()
+    print "entered arg parsing"
 
     # Topology selection
     opts.add_option("--topo", type = 'str', default = DEF_TOPO,
@@ -65,7 +66,7 @@ def parse_args():
 
     # Metric selection
     opts.add_option("--metric",
-                    default = 'latency',
+                    default = None,
                     choices = METRICS,
                     help = "metric to compute, one in %s" % METRICS)
     opts.add_option("--all_metrics",  action = "store_true",
@@ -154,6 +155,9 @@ def parse_args():
     options, arguments = opts.parse_args()
 
     # Handle metrics
+    if options.metric and options.metric_list:
+        raise Exception("Can't specify both --metric and --metric_list")
+
     if options.metric_list:
         metrics_split = options.metric_list.split(',')
         options.metrics = []
@@ -162,19 +166,13 @@ def parse_args():
                 raise Exception("Invalid metric(s): %s in %s; choose from %s" %
                                 (metric, options.metric_list, METRICS))
             options.metrics.append(metric)
-
-    if (options.metric != DEF_METRIC) and options.metric_list:
-        raise Exception("Can't specify both --metric and --metric_list")
-
-    if options.metric and not options.metric_list:
-        options.metrics = [options.metric]
-
-    if options.all_metrics:
+    elif options.all_metrics:
         options.metrics = metrics.METRICS
     elif options.lat_metrics:
         options.metrics = ['latency', 'wc_latency']
     else:
-        options.metrics = [options.metric]
+        options.metrics = [DEF_METRIC]
+
 
     if options.operation_list:
         options.operations = options.operation_list.split(',')

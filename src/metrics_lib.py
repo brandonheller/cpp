@@ -15,14 +15,14 @@ from util import sort_by_val
 BIG = 10000000
 RESULTS_TIMEOUT = 1
 COARSE = True  # Divide up tasks in the beginning, rather than fine-grained.
-PRINT_VERBOSE = False  # If true, print out metric details/sol'ns
+PRINT_VERBOSE = True  # If true, print out metric details/sol'ns
 
 lg = logging.getLogger("metrics_lib")
 
 
 def closest_controllers(g, controllers, apsp):
     '''Returns a dict of each node to its closest controller.
-    
+
     @param g: NetworkX graph
     @param controllers: list of controller locations
     @param apsp: all-pairs shortest paths data
@@ -43,6 +43,41 @@ def closest_controllers(g, controllers, apsp):
     return closest_controllers
 
 
+def closest_controllers_2(g, controllers, apsp):
+    '''Returns a dict of each node to its second-closest controller.
+    
+    @param g: NetworkX graph
+    @param controllers: list of controller locations
+    @param apsp: all-pairs shortest paths data
+    @return closest_controllers: dict of node to second-closest controller
+    '''
+    closest_controllers = {}  # map each node to closest controller
+    closest_controllers_2 = {}  # map each node to its second-closest controller
+    for n in g.nodes():
+        # closest_controller records controller w/shortest distance
+        # to the currently-considered node.
+        closest_controller = None
+        closest_controller_2 = None
+        shortest_path_len = BIG
+        shortest_path_len_2 = BIG
+        for c in controllers:
+            path_len = apsp[n][c]
+            if path_len < shortest_path_len:
+                # Copy closest to second-closest
+                closest_controller_2 = closest_controller
+                shortest_path_len_2 = shortest_path_len
+                # Overwrite for closest
+                closest_controller = c
+                shortest_path_len = path_len
+            elif path_len < shortest_path_len_2:
+                # Overwrite second-closest only
+                closest_controller_2 = c
+                shortest_path_len_2 = path_len
+        closest_controllers[n] = closest_controller
+        closest_controllers_2[n] = closest_controller_2
+    return closest_controllers_2
+
+
 def get_total_path_len(g, controllers, apsp, weighted = False):
     '''Returns the total of path lengths from nodes to nearest controllers.
 
@@ -56,8 +91,24 @@ def get_total_path_len(g, controllers, apsp, weighted = False):
     return sum([apsp[n][c] for n, c in closest.iteritems()])
 
 
+def get_total_path_len_2(g, controllers, apsp, weighted = False):
+    '''Returns the total of path lengths from nodes to second-nearest controllers.
+
+    @param g: NetworkX graph
+    @param controllers: list of controller locations
+    @param apsp: all-pairs shortest paths data
+    @param weighted: is graph weighted?
+    @return path_len_total: total of path lengths
+    '''
+    if len(controllers) == 1:
+        return get_total_path_len(g, controllers, apsp, weighted)
+    else:
+        closest_2 = closest_controllers_2(g, controllers, apsp)
+        return sum([apsp[n][c] for n, c in closest_2.iteritems()])
+
+
 def worst_case_latency(g, controllers, apsp, weighted = False):
-    '''Returns the latency of the switch farthest from a controller.
+    '''Returns worst-case latency for the switch farthest from its controller.
 
     @param g: NetworkX graph
     @param controllers: list of controller locations
@@ -67,6 +118,22 @@ def worst_case_latency(g, controllers, apsp, weighted = False):
     '''
     closest = closest_controllers(g, controllers, apsp)
     return max([apsp[n][c] for n, c in closest.iteritems()])
+
+
+def worst_case_latency_2(g, controllers, apsp, weighted = False):
+    '''Returns worst-case for the switch farthest from its second-closest controller.
+
+    @param g: NetworkX graph
+    @param controllers: list of controller locations
+    @param apsp: all-pairs shortest paths data
+    @param weighted: is graph weighted?
+    @return worst_case_latency
+    '''
+    if len(controllers) == 1:
+        return worst_case_latency(g, controllers, apsp, weighted)
+    else:
+        closest_2 = closest_controllers_2(g, controllers, apsp)
+        return max([apsp[n][c] for n, c in closest_2.iteritems()])
 
 
 def fraction_within_latency(g, combo, apsp, lat_bound, weighted = False):
@@ -311,8 +378,14 @@ def get_null(g, combo, apsp, apsp_paths, weighted, extra_params):
 def get_latency(g, combo, apsp, apsp_paths, weighted, extra_params):
     return get_total_path_len(g, combo, apsp, weighted) / float(g.number_of_nodes())
 
+def get_latency_2(g, combo, apsp, apsp_paths, weighted, extra_params):
+    return get_total_path_len_2(g, combo, apsp, weighted) / float(g.number_of_nodes())
+
 def get_wc_latency(g, combo, apsp, apsp_paths, weighted, extra_params):
     return worst_case_latency(g, combo, apsp, weighted)
+
+def get_wc_latency_2(g, combo, apsp, apsp_paths, weighted, extra_params):
+    return worst_case_latency_2(g, combo, apsp, weighted)
 
 def get_fairness(g, combo, apsp, apsp_paths, weighted, extra_params):
     return controller_split_fairness(g, combo, apsp, weighted)
@@ -330,10 +403,12 @@ def get_availability(g, combo, apsp, apsp_paths, weighted, extra_params):
 METRIC_FCNS = {
     'null': get_null,
     'latency': get_latency,
+    'latency_2': get_latency_2,
     'wc_latency': get_wc_latency,
     'fairness': get_fairness,
     'congestion': control_traffic_congestion,
-    'availability': get_availability
+    'availability': get_availability,
+    'wc_latency_2': get_wc_latency_2
 }
 
 METRICS = METRIC_FCNS.keys()
