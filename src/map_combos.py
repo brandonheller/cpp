@@ -29,8 +29,8 @@ from file_libs import read_json_file
 from topo_lib import get_topo_graph
 from metrics_lib import get_output_filepath
 
-def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
-              ext = DEF_EXT, labels = False, color = None):
+def write_map(g, city_data, metrics, metric_data, filename, write = False,
+              ext = DEF_EXT, labels = False, color = None, marks = ['o', 'x', '+']):
 
     def add_city(city, dot, markersize, color):
         lon = city_data[city]['Longitude']
@@ -74,13 +74,13 @@ def write_map(g, city_data, avg_combo, wc_combo, filename, write = False,
     m = lower_48_basemap()
     for edge in g.edges():
         add_edge(edge)
-    for city in avg_combo:
-        add_city(city, 'o', 24, color)
-    for city in wc_combo:
-        add_city(city, 'x', 24, color)
+    for i, metric in enumerate(metrics):
+        for city in metric_data[i]:
+            add_city(city, marks[i], 24, color)
     if write:
         filename = string.replace(filename, '.json', '')
-        filepath =  filename + '.' + ext
+        filename += '_' + ','.join(metrics)
+        filepath = filename + '.' + ext
         fig.savefig(filepath)
         print "wrote file to %s" % filepath
     else:
@@ -96,16 +96,17 @@ def do_plot(options, stats, g, write_filepath):
     data = {}
     if not write_filepath:
         write_filepath = get_output_filepath(options.input)
-    write_filepath += '_latencies_'
+    write_filepath += '_map_'
 
     print "reformatting data & doing plot..."
     for i, c in enumerate(stats['group']):
         if options.max and i >= options.max:
             break
         data[str(c)] = stats['data'][str(c)]
-        avg = data[str(c)]['latency']['lowest_combo']
-        wc = data[str(c)]['wc_latency']['lowest_combo']
-        write_map(g, city_data, avg, wc, write_filepath + str(c), options.write,
+        metric_data = []
+        for metric in options.metrics:
+            metric_data.append(data[str(c)][metric]['lowest_combo'])
+        write_map(g, city_data, options.metrics, metric_data, write_filepath + str(c), options.write,
                   options.ext, options.labels, color = COLORS[i])
 
 
