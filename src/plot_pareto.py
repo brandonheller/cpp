@@ -20,7 +20,7 @@ def do_pareto(options, stats, write_filepath):
     print "plotting point pareto"
     if not write_filepath:
         write_filepath = get_output_filepath(options.input)
-    write_filepath += '_pareto'
+    write_filepath += '_pareto_' + ','.join(options.metrics)
     plot.pareto(data, COLORS, None,
                "linear", "linear", write_filepath,
                options.write,
@@ -52,8 +52,8 @@ def do_pareto(options, stats, write_filepath):
                ext = options.ext,
                x_metric = x_metric,
                y_metric = y_metric,
-               max_x = 1.2,
-               max_y = 1.2,
+#               max_x = 1.2,
+#               max_y = 1.2,
                normalize = True,
                legend = True,
                loc = "upper right")
