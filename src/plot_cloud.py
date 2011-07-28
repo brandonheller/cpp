@@ -28,7 +28,7 @@ def do_cloud(options, stats, write_filepath, ext = None):
     if not ext:
         ext = options.ext
     plot.cloud(data, COLORS, axes,
-               "linear", "linear", write_filepath + '_cloud',
+               "linear", "linear", write_filepath + '_cloud_' + ','.join(options.metrics),
                options.write,
                xlabel = metric_fullname(x_metric) + ' (miles)',
                ylabel = metric_fullname(y_metric) + ' (miles)',
