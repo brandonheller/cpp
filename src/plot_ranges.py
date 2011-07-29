@@ -2,11 +2,13 @@
 '''Plot ranges, where each series is a # of controllers.'''
 from lib.options import parse_args
 import lib.plot as plot
-from metrics_lib import metric_fullname, get_output_filepath
+from metrics_lib import metric_fullname, get_output_filepath, METRIC_FCNS
 from util import divide_def0
 from lib.dist import MILES_TO_MS, LATENCY_LINES
+import networkx as nx
+from topo_lib import get_topo_graph
 
-PLOT_TYPES = ['ranges', 'ratios', 'durations', 'bc_abs', 'bc_rel', 'abs_benefit', 'miles_cost']
+PLOT_TYPES = ['ranges', 'ratios', 'durations', 'bc_abs', 'bc_rel', 'abs_benefit', 'miles_cost', 'ft_cost']
 PLOTS = PLOT_TYPES
 
 
@@ -34,6 +36,42 @@ def abs_benefit_fcns_gen(stats, metric):
                 prev = stats['data'][str(g - 1)][metric]['lowest']
             abs_benefits[g] = prev - now
     aspect_fcns = {'abs_benefit': (lambda g, d, m: abs_benefits[g])}
+    return aspect_fcns
+
+def ft_cost_fcn(g, d, m1, m2, graph):
+    '''
+    m1 is the metric we use for comparison; m2 is the opponent.
+    '''
+    m1_opt_combo = d[m1]['lowest_combo']
+    m2_opt_combo = d[m2]['lowest_combo']
+    apsp = nx.all_pairs_dijkstra_path_length(graph)
+    apsp_paths = nx.all_pairs_dijkstra_path(graph)
+    weighted = True
+    extra_params = None
+    m1_opt_m1_value = d[m1]['lowest']
+    m2_opt_m1_value = METRIC_FCNS[m1](graph, m2_opt_combo, apsp, apsp_paths, weighted, extra_params)
+    print "metric values for %s" % (m1)
+    print "  value for combo %s opt for %s: %s" % (m1_opt_combo, m1, m1_opt_m1_value)
+    print "  value for combo %s opt for %s: %s" % (m2_opt_combo, m2, m2_opt_m1_value)
+    value = divide_def0(m2_opt_m1_value, m1_opt_m1_value)
+    print "    return value of: %s for k = %s" % (value, g)
+    return value
+
+def other_metric(metric):
+    if metric == 'latency':
+        other_metric = 'latency_2'
+    elif metric == 'latency_2':
+        other_metric = 'latency'
+    elif metric == 'wc_latency':
+        other_metric = 'wc_latency_2'
+    elif metric == 'wc_latency_2':
+        other_metric = 'wc_latency'
+    else:
+        raise Exception("not sure what to compare against")
+    return other_metric
+
+def ft_cost_aspect_fcns_gen(stats, metric, graph):
+    aspect_fcns = {'ft_cost': (lambda g, d, m: ft_cost_fcn(g, d, metric, other_metric(m), graph))}
     return aspect_fcns
 
 # Master dict from plot types to all the info needed to construct them.
@@ -104,23 +142,46 @@ PLOT_FCNS = {
         'max_y': (lambda o: o.maxy)
     },
     'abs_benefit': {
-         'aspect_colors': {'abs_benefit': 'rx'},
-         'aspect_fcns_gen': abs_benefit_fcns_gen,
-         'ylabel': (lambda m: metric_fullname(m) + "\nincremental abs benefit (miles)"),
-         'min_x': (lambda o: 2.0)
+        'aspect_colors': {'abs_benefit': 'rx'},
+        'aspect_fcns_gen': abs_benefit_fcns_gen,
+        'ylabel': (lambda m: metric_fullname(m) + "\nincremental abs benefit (miles)"),
+        'min_x': (lambda o: 2.0)
+    },
+    'ft_cost': {
+        'aspect_colors':
+            {'ft_cost': 'rx'},
+        'aspect_fcns_gen_with_graph': ft_cost_aspect_fcns_gen,
+        'ylabel': (lambda m: '%s/%s,\nshowing %s' % (other_metric(m), m, m)),
+        'min_y': (lambda o: 1.0),
+        'min_x': (lambda o: 2.0)
     }
 }
 
-def get_aspect_fcns(p, stats, metric):
+def get_aspect_fcns(p, stats, metric, graph):
     '''Return aspect fcns, whether defined as functions or not.'''
-    if 'aspect_fcns_gen' in p:
+    if 'aspect_fcns_gen_with_graph' in p:
+        aspect_fcns = p['aspect_fcns_gen_with_graph'](stats, metric, graph)
+    elif 'aspect_fcns_gen' in p:
         aspect_fcns = p['aspect_fcns_gen'](stats, metric)
     else:
         aspect_fcns = p['aspect_fcns']
     return aspect_fcns
 
 
-def do_ranges(options, stats, write_filepath):
+def do_ranges(options, stats, write_filepath, topo_name):
+
+    # Grab topo to enable analysis that requires generating new metric values,
+    # such as the value of one metric with a combo optimized for another one.
+    '''
+    topo_graph returns
+        @param g: NetworkX Graph
+        @param usable: boolean: locations on all nodes and connected?
+        @param note: error or note about mods
+    '''
+    print "generating topo for: %s" % topo_name
+    graph, usable, note = get_topo_graph(topo_name)
+    if not usable:
+        raise Exception("unusable graph?")
 
     if not write_filepath:
         write_filepath = get_output_filepath(options.input)
@@ -130,13 +191,13 @@ def do_ranges(options, stats, write_filepath):
         this_write_filepath = write_filepath + '_' + metric
         xlabel = 'number of controllers (k)'
 
-        for ptype in PLOTS:
+        for ptype in options.plots:
             if ptype in PLOT_FCNS.keys():
                 p = PLOT_FCNS[ptype]
                 #print "plotting %s" % ptype
 
                 filepath = this_write_filepath + '_' + ptype
-                aspect_fcns = get_aspect_fcns(p, stats, metric)
+                aspect_fcns = get_aspect_fcns(p, stats, metric, graph)
                 aspects = aspect_fcns.keys()
                 aspect_colors = p['aspect_colors']
                 ylabel = p['ylabel'](metric)
@@ -170,4 +231,5 @@ if __name__ == "__main__":
     options = parse_args()
     print "loading JSON data..."
     stats = plot.load_stats(options)
-    do_ranges(options, stats, None)
+    topo_name = options.input.split('/')[1]
+    do_ranges(options, stats, None, topo_name)
