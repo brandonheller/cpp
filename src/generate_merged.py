@@ -385,7 +385,7 @@ if __name__ == "__main__":
                 if not os.path.exists(exp_filename + '.json'):
                     if IGNORE_MISSING_DATA:
                         # Ignore, continue.
-                        print "ignoring missing data"
+                        print "ignoring missing data in %s" % (exp_filename + '.json')
                         continue
                     else:
                         raise Exception("invalid file path: %s" % exp_filename)
