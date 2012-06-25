@@ -33,6 +33,8 @@ DPI = 300
 def parse_args():
     opts = OptionParser()
     print "entered arg parsing"
+    import sys
+    print sys.argv
 
     # Topology selection
     opts.add_option("--topo", type = 'str', default = DEF_TOPO,
@@ -179,10 +181,13 @@ def parse_args():
     else:
         options.operations = DEF_OPERATIONS
 
+    print "options.plot_list: %s" % options.plot_list
     if options.plot_list:
         options.plots = options.plot_list.split(',')
     else:
         options.plots = None
+
+    print "options.plot: %s" % options.plots
 
     if options.cdf_plot_list:
         options.cdf_plots = options.cdf_plot_list.split(',')
