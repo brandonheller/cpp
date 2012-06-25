@@ -12,7 +12,7 @@ from matplotlib import rc, rcParams
 from matplotlib.font_manager import FontProperties
 
 # yet another attempt:
-rc('font',**{'family':'sans-serif','sans-serif':['Arial']})
+rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 
 #rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 ## for Palatino and other serif fonts use:
@@ -62,6 +62,12 @@ rcParams['figure.subplot.right'] = DEF_AXIS_RIGHT
 rcParams['lines.linewidth'] = 2
 rcParams['grid.color'] = COLOR_LIGHTGRAY
 rcParams['grid.linewidth'] = 0.6
+
+# Generate figures with Type 1 fonts for camera-ready copies:
+# from http://nerdjusttyped.blogspot.com/2010/07/type-1-fonts-and-matplotlib-figures.html
+rcParams['ps.useafm'] = True
+rcParams['pdf.use14corefonts'] = True
+#rcParams['text.usetex'] = True
 
 
 from lib.options import parse_args, DPI
